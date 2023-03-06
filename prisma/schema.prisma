@@ -23,6 +23,60 @@ model User {
   role Role @default(USER) 
   status Boolean @default(true) 
   course String
+  posts Post[]
 
   @@map("user")
+}
+
+model Post {
+  id Int @id @default(autoincrement())
+  title String
+  description String? 
+  upvotes Int @default(0)
+  downvotes Int @default(0)
+  authorId Int
+  files File[]
+  tags Tag[]
+  comments Comment[]
+  
+  author  User  @relation(fields: [authorId], references: [id])
+  @@map("post")
+}
+
+model File {
+  id Int @id @default(autoincrement())
+  title String
+  path String
+  postId Int
+  commentId Int
+
+  comment Comment @relation(fields: [commentId], references: [id])
+  post Post @relation(fields: [postId], references: [id])
+  @@map("file")
+}
+
+model Comment {
+  id Int @id @default(autoincrement())
+  text String
+  category String
+  upvotes Int @default(0)
+  downvotes Int @default(0)
+  postId Int?
+  parentCommentId Int?
+  files File[]
+  childComments Comment[] @relation("ChildComments")
+
+  parentComment Comment? @relation("ChildComments", fields: [parentCommentId], references: [id])
+  post Post? @relation(fields: [postId], references: [id])
+  @@map("comment")
+}
+
+model Tag {
+  id Int @id @default(autoincrement())
+  category String 
+  key String
+  postId Int
+
+  post Post @relation(fields: [postId], references: [id])
+  @@map("tag")
 }
