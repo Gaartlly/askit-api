@@ -14,7 +14,7 @@ enum Role {
 
 model User {
   id Int @id @default(autoincrement())
-  name String 
+  name String
   email String @unique 
   password String
   role Role @default(USER) 
@@ -63,7 +63,7 @@ model File {
 
 model Comment {
   id Int @id @default(autoincrement())
-  content String
+  content String? // A person could post only an image as an answer to the question.
   category String
   upvotes Int @default(0)
   downvotes Int @default(0)
