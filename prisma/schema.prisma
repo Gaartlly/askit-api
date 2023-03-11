@@ -47,11 +47,11 @@ model File {
   id Int @id @default(autoincrement())
   title String
   path String
-  postId Int
-  commentId Int
+  postId Int?
+  commentId Int?
 
-  comment Comment @relation(fields: [commentId], references: [id])
-  post Post @relation(fields: [postId], references: [id])
+  comment Comment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  post Post? @relation(fields: [postId], references: [id], onDelete: Cascade)
   @@map("file")
 }
 
@@ -77,6 +77,6 @@ model Tag {
   key String
   postId Int
 
-  post Post @relation(fields: [postId], references: [id])
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
   @@map("tag")
 }
