@@ -6,13 +6,16 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsup ./src",
-    "start": "node ./dist/app.js"
+    "start": "node ./dist/app.js",
+    "start-dev": "npm run build && npm start"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "@prisma/client": "^4.11.0",
+    "cloudinary": "^1.35.0",
+    "dotenv": "^16.0.3",
     "express": "^4.18.2",
     "zod": "^3.21.2"
   },
