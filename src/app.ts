@@ -31,11 +31,13 @@ app.get("/", (_, res) => {
 
 app.get("/getUsers", getUsers);
 app.post("/createUser", createUser);
+
+// File routes
 app.get("/files", getAllFiles);
-app.post("/files/uploadFile", uploadFile);
-app.get("/files/getFile/:id", getFileById);
-app.delete("/files/deleteFile/:id", deleteFile);
-app.put("/files/updateFile", updateFile);
+app.get("/files/:id", getFileById);
+app.post("/files/upload", uploadFile);
+app.delete("/files/delete/:id", deleteFile);
+app.put("/files/update", updateFile);
 
 app.listen(port, () => {
   console.log(`App running at http://localhost:${port}`);
