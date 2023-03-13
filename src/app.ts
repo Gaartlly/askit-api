@@ -2,6 +2,7 @@ import dotenv from "dotenv";
 dotenv.config();
 import express from "express";
 import bodyParser from "body-parser";
+import commentRoutes from "./routes/commentRoutes"
 import * as postController from "./controllers/PostController";
 import * as tagController from "./controllers/TagController";
 import { createUser, deleteUser, getUsers, updateUserEmail, updateUserName, updateUserPassword } from "./controllers/UserController";
@@ -26,6 +27,11 @@ cloud.config({
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
+
+/**
+ * App routes
+ */
+app.use('/api/comments', commentRoutes);
 
 // Post routes
 app.post("/posts", postController.create);
@@ -57,5 +63,5 @@ app.delete("/files/delete/:id", deleteFile);
 app.put("/files/update", updateFile);
 
 app.listen(port, () => {
-    console.log(`App running at http://localhost:${port}`);
+  console.log(`App running at http://localhost:${port}`);
 });
