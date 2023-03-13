@@ -2,6 +2,8 @@ import dotenv from "dotenv";
 dotenv.config();
 import express from "express";
 import bodyParser from "body-parser";
+import * as postController from "./controllers/PostController";
+import * as tagController from "./controllers/TagController";
 import { createUser, deleteUser, getUsers, updateUserEmail, updateUserName, updateUserPassword } from "./controllers/UserController";
 import {
   deleteFile,
@@ -24,6 +26,20 @@ cloud.config({
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
+
+// Post routes
+app.post("/posts", postController.create);
+app.get("/posts", postController.index);
+app.get("/posts/:id", postController.show);
+app.put("/posts/:id", postController.update);
+app.delete("/posts/:id", postController.destroy);
+
+// Tag routes
+app.post("/tags", tagController.create);
+app.get("/tags", tagController.index);
+app.get("/tags/:id", tagController.show);
+app.put("/tags/:id", tagController.update);
+app.delete("/tags/:id", tagController.destroy);
 
 // User routes
 app.get("/user", getUsers);
