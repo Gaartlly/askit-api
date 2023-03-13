@@ -56,8 +56,9 @@ model File {
   createdAt DateTime @default(now())
   updateAt DateTime @updatedAt
 
-  comment Comment? @relation(fields: [commentId], references: [id])
-  post Post @relation(fields: [postId], references: [id])
+  comment Comment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+
   @@map("file")
 }
 
@@ -89,6 +90,6 @@ model Tag {
   createdAt DateTime @default(now())
   updateAt DateTime @updatedAt
 
-  post Post @relation(fields: [postId], references: [id])
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
   @@map("tag")
 }
