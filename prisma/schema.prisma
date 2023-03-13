@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -17,13 +14,17 @@ enum Role {
 
 model User {
   id Int @id @default(autoincrement())
-  name String 
+  name String
   email String @unique 
   password String
   role Role @default(USER) 
   status Boolean @default(true) 
   course String
+  createdAt DateTime @default(now())
+  updateAt DateTime @updatedAt
+
   posts Post[]
+  comments Comment[]
 
   @@map("user")
 }
@@ -31,10 +32,13 @@ model User {
 model Post {
   id Int @id @default(autoincrement())
   title String
-  description String? 
+  content String? 
   upvotes Int @default(0)
   downvotes Int @default(0)
   authorId Int
+  createdAt DateTime @default(now())
+  updateAt DateTime @updatedAt
+
   files File[]
   tags Tag[]
   comments Comment[]
@@ -48,25 +52,33 @@ model File {
   title String
   path String
   postId Int
-  commentId Int
+  commentId Int?
+  createdAt DateTime @default(now())
+  updateAt DateTime @updatedAt
 
   comment Comment @relation(fields: [commentId], references: [id], onDelete: Cascade)
   post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+
   @@map("file")
 }
 
 model Comment {
   id Int @id @default(autoincrement())
-  text String
+  content String? // A person could post only an image as an answer to the question.
   category String
   upvotes Int @default(0)
   downvotes Int @default(0)
+  authorId Int
   postId Int?
   parentCommentId Int?
+  createdAt DateTime @default(now())
+  updateAt DateTime @updatedAt
+
   files File[]
   childComments Comment[] @relation("ChildComments")
 
   parentComment Comment? @relation("ChildComments", fields: [parentCommentId], references: [id])
+  author  User  @relation(fields: [authorId], references: [id])
   post Post? @relation(fields: [postId], references: [id])
   @@map("comment")
 }
@@ -76,6 +88,8 @@ model Tag {
   category String 
   key String
   postId Int
+  createdAt DateTime @default(now())
+  updateAt DateTime @updatedAt
 
   post Post @relation(fields: [postId], references: [id])
   @@map("tag")

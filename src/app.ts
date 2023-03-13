@@ -2,7 +2,7 @@ import dotenv from "dotenv";
 dotenv.config();
 import express from "express";
 import bodyParser from "body-parser";
-import { createUser, getUsers } from "./controllers/UserController";
+import { createUser, deleteUser, getUsers, updateUserEmail, updateUserName, updateUserPassword } from "./controllers/UserController";
 import {
   deleteFile,
   getAllFiles,
@@ -25,12 +25,13 @@ app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
-app.get("/", (_, res) => {
-  res.send("Script created by Matheus Souza.");
-});
-
-app.get("/getUsers", getUsers);
-app.post("/createUser", createUser);
+// User routes
+app.get("/user", getUsers);
+app.post("/user/create", createUser);
+app.put("/user/update/username", updateUserName);
+app.put("/user/update/password", updateUserPassword);
+app.put("/user/update/email", updateUserEmail);
+app.delete("/user/delete/:id", deleteUser);
 
 // File routes
 app.get("/files", getAllFiles);
@@ -40,5 +41,5 @@ app.delete("/files/delete/:id", deleteFile);
 app.put("/files/update", updateFile);
 
 app.listen(port, () => {
-  console.log(`App running at http://localhost:${port}`);
+    console.log(`App running at http://localhost:${port}`);
 });
