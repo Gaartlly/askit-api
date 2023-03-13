@@ -8,7 +8,7 @@ const prisma = new PrismaClient();
 const integerValidator = z.string().refine((value) => {
   return /^\d+$/.test(value); 
 }, {
-  message: 'Value must be a valid integer string',
+  message: 'Value must be a valid integer',
 }).transform((value) => parseInt(value));
 
 const createCommentSchema = z.object({
@@ -90,9 +90,14 @@ export const createComment = async (req: Request, res: Response): Promise<void> 
           parentCommentId
       }
     });
+
     res.status(201).json(comment);
   } catch (error) {
-    res.status(500).json({ message: 'Internal server error', error: error});
+    if (error.name === 'ZodError'){
+      res.status(400).json({ error: error });
+    } else {
+      res.status(500).json({ message: 'Internal server error', error: error});
+    }
   }
 };
 
