@@ -116,7 +116,7 @@ export const index = async (req: Request, res: Response) => {
 				files: true,
 			},
 		});
-		res.json(posts);
+		res.json({ posts: posts });
 	} catch (err) {
 		res.status(500).json({ message: "Internal server error.", err: err.message });
 	}
