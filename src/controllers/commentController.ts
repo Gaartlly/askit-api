@@ -55,10 +55,10 @@ export const getAllComments = async (req: Request, res: Response): Promise<void>
  */
 export const getCommentsByUserId = async (req: Request, res: Response): Promise<void> => {
   try {
-    const userId = integerValidator.parse(req.params.userId);
+    const authorId = integerValidator.parse(req.params.authorId);
 
     const comments = await prisma.comment.findMany({
-      where: { id: userId }
+      where: { authorId }
     });
 
     res.status(200).json(comments);
