@@ -11,14 +11,6 @@ export const create = async (req: Request, res: Response) => {
 		upvotes: z.number().int().default(0),
 		downvotes: z.number().int().default(0),
 		authorId: z.number().int(),
-		tags: z
-			.array(
-				z.object({
-					key: z.string().min(1).max(255),
-					category: z.string().min(1).max(255),
-				})
-			)
-			.optional(),
 		files: z
 			.array(
 				z.object({
@@ -38,15 +30,11 @@ export const create = async (req: Request, res: Response) => {
 				upvotes: post.upvotes,
 				downvotes: post.downvotes,
 				authorId: post.authorId,
-				tags: {
-					create: post.tags,
-				},
 				files: {
 					create: post.files,
 				},
 			},
 			include: {
-				tags: true,
 				files: true,
 			},
 		});
@@ -63,15 +51,6 @@ export const update = async (req: Request, res: Response) => {
 		upvotes: z.number().int().optional(),
 		downvotes: z.number().int().optional(),
 		authorId: z.number().int().optional(),
-		tags: z
-			.array(
-				z.object({
-					id: z.number().int().optional(),
-					key: z.string().min(1).max(255),
-					category: z.string().min(1).max(255),
-				})
-			)
-			.optional(),
 		files: z
 			.array(
 				z.object({
@@ -88,7 +67,6 @@ export const update = async (req: Request, res: Response) => {
 		const currentPost = await prisma.post.findUnique({
 			where: { id: Number(id) },
 			include: {
-				tags: true,
 				files: true,
 			},
 		});
@@ -116,16 +94,11 @@ export const update = async (req: Request, res: Response) => {
 				upvotes: newPost.upvotes,
 				downvotes: newPost.downvotes,
 				authorId: newPost.authorId,
-				tags: {
-					deleteMany: {},
-					createMany: { data: newPost.tags },
-				},
 				files: {
 					createMany: { data: createdFiles },
 				},
 			},
 			include: {
-				tags: true,
 				files: true,
 			},
 		});
@@ -140,7 +113,6 @@ export const index = async (req: Request, res: Response) => {
 	try {
 		const posts = await prisma.post.findMany({
 			include: {
-				tags: true,
 				files: true,
 			},
 		});
@@ -158,7 +130,6 @@ export const show = async (req: Request, res: Response) => {
 				id: Number(id),
 			},
 			include: {
-				tags: true,
 				files: true,
 			},
 		});
