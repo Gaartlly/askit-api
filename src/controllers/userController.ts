@@ -1,7 +1,7 @@
-import { Response, Request } from "express";
-import { PrismaClient, Role } from "@prisma/client";
-import { z } from "zod";
-import { hashPassword, verifyPassword } from "../utils/bcryptUtil";
+import { Response, Request } from 'express';
+import { PrismaClient, Role } from '@prisma/client';
+import { z } from 'zod';
+import { hashPassword, verifyPassword } from '../utils/bcryptUtil';
 
 const prisma = new PrismaClient();
 
@@ -19,12 +19,12 @@ export const getUsers = async (_: Request, res: Response) => {
                 status: false,
             },
             orderBy: {
-                name: "asc",
+                name: 'asc',
             },
         });
         res.status(200).json(users);
     } catch (err) {
-        res.status(500).json({ message: "Internal server error" });
+        res.status(500).json({ message: 'Internal server error' });
     }
 };
 
@@ -44,7 +44,7 @@ export const createUser = async (req: Request, res: Response) => {
         let { password } = createUserSchema.parse(req.body);
 
         const hash = await hashPassword(password, 11);
-        if (!hashPassword) throw new Error("Failed to encrypt password!");
+        if (!hashPassword) throw new Error('Failed to encrypt password!');
         password = hash;
 
         const user = await prisma.user.create({
@@ -59,7 +59,7 @@ export const createUser = async (req: Request, res: Response) => {
         });
 
         res.status(201).json({
-            message: "User created!",
+            message: 'User created!',
             user: {
                 id: user.id,
                 name: user.name,
@@ -69,7 +69,7 @@ export const createUser = async (req: Request, res: Response) => {
             },
         });
     } catch (err) {
-        res.status(500).json({ message: "Internal server error", err: err.message });
+        res.status(500).json({ message: 'Internal server error', err: err.message });
     }
 };
 
@@ -100,14 +100,14 @@ export const updateUserName = async (req: Request, res: Response) => {
         });
 
         res.status(200).json({
-            message: "User name updated!",
+            message: 'User name updated!',
             user: {
                 id: userUpdated.id,
                 name: userUpdated.name,
             },
         });
     } catch (error) {
-        res.status(400).json({ message: "Unable to update name!", error: error.message });
+        res.status(400).json({ message: 'Unable to update name!', error: error.message });
     }
 };
 
@@ -131,7 +131,7 @@ export const updateUserPassword = async (req: Request, res: Response) => {
 
         const resultComparison = verifyPassword(currentPassword, user.password);
 
-        if (!resultComparison) throw new Error("Current password is wrong!");
+        if (!resultComparison) throw new Error('Current password is wrong!');
 
         newPassword = await hashPassword(newPassword, 11);
 
@@ -146,14 +146,14 @@ export const updateUserPassword = async (req: Request, res: Response) => {
         });
 
         res.status(200).json({
-            message: "User password updated!",
+            message: 'User password updated!',
             user: {
                 id: userUpdated.id,
                 name: userUpdated.name,
             },
         });
     } catch (error) {
-        res.status(400).json({ message: "Unable to update password!", error: error.message });
+        res.status(400).json({ message: 'Unable to update password!', error: error.message });
     }
 };
 
@@ -174,7 +174,7 @@ export const updateUserEmail = async (req: Request, res: Response) => {
             },
         });
 
-        if (user.email !== currentEmail) throw new Error("Current email is wrong!");
+        if (user.email !== currentEmail) throw new Error('Current email is wrong!');
 
         const userUpdated = await prisma.user.update({
             where: {
@@ -187,7 +187,7 @@ export const updateUserEmail = async (req: Request, res: Response) => {
         });
 
         res.status(200).json({
-            message: "User email updated!",
+            message: 'User email updated!',
             user: {
                 id: userUpdated.id,
                 name: userUpdated.name,
@@ -195,7 +195,7 @@ export const updateUserEmail = async (req: Request, res: Response) => {
             },
         });
     } catch (error) {
-        res.status(400).json({ message: "Unable to update email!", error: error.message });
+        res.status(400).json({ message: 'Unable to update email!', error: error.message });
     }
 };
 
@@ -215,8 +215,8 @@ export const deleteUser = async (req: Request, res: Response) => {
             },
         });
 
-        res.status(200).json({ message: "User deleted!" });
+        res.status(200).json({ message: 'User deleted!' });
     } catch (error) {
-        res.status(400).json({ message: "Unable to deleted user!", error: error.message });
+        res.status(400).json({ message: 'Unable to deleted user!', error: error.message });
     }
 };
