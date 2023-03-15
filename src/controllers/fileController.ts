@@ -5,6 +5,18 @@ import { z } from 'zod';
 
 const prisma = new PrismaClient();
 
+const integerValidator = z
+    .string()
+    .refine(
+        (value) => {
+            return /^\d+$/.test(value);
+        },
+        {
+            message: 'Value must be a valid integer',
+        }
+    )
+    .transform((value) => parseInt(value));
+
 // Upload
 export const uploadFile = async (req: Request, res: Response) => {
     try {
@@ -14,8 +26,8 @@ export const uploadFile = async (req: Request, res: Response) => {
             postId: z.number().int(),
             commentId: z.number().int(),
         });
-
-        const { title, path, postId, commentId } = uploadFileSchema.parse(req.body);
+        const postId = integerValidator.parse(req.body.postId);
+        const { title, path, commentId } = uploadFileSchema.parse(req.body);
 
         const result = await cloudinary.uploader.upload(path, {
             resource_type: 'image',
@@ -50,11 +62,11 @@ export const getAllFiles = async (_: Request, res: Response) => {
 // Get file
 export const getFileById = async (req: Request, res: Response) => {
     try {
-        const id = +req.params.id;
+        const id = integerValidator.parse(req.params.fileId);
 
         const file = await prisma.file.findUniqueOrThrow({
             where: {
-                id: id,
+                id,
             },
         });
 
@@ -67,7 +79,7 @@ export const getFileById = async (req: Request, res: Response) => {
 // Delete file
 export const deleteFile = async (req: Request, res: Response) => {
     try {
-        const id = +req.params.id;
+        const id = integerValidator.parse(req.params.fileId);
 
         await prisma.file.delete({
             where: {
@@ -89,12 +101,13 @@ export const updateFile = async (req: Request, res: Response) => {
             newTitle: z.string().min(1).max(255),
             newPath: z.string().min(1),
         });
+        const id = integerValidator.parse(req.params.fileId);
 
-        const { id, newTitle, newPath } = updateFileSchema.parse(req.body);
+        const { newTitle, newPath } = updateFileSchema.parse(req.body);
 
         await prisma.file.findFirstOrThrow({
             where: {
-                id: id,
+                id,
             },
         });
 
@@ -104,7 +117,7 @@ export const updateFile = async (req: Request, res: Response) => {
 
         const fileUpdated = await prisma.file.update({
             where: {
-                id: id,
+                id,
             },
             data: {
                 title: newTitle,

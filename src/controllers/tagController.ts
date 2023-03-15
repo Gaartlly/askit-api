@@ -4,6 +4,18 @@ import { z } from 'zod';
 
 const prisma = new PrismaClient();
 
+const integerValidator = z
+    .string()
+    .refine(
+        (value) => {
+            return /^\d+$/.test(value);
+        },
+        {
+            message: 'Value must be a valid integer',
+        }
+    )
+    .transform((value) => parseInt(value));
+
 export const create = async (req: Request, res: Response) => {
     const createSchema = z.object({
         key: z.string().min(1).max(255),
@@ -23,7 +35,7 @@ export const create = async (req: Request, res: Response) => {
 };
 
 export const update = async (req: Request, res: Response) => {
-    const { id } = req.params;
+    const id = integerValidator.parse(req.body.tagId);
 
     const updateSchema = z.object({
         key: z.string().min(1).max(255).optional(),
@@ -34,7 +46,7 @@ export const update = async (req: Request, res: Response) => {
     try {
         const tag = updateSchema.parse(req.body);
         const updatedTag: Tag = await prisma.tag.update({
-            where: { id: Number(id) },
+            where: { id },
             data: { key: tag.key, category: tag.category, postId: tag.postId },
         });
         res.status(200).json({ message: 'Tag updated.', tag: updatedTag });
@@ -54,10 +66,10 @@ export const index = async (req: Request, res: Response) => {
 
 export const show = async (req: Request, res: Response) => {
     try {
-        const { id } = req.params;
+        const id = integerValidator.parse(req.body.tagId);
         const tag = await prisma.tag.findUnique({
             where: {
-                id: Number(id),
+                id,
             },
         });
         if (tag === null) {
@@ -72,10 +84,10 @@ export const show = async (req: Request, res: Response) => {
 
 export const destroy = async (req: Request, res: Response) => {
     try {
-        const { id } = req.params;
-        const tag = await prisma.tag.findUnique({ where: { id: Number(id) } });
+        const id = integerValidator.parse(req.body.tagId);
+        const tag = await prisma.tag.findUnique({ where: { id } });
         if (tag) {
-            await prisma.tag.deleteMany({ where: { id: tag.id } });
+            await prisma.tag.deleteMany({ where: { id } });
         }
         res.status(200).json({ message: 'Tag deleted.' });
     } catch (err) {

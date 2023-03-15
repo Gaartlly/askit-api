@@ -4,6 +4,18 @@ import { z } from 'zod';
 
 const prisma = new PrismaClient();
 
+const integerValidator = z
+    .string()
+    .refine(
+        (value) => {
+            return /^\d+$/.test(value);
+        },
+        {
+            message: 'Value must be a valid integer',
+        }
+    )
+    .transform((value) => parseInt(value));
+
 export const create = async (req: Request, res: Response) => {
     const createSchema = z.object({
         title: z.string().min(1).max(255),
@@ -63,9 +75,9 @@ export const update = async (req: Request, res: Response) => {
     });
 
     try {
-        const { id } = req.params;
+        const id = integerValidator.parse(req.body.postId);
         const currentPost = await prisma.post.findUnique({
-            where: { id: Number(id) },
+            where: { id },
             include: {
                 files: true,
             },
@@ -87,7 +99,7 @@ export const update = async (req: Request, res: Response) => {
         }
 
         const updatedPost: Post = await prisma.post.update({
-            where: { id: Number(id) },
+            where: { id },
             data: {
                 title: newPost.title,
                 description: newPost.description,
@@ -124,10 +136,10 @@ export const index = async (req: Request, res: Response) => {
 
 export const show = async (req: Request, res: Response) => {
     try {
-        const { id } = req.params;
+        const id = integerValidator.parse(req.body.postId);
         const post = await prisma.post.findUnique({
             where: {
-                id: Number(id),
+                id
             },
             include: {
                 files: true,
@@ -145,10 +157,10 @@ export const show = async (req: Request, res: Response) => {
 
 export const destroy = async (req: Request, res: Response) => {
     try {
-        const { id } = req.params;
-        const post = await prisma.post.findUnique({ where: { id: Number(id) } });
+        const id = integerValidator.parse(req.body.postId);
+        const post = await prisma.post.findUnique({ where: { id } });
         if (post) {
-            await prisma.post.deleteMany({ where: { id: post.id } });
+            await prisma.post.deleteMany({ where: { id } });
         }
         res.status(200).json({ message: 'Post deleted.' });
     } catch (err) {
