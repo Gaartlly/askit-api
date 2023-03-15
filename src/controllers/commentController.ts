@@ -17,24 +17,6 @@ const integerValidator = z
     )
     .transform((value) => parseInt(value));
 
-const createCommentSchema = z.object({
-    text: string(),
-    category: string(),
-    postId: number(),
-    parentCommentId: number().optional(),
-    files: any().optional(),
-});
-
-const updateCommentSchema = z.object({
-    text: string().optional(),
-    category: string().optional(),
-    postId: number().optional(),
-    parentCommentId: number().optional(),
-    upvotes: number().optional(),
-    downvotes: number().optional(),
-    files: any().optional(),
-});
-
 /**
  * Get all comments.
  *
@@ -86,6 +68,13 @@ export const getCommentsByUserId = async (req: Request, res: Response): Promise<
  */
 export const createComment = async (req: Request, res: Response): Promise<void> => {
     try {
+        const createCommentSchema = z.object({
+            text: string(),
+            category: string(),
+            postId: number(),
+            parentCommentId: number().optional(),
+            files: any().optional(),
+        });
         const { text, category, files, postId, parentCommentId } = createCommentSchema.parse(req.body);
 
         const comment = await prisma.comment.create({
@@ -143,6 +132,15 @@ export const deleteComment = async (req: Request, res: Response): Promise<void> 
  */
 export const updateComment = async (req: Request, res: Response): Promise<void> => {
     try {
+        const updateCommentSchema = z.object({
+            text: string().optional(),
+            category: string().optional(),
+            postId: number().optional(),
+            parentCommentId: number().optional(),
+            upvotes: number().optional(),
+            downvotes: number().optional(),
+            files: any().optional(),
+        });
         const commentId = integerValidator.parse(req.params.commentId);
 
         const { text, category, upvotes, downvotes, postId, parentCommentId } = updateCommentSchema.parse(req.body);
