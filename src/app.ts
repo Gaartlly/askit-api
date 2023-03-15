@@ -3,10 +3,10 @@ dotenv.config();
 import express from 'express';
 import bodyParser from 'body-parser';
 import commentRoutes from './routes/commentRoutes';
-import * as postController from './controllers/postController';
-import * as tagController from './controllers/tagController';
-import { createUser, deleteUser, getUsers, updateUserEmail, updateUserName, updateUserPassword } from './controllers/userController';
-import { deleteFile, getAllFiles, getFileById, updateFile, uploadFile } from './controllers/fileController';
+import fileRoutes from './routes/fileRoutes';
+import postRoutes from './routes/postRoutes';
+import userRoutes from './routes/userRoutes';
+import tagRoutes from './routes/tagRoutes';
 import cloudinary from 'cloudinary';
 
 const app = express();
@@ -25,36 +25,12 @@ app.use(bodyParser.json());
 /**
  * App routes
  */
-app.use('/api/comments', commentRoutes);
+app.use('/api/user', userRoutes);
+app.use('/api/file', fileRoutes);
+app.use('/api/comment', commentRoutes);
+app.use('/api/post', postRoutes);
+app.use('/api/tag', tagRoutes);
 
-// Post routes
-app.post('/posts', postController.create);
-app.get('/posts', postController.index);
-app.get('/posts/:id', postController.show);
-app.put('/posts/:id', postController.update);
-app.delete('/posts/:id', postController.destroy);
-
-// Tag routes
-app.post('/tags', tagController.create);
-app.get('/tags', tagController.index);
-app.get('/tags/:id', tagController.show);
-app.put('/tags/:id', tagController.update);
-app.delete('/tags/:id', tagController.destroy);
-
-// User routes
-app.get('/user', getUsers);
-app.post('/user/create', createUser);
-app.put('/user/update/username', updateUserName);
-app.put('/user/update/password', updateUserPassword);
-app.put('/user/update/email', updateUserEmail);
-app.delete('/user/delete/:id', deleteUser);
-
-// File routes
-app.get('/files', getAllFiles);
-app.get('/files/:id', getFileById);
-app.post('/files/upload', uploadFile);
-app.delete('/files/delete/:id', deleteFile);
-app.put('/files/update', updateFile);
 
 app.listen(port, () => {
     console.log(`App running at http://localhost:${port}`);
