@@ -95,12 +95,6 @@ export const updateUserName = async (req: Request, res: Response) => {
 
         const { id, name } = updateUserNameSchema.parse(req.body);
 
-        await prisma.user.findUniqueOrThrow({
-            where: {
-                id: id,
-            },
-        });
-
         const userUpdated = await prisma.user.update({
             where: {
                 id: id,
@@ -134,12 +128,6 @@ export const updateUserPassword = async (req: Request, res: Response) => {
 
         const { id, currentPassword } = updateUserPasswordSchema.parse(req.body);
         let { newPassword } = updateUserPasswordSchema.parse(req.body);
-
-        const user = await prisma.user.findUniqueOrThrow({
-            where: {
-                id: id,
-            },
-        });
 
         const resultComparison = verifyPassword(currentPassword, user.password);
 
@@ -216,12 +204,6 @@ export const deleteUser = async (req: Request, res: Response) => {
     const id = integerValidator.parse(req.body.tagId);
 
     try {
-        await prisma.user.findUniqueOrThrow({
-            
-            where: {
-                id,
-            },
-        });
 
         await prisma.user.delete({
             where: {

@@ -64,7 +64,7 @@ export const getFileById = async (req: Request, res: Response) => {
     try {
         const id = integerValidator.parse(req.params.fileId);
 
-        const file = await prisma.file.findUniqueOrThrow({
+        const file = await prisma.file.findFirst({
             where: {
                 id,
             },
@@ -104,12 +104,6 @@ export const updateFile = async (req: Request, res: Response) => {
         const id = integerValidator.parse(req.params.fileId);
 
         const { newTitle, newPath } = updateFileSchema.parse(req.body);
-
-        await prisma.file.findFirstOrThrow({
-            where: {
-                id,
-            },
-        });
 
         const result = await cloudinary.uploader.upload(newPath, {
             resource_type: 'image',
