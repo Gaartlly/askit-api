@@ -18,18 +18,20 @@ const integerValidator = z
     .transform((value) => parseInt(value));
 
 const createCommentSchema = z.object({
-    text: string(),
+    content: string().optional(),
     category: string(),
     postId: number(),
     parentCommentId: number().optional(),
-    files: any().optional(),
+    authorId: number(),
+    files: any().optional()
 });
 
 const updateCommentSchema = z.object({
-    text: string().optional(),
+    content: string().optional(),
     category: string().optional(),
     postId: number().optional(),
     parentCommentId: number().optional(),
+    authorId: number().optional(),
     upvotes: number().optional(),
     downvotes: number().optional(),
     files: any().optional(),
@@ -86,11 +88,12 @@ export const getCommentsByUserId = async (req: Request, res: Response): Promise<
  */
 export const createComment = async (req: Request, res: Response): Promise<void> => {
     try {
-        const { text, category, files, postId, parentCommentId } = createCommentSchema.parse(req.body);
+        const { authorId, content, category, files, postId, parentCommentId } = createCommentSchema.parse(req.body);
 
         const comment = await prisma.comment.create({
             data: {
-                text,
+                authorId,
+                content,
                 category,
                 postId,
                 parentCommentId,
@@ -145,14 +148,14 @@ export const updateComment = async (req: Request, res: Response): Promise<void> 
     try {
         const commentId = integerValidator.parse(req.params.commentId);
 
-        const { text, category, upvotes, downvotes, postId, parentCommentId } = updateCommentSchema.parse(req.body);
+        const { content, category, upvotes, downvotes, postId, parentCommentId } = updateCommentSchema.parse(req.body);
 
         const updatedComment = await prisma.comment.update({
             where: {
                 id: commentId,
             },
             data: {
-                text,
+                content,
                 category,
                 upvotes,
                 downvotes,
