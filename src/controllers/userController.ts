@@ -135,11 +135,13 @@ export const updateUser = async (req: Request, res: Response): Promise<void> => 
         });
 
         if(email && email !== user.email)
-            res.status(400).json({ message: 'Current email is wrong!'})
+            throw new Error('Current email is wrong.');
+            //res.status(400).json({ message: 'Current email is wrong!'})
         
         const resultComparison = verifyPassword(password, user.password);
         if(password && !resultComparison)
-            res.status(400).json({ message: 'Current password is wrong!'})
+            throw new Error('Current password is wrong.');
+            //res.status(400).json({ message: 'Current password is wrong!'})
 
         await prisma.user.update({
             where: {
