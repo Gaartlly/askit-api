@@ -48,7 +48,7 @@ export const update = async (req: Request, res: Response) => {
     });
 
     try {
-        const id = integerValidator.parse(req.body.tagId);
+        const id = await integerValidator.parseAsync(req.body.tagId);
         const tag = updateSchema.parse(req.body);
 
         const updatedTag: Tag = await prisma.tag.update({
@@ -80,7 +80,7 @@ export const index = async (req: Request, res: Response) => {
 
 export const show = async (req: Request, res: Response) => {
     try {
-        const id = integerValidator.parse(req.body.tagId);
+        const id = await integerValidator.parseAsync(req.body.tagId);
         const tag = await prisma.tag.findUnique({
             where: {
                 id,
@@ -101,7 +101,7 @@ export const show = async (req: Request, res: Response) => {
 
 export const destroy = async (req: Request, res: Response) => {
     try {
-        const id = integerValidator.parse(req.body.tagId);
+        const id = await integerValidator.parseAsync(req.body.tagId);
         await prisma.tag.deleteMany({ where: { id } });
 
         res.status(200).json({ message: 'Tag deleted.' });
@@ -115,3 +115,7 @@ export const destroy = async (req: Request, res: Response) => {
         }
     }
 };
+function next(error: any) {
+    throw new Error('Function not implemented.');
+}
+

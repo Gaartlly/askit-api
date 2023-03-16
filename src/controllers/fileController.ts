@@ -26,7 +26,7 @@ export const uploadFile = async (req: Request, res: Response) => {
         commentId: z.number().int(),
     });
     try {
-        const postId = integerValidator.parse(req.body.postId);
+        const postId = await integerValidator.parse(req.body.postId);
         const { title, path, commentId } = uploadFileSchema.parse(req.body);
 
         const result = await cloudinary.uploader.upload(path, {
@@ -66,7 +66,7 @@ export const getAllFiles = async (_: Request, res: Response) => {
 // Get file
 export const getFileById = async (req: Request, res: Response) => {
     try {
-        const id = integerValidator.parse(req.params.fileId);
+        const id = await integerValidator.parse(req.params.fileId);
 
         const file = await prisma.file.findFirst({
             where: {
@@ -89,7 +89,7 @@ export const getFileById = async (req: Request, res: Response) => {
 // Delete file
 export const deleteFile = async (req: Request, res: Response) => {
     try {
-        const id = integerValidator.parse(req.params.fileId);
+        const id = await integerValidator.parse(req.params.fileId);
 
         await prisma.file.delete({
             where: {
@@ -117,7 +117,7 @@ export const updateFile = async (req: Request, res: Response) => {
         newPath: z.string().min(1),
     });
     try {
-        const id = integerValidator.parse(req.params.fileId);
+        const id = await integerValidator.parse(req.params.fileId);
 
         const { newTitle, newPath } = updateFileSchema.parse(req.body);
 

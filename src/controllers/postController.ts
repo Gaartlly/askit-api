@@ -79,7 +79,7 @@ export const update = async (req: Request, res: Response) => {
     });
 
     try {
-        const id = integerValidator.parse(req.body.postId);
+        const id = await integerValidator.parse(req.body.postId);
         const currentPost = await prisma.post.findUnique({
             where: { id },
             include: {
@@ -146,7 +146,7 @@ export const index = async (req: Request, res: Response) => {
 
 export const show = async (req: Request, res: Response) => {
     try {
-        const id = integerValidator.parse(req.body.postId);
+        const id = await integerValidator.parse(req.body.postId);
 
         const post = await prisma.post.findUnique({
             where: {
@@ -171,7 +171,7 @@ export const show = async (req: Request, res: Response) => {
 
 export const destroy = async (req: Request, res: Response) => {
     try {
-        const id = integerValidator.parse(req.body.postId);
+        const id = await integerValidator.parse(req.body.postId);
 
         const post = await prisma.post.findUnique({ where: { id } });
         if (post) {

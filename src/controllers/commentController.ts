@@ -43,7 +43,7 @@ export const getAllComments = async (req: Request, res: Response): Promise<void>
  */
 export const getCommentsByUserId = async (req: Request, res: Response): Promise<void> => {
     try {
-        const authorId = integerValidator.parse(req.params.authorId);
+        const authorId = await integerValidator.parse(req.params.authorId);
 
         const comments = await prisma.comment.findMany({
             where: { authorId },
@@ -105,7 +105,7 @@ export const createComment = async (req: Request, res: Response): Promise<void> 
  */
 export const deleteComment = async (req: Request, res: Response): Promise<void> => {
     try {
-        const id = integerValidator.parse(req.params.commentId);
+        const id = await integerValidator.parse(req.params.commentId);
 
         const deletedComment = await prisma.comment.delete({
             where: { id },
@@ -141,7 +141,7 @@ export const updateComment = async (req: Request, res: Response): Promise<void> 
         files: any().optional(),
     });
     try {
-        const id = integerValidator.parse(req.params.commentId);
+        const id = await integerValidator.parse(req.params.commentId);
 
         const { text, category, upvotes, downvotes, postId, parentCommentId } = updateCommentSchema.parse(req.body);
 

@@ -107,8 +107,8 @@ export const updateUser = async (req: Request, res: Response) => {
     );
 
     try {
-        const id = integerValidator.parse(req.body.tagId);
-        const { newName, email, newEmail, newCourse, password, newPassword, newRole } = updateUserSchema.parse(req.body);
+        const id = await integerValidator.parseAsync(req.body.tagId);
+        const { newName, email, newEmail, newCourse, password, newPassword, newRole } = await updateUserSchema.parseAsync(req.body);
 
         const user = await prisma.user.findUniqueOrThrow({
             where: {
@@ -151,7 +151,7 @@ export const updateUser = async (req: Request, res: Response) => {
 // Delete user
 export const deleteUser = async (req: Request, res: Response) => {
     try {
-        const id = integerValidator.parse(req.body.tagId);
+        const id = await integerValidator.parseAsync(req.body.tagId);
 
         await prisma.user.delete({
             where: {
