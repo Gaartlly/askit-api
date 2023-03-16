@@ -205,7 +205,7 @@ export const show = async (req: Request, res: Response): Promise<void> => {
  */
 export const destroy = async (req: Request, res: Response): Promise<void> => {
     try {
-        const id = await integerValidator.(req.body.postId);
+        const id = await integerValidator.parseAsync(req.body.postId);
 
         const post = await prisma.post.findUnique({ where: { id } });
         if (post) {
