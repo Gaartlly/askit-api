@@ -35,23 +35,22 @@ export const getUsers = async (_: Request, res: Response) => {
             },
         });
         res.status(200).json(users);
-    } catch (err) {
+    } catch (error) {
         res.status(500).json({ message: 'Internal server error' });
     }
 };
 
 // Create user
 export const createUser = async (req: Request, res: Response) => {
+    const createUserSchema = z.object({
+        name: z.string(),
+        email: z.string().email(),
+        password: z.string(),
+        role: z.enum([Role.ADMIN, Role.USER]),
+        status: z.boolean(),
+        course: z.string(),
+    });
     try {
-        const createUserSchema = z.object({
-            name: z.string(),
-            email: z.string().email(),
-            password: z.string(),
-            role: z.enum([Role.ADMIN, Role.USER]),
-            status: z.boolean(),
-            course: z.string(),
-        });
-
         const { name, email, role, status, course } = createUserSchema.parse(req.body);
         let { password } = createUserSchema.parse(req.body);
 
@@ -80,93 +79,36 @@ export const createUser = async (req: Request, res: Response) => {
                 status: user.status,
             },
         });
-    } catch (err) {
-        res.status(500).json({ message: 'Internal server error', err: err.message });
-    }
-};
-
-// Update user name
-export const updateUserName = async (req: Request, res: Response) => {
-    try {
-        const updateUserNameSchema = z.object({
-            id: z.number().int(),
-            name: z.string().min(1).max(255),
-        });
-
-        const { id, name } = updateUserNameSchema.parse(req.body);
-
-        const userUpdated = await prisma.user.update({
-            where: {
-                id: id,
-            },
-
-            data: {
-                name: name,
-            },
-        });
-
-        res.status(200).json({
-            message: 'User name updated!',
-            user: {
-                id: userUpdated.id,
-                name: userUpdated.name,
-            },
-        });
     } catch (error) {
-        res.status(400).json({ message: 'Unable to update name!', error: error.message });
+        res.status(500).json({ message: 'Internal server error', error: error.message });
     }
 };
 
-// Update user password
-export const updateUserPassword = async (req: Request, res: Response) => {
+
+export const updateUser = async (req: Request, res: Response) => {
+    const updateUserSchema = z.object({
+        newName: z.string().min(1).max(255).optional(),
+        newRole: z.enum([Role.ADMIN, Role.USER]),
+        email: z.string().optional(),
+        newEmail: z.string().optional(),
+        newCourse: z.string().optional(),
+        password: z.string().min(1).max(255).optional(),
+        newPassword: z.string().min(1).max(255).optional(),
+    }).refine((data) => 
+        (data.email && !data.newEmail) || (!data.email && data.newEmail), {
+            message: 'Email cannot be updated as some data is missing',
+            path: ['email', 'newEmail']
+        }
+    ).refine((data) =>
+        (data.password && !data.newPassword) || (!data.password && data.newPassword), {
+            message: 'Password cannot be updated as some data is missing',
+            path: ['password', 'password']
+        }
+    );
+
     try {
-        const updateUserPasswordSchema = z.object({
-            id: z.number().int(),
-            currentPassword: z.string().min(1).max(255),
-            newPassword: z.string().min(1).max(255),
-        });
-
-        const { id, currentPassword } = updateUserPasswordSchema.parse(req.body);
-        let { newPassword } = updateUserPasswordSchema.parse(req.body);
-
-        const resultComparison = verifyPassword(currentPassword, user.password);
-
-        if (!resultComparison) throw new Error('Current password is wrong!');
-
-        newPassword = await hashPassword(newPassword, 11);
-
-        const userUpdated = await prisma.user.update({
-            where: {
-                id: id,
-            },
-
-            data: {
-                password: newPassword,
-            },
-        });
-
-        res.status(200).json({
-            message: 'User password updated!',
-            user: {
-                id: userUpdated.id,
-                name: userUpdated.name,
-            },
-        });
-    } catch (error) {
-        res.status(400).json({ message: 'Unable to update password!', error: error.message });
-    }
-};
-
-// Update user email
-export const updateUserEmail = async (req: Request, res: Response) => {
-    try {
-        const updateUserEmailSchema = z.object({
-            id: z.number().int(),
-            currentEmail: z.string().min(1).max(255),
-            newEmail: z.string().min(1).max(255),
-        });
-
-        const { id, currentEmail, newEmail } = updateUserEmailSchema.parse(req.body);
+        const id = integerValidator.parse(req.body.tagId);
+        const { newName, email, newEmail, newCourse, password, newPassword, newRole } = updateUserSchema.parse(req.body);
 
         const user = await prisma.user.findUniqueOrThrow({
             where: {
@@ -174,36 +116,42 @@ export const updateUserEmail = async (req: Request, res: Response) => {
             },
         });
 
-        if (user.email !== currentEmail) throw new Error('Current email is wrong!');
+        if(email && email !== user.email)
+            return res.status(400).json({ message: 'Current email is wrong!'})
+        
+        const resultComparison = verifyPassword(password, user.password);
+        if(password && !resultComparison)
+            return res.status(400).json({ message: 'Current password is wrong!'})
 
-        const userUpdated = await prisma.user.update({
+        await prisma.user.update({
             where: {
-                id: id,
+                id
             },
-
-            data: {
+            data:{
+                name: newName,
                 email: newEmail,
-            },
+                course: newCourse,
+                password: newPassword,
+                role: newRole
+            }
         });
 
-        res.status(200).json({
-            message: 'User email updated!',
-            user: {
-                id: userUpdated.id,
-                name: userUpdated.name,
-                email: userUpdated.email,
-            },
-        });
+        res.status(200).json({ message: 'User updated!' });
     } catch (error) {
-        res.status(400).json({ message: 'Unable to update email!', error: error.message });
+        if (error.name === 'ZodError') {
+            res.status(400).json({ error: error });
+        } else if (error.code === 'P2025') {
+            res.status(404).json({ message: 'User not found!' });
+        } else {
+            res.status(500).json({ message: 'Internal server error' });
+        }
     }
-};
+}
 
 // Delete user
 export const deleteUser = async (req: Request, res: Response) => {
-    const id = integerValidator.parse(req.body.tagId);
-
     try {
+        const id = integerValidator.parse(req.body.tagId);
 
         await prisma.user.delete({
             where: {
@@ -213,6 +161,12 @@ export const deleteUser = async (req: Request, res: Response) => {
 
         res.status(200).json({ message: 'User deleted!' });
     } catch (error) {
-        res.status(400).json({ message: 'Unable to deleted user!', error: error.message });
+        if (error.name === 'ZodError') {
+            res.status(400).json({ error: error });
+        } else if (error.code === 'P2025') {
+            res.status(404).json({ message: 'User not found!' });
+        } else {
+            res.status(500).json({ message: 'Internal server error' });
+        }
     }
 };

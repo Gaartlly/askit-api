@@ -25,18 +25,22 @@ export const create = async (req: Request, res: Response) => {
 
     try {
         const tag = createSchema.parse(req.body);
+
         const createdTag = await prisma.tag.create({
             data: { key: tag.key, category: tag.category, postId: tag.postId },
         });
-        res.status(200).json({ message: 'Tag created.', tag: createdTag });
-    } catch (err) {
-        res.status(500).json({ message: 'Internal server error.', err: err.message });
+
+        res.status(201).json({ message: 'Tag created.', tag: createdTag });
+    } catch (error) {
+        if (error.name === 'ZodError') {
+            res.status(400).json({ error: error });
+        } else {
+            res.status(500).json({ message: 'Internal server error' });
+        }
     }
 };
 
 export const update = async (req: Request, res: Response) => {
-    const id = integerValidator.parse(req.body.tagId);
-
     const updateSchema = z.object({
         key: z.string().min(1).max(255).optional(),
         category: z.string().min(1).max(255).optional(),
@@ -44,23 +48,33 @@ export const update = async (req: Request, res: Response) => {
     });
 
     try {
+        const id = integerValidator.parse(req.body.tagId);
         const tag = updateSchema.parse(req.body);
+
         const updatedTag: Tag = await prisma.tag.update({
             where: { id },
             data: { key: tag.key, category: tag.category, postId: tag.postId },
         });
+
         res.status(200).json({ message: 'Tag updated.', tag: updatedTag });
-    } catch (err) {
-        res.status(500).json({ message: 'Internal server error.', err: err.message });
+    } catch (error) {
+        if (error.name === 'ZodError') {
+            res.status(400).json({ error: error });
+        } else if (error.code === 'P2025') {
+            res.status(404).json({ message: 'Tag not found!' });
+        } else {
+            res.status(500).json({ message: 'Internal server error' });
+        }
     }
 };
 
 export const index = async (req: Request, res: Response) => {
     try {
         const tags = await prisma.tag.findMany();
-        res.json({ tags: tags });
-    } catch (err) {
-        res.status(500).json({ message: 'Internal server error.', err: err.message });
+
+        res.status(200).json({ tags: tags });
+    } catch (error) {
+        res.status(500).json({ message: 'Internal server error.', error: error.message });
     }
 };
 
@@ -72,25 +86,32 @@ export const show = async (req: Request, res: Response) => {
                 id,
             },
         });
-        if (tag === null) {
-            res.status(404).json({ message: `Tag ${id} not found` });
+        
+        res.status(200).json({ tag: tag });
+    } catch (error) {
+        if (error.name === 'ZodError') {
+            res.status(400).json({ error: error });
+        } else if (error.code === 'P2025') {
+            res.status(404).json({ message: 'Tag not found!' });
         } else {
-            res.json({ tag: tag });
+            res.status(500).json({ message: 'Internal server error' });
         }
-    } catch (err) {
-        res.status(500).json({ message: 'Internal server error.', err: err.message });
     }
 };
 
 export const destroy = async (req: Request, res: Response) => {
     try {
         const id = integerValidator.parse(req.body.tagId);
-        const tag = await prisma.tag.findUnique({ where: { id } });
-        if (tag) {
-            await prisma.tag.deleteMany({ where: { id } });
-        }
+        await prisma.tag.deleteMany({ where: { id } });
+
         res.status(200).json({ message: 'Tag deleted.' });
-    } catch (err) {
-        res.status(500).json({ message: 'Internal server error.', err: err.message });
+    } catch (error) {
+        if (error.name === 'ZodError') {
+            res.status(400).json({ error: error });
+        } else if (error.code === 'P2025') {
+            res.status(404).json({ message: 'Tag not found!' });
+        } else {
+            res.status(500).json({ message: 'Internal server error' });
+        }
     }
 };

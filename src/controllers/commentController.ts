@@ -67,15 +67,15 @@ export const getCommentsByUserId = async (req: Request, res: Response): Promise<
  * @returns {Promise<void>}
  */
 export const createComment = async (req: Request, res: Response): Promise<void> => {
+    const createCommentSchema = z.object({
+        text: string(),
+        category: string(),
+        postId: number(),
+        parentCommentId: number().optional(),
+        files: any().optional(),
+    });
     try {
-        const createCommentSchema = z.object({
-            text: string(),
-            category: string(),
-            postId: number(),
-            parentCommentId: number().optional(),
-            files: any().optional(),
-        });
-        const { text, category, files, postId, parentCommentId } = createCommentSchema.parse(req.body);
+       const { text, category, files, postId, parentCommentId } = createCommentSchema.parse(req.body);
 
         const comment = await prisma.comment.create({
             data: {
@@ -105,10 +105,10 @@ export const createComment = async (req: Request, res: Response): Promise<void> 
  */
 export const deleteComment = async (req: Request, res: Response): Promise<void> => {
     try {
-        const commentId = integerValidator.parse(req.params.commentId);
+        const id = integerValidator.parse(req.params.commentId);
 
         const deletedComment = await prisma.comment.delete({
-            where: { id: commentId },
+            where: { id },
         });
 
         res.status(200).json(deletedComment);
@@ -131,23 +131,23 @@ export const deleteComment = async (req: Request, res: Response): Promise<void> 
  * @returns {Promise<void>}
  */
 export const updateComment = async (req: Request, res: Response): Promise<void> => {
+   const updateCommentSchema = z.object({
+        text: string().optional(),
+        category: string().optional(),
+        postId: number().optional(),
+        parentCommentId: number().optional(),
+        upvotes: number().optional(),
+        downvotes: number().optional(),
+        files: any().optional(),
+    });
     try {
-        const updateCommentSchema = z.object({
-            text: string().optional(),
-            category: string().optional(),
-            postId: number().optional(),
-            parentCommentId: number().optional(),
-            upvotes: number().optional(),
-            downvotes: number().optional(),
-            files: any().optional(),
-        });
-        const commentId = integerValidator.parse(req.params.commentId);
+        const id = integerValidator.parse(req.params.commentId);
 
         const { text, category, upvotes, downvotes, postId, parentCommentId } = updateCommentSchema.parse(req.body);
 
         const updatedComment = await prisma.comment.update({
             where: {
-                id: commentId,
+                id,
             },
             data: {
                 text,

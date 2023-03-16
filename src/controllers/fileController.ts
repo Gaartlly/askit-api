@@ -19,13 +19,13 @@ const integerValidator = z
 
 // Upload
 export const uploadFile = async (req: Request, res: Response) => {
+    const uploadFileSchema = z.object({
+        title: z.string().min(1).max(255),
+        path: z.string().min(1),
+        postId: z.number().int(),
+        commentId: z.number().int(),
+    });
     try {
-        const uploadFileSchema = z.object({
-            title: z.string().min(1).max(255),
-            path: z.string().min(1),
-            postId: z.number().int(),
-            commentId: z.number().int(),
-        });
         const postId = integerValidator.parse(req.body.postId);
         const { title, path, commentId } = uploadFileSchema.parse(req.body);
 
@@ -44,7 +44,11 @@ export const uploadFile = async (req: Request, res: Response) => {
 
         res.status(200).json({ message: 'File uploaded!', file: fileUploaded });
     } catch (error) {
-        res.status(400).json({ messageError: error.message });
+        if (error.name === 'ZodError') {
+            res.status(400).json({ error: error });
+        } else {
+            res.status(500).json({ message: 'Internal server error' });
+        }
     }
 };
 
@@ -72,7 +76,13 @@ export const getFileById = async (req: Request, res: Response) => {
 
         res.status(200).json(file);
     } catch (error) {
-        res.status(404).json({ message: 'File not found!' });
+        if (error.name === 'ZodError') {
+            res.status(400).json({ error: error });
+        } else if (error.code === 'P2025') {
+            res.status(404).json({ message: 'File not found!' });
+        } else {
+            res.status(500).json({ message: 'Internal server error' });
+        }
     }
 };
 
@@ -83,24 +93,30 @@ export const deleteFile = async (req: Request, res: Response) => {
 
         await prisma.file.delete({
             where: {
-                id: id,
+                id,
             },
         });
 
         res.status(200).json({ message: 'File deleted.' });
     } catch (error) {
-        res.status(404).json({ error: error.message });
+        if (error.name === 'ZodError') {
+            res.status(400).json({ error: error });
+        } else if (error.code === 'P2025') {
+            res.status(404).json({ message: 'File not found!' });
+        } else {
+            res.status(500).json({ message: 'Internal server error' });
+        }
     }
 };
 
 // Update file
 export const updateFile = async (req: Request, res: Response) => {
+    const updateFileSchema = z.object({
+        id: z.number().int(),
+        newTitle: z.string().min(1).max(255),
+        newPath: z.string().min(1),
+    });
     try {
-        const updateFileSchema = z.object({
-            id: z.number().int(),
-            newTitle: z.string().min(1).max(255),
-            newPath: z.string().min(1),
-        });
         const id = integerValidator.parse(req.params.fileId);
 
         const { newTitle, newPath } = updateFileSchema.parse(req.body);
@@ -121,6 +137,12 @@ export const updateFile = async (req: Request, res: Response) => {
 
         res.status(200).json({ message: 'File updated!', file: fileUpdated });
     } catch (error) {
-        res.status(400).json({ messageError: error.message });
+        if (error.name === 'ZodError') {
+            res.status(400).json({ error: error });
+        } else if (error.code === 'P2025') {
+            res.status(404).json({ message: 'File not found!' });
+        } else {
+            res.status(500).json({ message: 'Internal server error' });
+        }
     }
 };

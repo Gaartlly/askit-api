@@ -50,9 +50,13 @@ export const create = async (req: Request, res: Response) => {
                 files: true,
             },
         });
-        res.status(200).json({ message: 'Post created.', post: createdPost });
-    } catch (err) {
-        res.status(500).json({ message: 'Internal server error.', err: err.message });
+        res.status(201).json({ message: 'Post created.', post: createdPost });
+    } catch (error) {
+        if (error.name === 'ZodError') {
+            res.status(400).json({ error: error });
+        } else {
+            res.status(500).json({ message: 'Internal server error' });
+        }
     }
 };
 
@@ -114,10 +118,16 @@ export const update = async (req: Request, res: Response) => {
                 files: true,
             },
         });
+
         res.status(200).json({ message: 'Post updated.', post: updatedPost });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: 'Internal server error.', err: err.message });
+    } catch (error) {
+        if (error.name === 'ZodError') {
+            res.status(400).json({ error: error });
+        } else if (error.code === 'P2025') {
+            res.status(404).json({ message: 'Comment not found!' });
+        } else {
+            res.status(500).json({ message: 'Internal server error' });
+        }
     }
 };
 
@@ -128,15 +138,16 @@ export const index = async (req: Request, res: Response) => {
                 files: true,
             },
         });
-        res.json({ posts: posts });
-    } catch (err) {
-        res.status(500).json({ message: 'Internal server error.', err: err.message });
+        res.status(200).json({ posts: posts });
+    } catch (error) {
+        res.status(500).json({ message: 'Internal server error.', error: error.message });
     }
 };
 
 export const show = async (req: Request, res: Response) => {
     try {
         const id = integerValidator.parse(req.body.postId);
+
         const post = await prisma.post.findUnique({
             where: {
                 id
@@ -145,25 +156,36 @@ export const show = async (req: Request, res: Response) => {
                 files: true,
             },
         });
-        if (post === null) {
-            res.status(404).json({ message: `Post ${id} not found` });
+
+        res.status(200).json({ post: post });
+    } catch (error) {
+        if (error.name === 'ZodError') {
+            res.status(400).json({ error: error });
+        } else if (error.code === 'P2025') {
+            res.status(404).json({ message: 'Comment not found!' });
         } else {
-            res.json({ post: post });
+            res.status(500).json({ message: 'Internal server error' });
         }
-    } catch (err) {
-        res.status(500).json({ message: 'Internal server error.', err: err.message });
     }
 };
 
 export const destroy = async (req: Request, res: Response) => {
     try {
         const id = integerValidator.parse(req.body.postId);
+
         const post = await prisma.post.findUnique({ where: { id } });
         if (post) {
             await prisma.post.deleteMany({ where: { id } });
         }
+
         res.status(200).json({ message: 'Post deleted.' });
-    } catch (err) {
-        res.status(500).json({ message: 'Internal server error.', err: err.message });
+    } catch (error) {
+        if (error.name === 'ZodError') {
+            res.status(400).json({ error: error });
+        } else if (error.code === 'P2025') {
+            res.status(404).json({ message: 'Comment not found!' });
+        } else {
+            res.status(500).json({ message: 'Internal server error' });
+        }
     }
 };
