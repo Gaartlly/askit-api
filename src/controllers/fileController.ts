@@ -17,8 +17,14 @@ const integerValidator = z
     )
     .transform((value) => parseInt(value));
 
-// Upload
-export const uploadFile = async (req: Request, res: Response) => {
+/**
+ * Upload a file.
+ *
+ * @param {Request} req - Express Request object.
+ * @param {Response} res - Express Response object.
+ * @returns {Promise<void>}
+ */
+export const uploadFile = async (req: Request, res: Response): Promise<void> => {
     const uploadFileSchema = z.object({
         title: z.string().min(1).max(255),
         path: z.string().min(1),
@@ -26,7 +32,7 @@ export const uploadFile = async (req: Request, res: Response) => {
         commentId: z.number().int(),
     });
     try {
-        const postId = await integerValidator.parse(req.body.postId);
+        const postId = await integerValidator.parseAsync(req.body.postId);
         const { title, path, commentId } = uploadFileSchema.parse(req.body);
 
         const result = await cloudinary.uploader.upload(path, {
@@ -52,8 +58,13 @@ export const uploadFile = async (req: Request, res: Response) => {
     }
 };
 
-// Get all files
-export const getAllFiles = async (_: Request, res: Response) => {
+/**
+ * Get all filles.
+ *
+ * @param {Response} res - Express Response object.
+ * @returns {Promise<void>}
+ */
+export const getAllFiles = async (_: Request, res: Response): Promise<void> => {
     try {
         const files = await prisma.file.findMany();
 
@@ -63,10 +74,16 @@ export const getAllFiles = async (_: Request, res: Response) => {
     }
 };
 
-// Get file
-export const getFileById = async (req: Request, res: Response) => {
+/**
+ * Get a file by id.
+ *
+ * @param {Request} req - Express Request object.
+ * @param {Response} res - Express Response object.
+ * @returns {Promise<void>}
+ */
+export const getFileById = async (req: Request, res: Response): Promise<void> => {
     try {
-        const id = await integerValidator.parse(req.params.fileId);
+        const id = await integerValidator.parseAsync(req.params.fileId);
 
         const file = await prisma.file.findFirst({
             where: {
@@ -86,10 +103,16 @@ export const getFileById = async (req: Request, res: Response) => {
     }
 };
 
-// Delete file
-export const deleteFile = async (req: Request, res: Response) => {
+/**
+ * Delete a file.
+ *
+ * @param {Request} req - Express Request object.
+ * @param {Response} res - Express Response object.
+ * @returns {Promise<void>}
+ */
+export const deleteFile = async (req: Request, res: Response): Promise<void> => {
     try {
-        const id = await integerValidator.parse(req.params.fileId);
+        const id = await integerValidator.parseAsync(req.params.fileId);
 
         await prisma.file.delete({
             where: {
@@ -109,7 +132,13 @@ export const deleteFile = async (req: Request, res: Response) => {
     }
 };
 
-// Update file
+/**
+ * Update a file.
+ *
+ * @param {Request} req - Express Request object.
+ * @param {Response} res - Express Response object.
+ * @returns {Promise<void>}
+ */
 export const updateFile = async (req: Request, res: Response) => {
     const updateFileSchema = z.object({
         id: z.number().int(),
@@ -117,7 +146,7 @@ export const updateFile = async (req: Request, res: Response) => {
         newPath: z.string().min(1),
     });
     try {
-        const id = await integerValidator.parse(req.params.fileId);
+        const id = await integerValidator.parseAsync(req.params.fileId);
 
         const { newTitle, newPath } = updateFileSchema.parse(req.body);
 

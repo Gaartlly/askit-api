@@ -17,8 +17,14 @@ const integerValidator = z
     )
     .transform((value) => parseInt(value));
 
-// Get all users
-export const getUsers = async (_: Request, res: Response) => {
+/**
+ * Get all users.
+ *
+ * @param {Request} req - Express Request object.
+ * @param {Response} res - Express Response object.
+ * @returns {Promise<void>}
+ */
+export const getUsers = async (_: Request, res: Response): Promise<void> => {
     try {
         const users = await prisma.user.findMany({
             select: {
@@ -40,7 +46,13 @@ export const getUsers = async (_: Request, res: Response) => {
     }
 };
 
-// Create user
+/**
+ * Create a new user.
+ *
+ * @param {Request} req - Express Request object.
+ * @param {Response} res - Express Response object.
+ * @returns {Promise<void>}
+ */
 export const createUser = async (req: Request, res: Response) => {
     const createUserSchema = z.object({
         name: z.string(),
@@ -84,8 +96,14 @@ export const createUser = async (req: Request, res: Response) => {
     }
 };
 
-
-export const updateUser = async (req: Request, res: Response) => {
+/**
+ * Update a user.
+ *
+ * @param {Request} req - Express Request object.
+ * @param {Response} res - Express Response object.
+ * @returns {Promise<void>}
+ */
+export const updateUser = async (req: Request, res: Response): Promise<void> => {
     const updateUserSchema = z.object({
         newName: z.string().min(1).max(255).optional(),
         newRole: z.enum([Role.ADMIN, Role.USER]),
@@ -117,11 +135,11 @@ export const updateUser = async (req: Request, res: Response) => {
         });
 
         if(email && email !== user.email)
-            return res.status(400).json({ message: 'Current email is wrong!'})
+            res.status(400).json({ message: 'Current email is wrong!'})
         
         const resultComparison = verifyPassword(password, user.password);
         if(password && !resultComparison)
-            return res.status(400).json({ message: 'Current password is wrong!'})
+            res.status(400).json({ message: 'Current password is wrong!'})
 
         await prisma.user.update({
             where: {
@@ -148,7 +166,13 @@ export const updateUser = async (req: Request, res: Response) => {
     }
 }
 
-// Delete user
+/**
+ * Delete a user.
+ *
+ * @param {Request} req - Express Request object.
+ * @param {Response} res - Express Response object.
+ * @returns {Promise<void>}
+ */
 export const deleteUser = async (req: Request, res: Response) => {
     try {
         const id = await integerValidator.parseAsync(req.body.tagId);

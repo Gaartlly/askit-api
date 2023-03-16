@@ -16,7 +16,14 @@ const integerValidator = z
     )
     .transform((value) => parseInt(value));
 
-export const create = async (req: Request, res: Response) => {
+/**
+ * Create a new tag.
+ *
+ * @param {Request} req - Express Request object.
+ * @param {Response} res - Express Response object.
+ * @returns {Promise<void>}
+ */
+export const create = async (req: Request, res: Response): Promise<void> => {
     const createSchema = z.object({
         key: z.string().min(1).max(255),
         category: z.string().min(1).max(255),
@@ -40,7 +47,14 @@ export const create = async (req: Request, res: Response) => {
     }
 };
 
-export const update = async (req: Request, res: Response) => {
+/**
+ * Update a tag.
+ *
+ * @param {Request} req - Express Request object.
+ * @param {Response} res - Express Response object.
+ * @returns {Promise<void>}
+ */
+export const update = async (req: Request, res: Response): Promise<void> => {
     const updateSchema = z.object({
         key: z.string().min(1).max(255).optional(),
         category: z.string().min(1).max(255).optional(),
@@ -68,7 +82,14 @@ export const update = async (req: Request, res: Response) => {
     }
 };
 
-export const index = async (req: Request, res: Response) => {
+/**
+ * Get all tags. 
+ *
+ * @param {Request} req - Express Request object.
+ * @param {Response} res - Express Response object.
+ * @returns {Promise<void>}
+ */
+export const index = async (req: Request, res: Response): Promise<void> => {
     try {
         const tags = await prisma.tag.findMany();
 
@@ -78,7 +99,14 @@ export const index = async (req: Request, res: Response) => {
     }
 };
 
-export const show = async (req: Request, res: Response) => {
+/**
+ * Get a tag.
+ *
+ * @param {Request} req - Express Request object.
+ * @param {Response} res - Express Response object.
+ * @returns {Promise<void>}
+ */
+export const show = async (req: Request, res: Response): Promise<void> => {
     try {
         const id = await integerValidator.parseAsync(req.body.tagId);
         const tag = await prisma.tag.findUnique({
@@ -99,7 +127,14 @@ export const show = async (req: Request, res: Response) => {
     }
 };
 
-export const destroy = async (req: Request, res: Response) => {
+/**
+ * Delete a tag.
+ *
+ * @param {Request} req - Express Request object.
+ * @param {Response} res - Express Response object.
+ * @returns {Promise<void>}
+ */
+export const destroy = async (req: Request, res: Response): Promise<void> => {
     try {
         const id = await integerValidator.parseAsync(req.body.tagId);
         await prisma.tag.deleteMany({ where: { id } });
@@ -115,7 +150,3 @@ export const destroy = async (req: Request, res: Response) => {
         }
     }
 };
-function next(error: any) {
-    throw new Error('Function not implemented.');
-}
-

@@ -16,7 +16,14 @@ const integerValidator = z
     )
     .transform((value) => parseInt(value));
 
-export const create = async (req: Request, res: Response) => {
+/**
+ * Create a new post.
+ *
+ * @param {Request} req - Express Request object.
+ * @param {Response} res - Express Response object.
+ * @returns {Promise<void>}
+ */
+export const create = async (req: Request, res: Response): Promise<void> => {
     const createSchema = z.object({
         title: z.string().min(1).max(255),
         description: z.string().min(1).max(255),
@@ -60,7 +67,14 @@ export const create = async (req: Request, res: Response) => {
     }
 };
 
-export const update = async (req: Request, res: Response) => {
+/**
+ * Update a post.
+ *
+ * @param {Request} req - Express Request object.
+ * @param {Response} res - Express Response object.
+ * @returns {Promise<void>}
+ */
+export const update = async (req: Request, res: Response): Promise<void> => {
     const updateSchema = z.object({
         title: z.string().min(1).max(255).optional(),
         description: z.string().min(1).max(255).optional(),
@@ -79,7 +93,7 @@ export const update = async (req: Request, res: Response) => {
     });
 
     try {
-        const id = await integerValidator.parse(req.body.postId);
+        const id = await integerValidator.parseAsync(req.body.postId);
         const currentPost = await prisma.post.findUnique({
             where: { id },
             include: {
@@ -130,8 +144,14 @@ export const update = async (req: Request, res: Response) => {
         }
     }
 };
-
-export const index = async (req: Request, res: Response) => {
+/**
+ * Get all posts.
+ *
+ * @param {Request} req - Express Request object.
+ * @param {Response} res - Express Response object.
+ * @returns {Promise<void>}
+ */
+export const index = async (req: Request, res: Response): Promise<void> => {
     try {
         const posts = await prisma.post.findMany({
             include: {
@@ -144,9 +164,16 @@ export const index = async (req: Request, res: Response) => {
     }
 };
 
-export const show = async (req: Request, res: Response) => {
+/**
+ * Get a post.
+ *
+ * @param {Request} req - Express Request object.
+ * @param {Response} res - Express Response object.
+ * @returns {Promise<void>}
+ */
+export const show = async (req: Request, res: Response): Promise<void> => {
     try {
-        const id = await integerValidator.parse(req.body.postId);
+        const id = await integerValidator.parseAsync(req.body.postId);
 
         const post = await prisma.post.findUnique({
             where: {
@@ -169,9 +196,16 @@ export const show = async (req: Request, res: Response) => {
     }
 };
 
-export const destroy = async (req: Request, res: Response) => {
+/**
+ * Delete a post.
+ *
+ * @param {Request} req - Express Request object.
+ * @param {Response} res - Express Response object.
+ * @returns {Promise<void>}
+ */
+export const destroy = async (req: Request, res: Response): Promise<void> => {
     try {
-        const id = await integerValidator.parse(req.body.postId);
+        const id = await integerValidator.(req.body.postId);
 
         const post = await prisma.post.findUnique({ where: { id } });
         if (post) {
