@@ -75,11 +75,12 @@ export const createComment = async (req: Request, res: Response): Promise<void> 
         files: any().optional(),
     });
     try {
-       const { text, category, files, postId, parentCommentId } = createCommentSchema.parse(req.body);
-
+        const { authorId, content, category, files, postId, parentCommentId } = createCommentSchema.parse(req.body);
+      
         const comment = await prisma.comment.create({
             data: {
-                text,
+                authorId,
+                content,
                 category,
                 postId,
                 parentCommentId,
@@ -143,14 +144,14 @@ export const updateComment = async (req: Request, res: Response): Promise<void> 
     try {
         const id = await integerValidator.parseAsync(req.params.commentId);
 
-        const { text, category, upvotes, downvotes, postId, parentCommentId } = updateCommentSchema.parse(req.body);
+        const { content, category, upvotes, downvotes, postId, parentCommentId } = updateCommentSchema.parse(req.body);
 
         const updatedComment = await prisma.comment.update({
             where: {
                 id,
             },
             data: {
-                text,
+                content,
                 category,
                 upvotes,
                 downvotes,
