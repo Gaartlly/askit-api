@@ -22,9 +22,9 @@ model User {
   createdAt DateTime @default(now())
   updateAt DateTime @updatedAt
 
-  name String
-  email String @unique 
-  password String
+  name String @db.VarChar(255)
+  email String @unique @db.VarChar(1000)
+  password String @db.VarChar(255)
   role Role @default(USER) 
   status Boolean @default(true)
 
@@ -45,7 +45,7 @@ model Course {
   createdAt DateTime @default(now())
   updateAt DateTime @updatedAt
 
-  title String
+  title String @db.VarChar(255)
 
   //Relationship fields
   users User[] // Course 1:N User
@@ -58,7 +58,7 @@ model UserControl {
   createdAt DateTime @default(now())
   updateAt DateTime @updatedAt
 
-  reason String
+  reason String @db.VarChar(1000)
 
   //Relationship fields
   userId Int @unique // UserControl 1:1 User
@@ -72,8 +72,8 @@ model Post {
   createdAt DateTime @default(now())
   updateAt DateTime @updatedAt
 
-  title String
-  content String?
+  title String @db.VarChar(255)
+  content String? @db.VarChar(8000)
   
   //Relationship fields
   tags TagOnPost[] // Post N:N Tag (through TagOnPost)
@@ -92,8 +92,8 @@ model File {
   createdAt DateTime @default(now())
   updateAt DateTime @updatedAt
 
-  title String
-  path String
+  title String @db.VarChar(255)
+  path String @db.VarChar(1000)
 
   //Relationship fields
   postId Int // File N:1 Post
@@ -109,8 +109,8 @@ model Comment {
   createdAt DateTime @default(now())
   updateAt DateTime @updatedAt
   
-  content String? // A person could post only an image as an answer to the question.
-  category String
+  content String? @db.VarChar(1000) // A person could post only an image as an answer to the question.
+  category String @db.VarChar(255)
 
   //Relationship fields
   files File[] // Comment 1:N File
@@ -132,7 +132,7 @@ model Tag {
   createdAt DateTime @default(now())
   updateAt DateTime @updatedAt
 
-  key String
+  key String @db.VarChar(255)
 
   //Relationship fields
   posts TagOnPost[] // Tag N:N Post (through TagOnPost)
@@ -148,7 +148,7 @@ model TagCategory{
   createdAt DateTime @default(now())
   updateAt DateTime @updatedAt
 
-  title String
+  title String @db.VarChar(255)
 
   //Relationship fields
   tags Tag[] // TagCategory 1:N Tag
@@ -193,7 +193,7 @@ model Report{
   createdAt DateTime @default(now())
   updateAt DateTime @updatedAt
 
-  reason String
+  reason String @db.VarChar(1000)
 
   //Relationship fields
   tags TagOnReport[] // Report N:N Tag (through TagOnReport)
