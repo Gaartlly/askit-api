@@ -1,5 +1,5 @@
 import { Response, Request } from 'express';
-import { Post, PrismaClient, Role } from '@prisma/client';
+import { Post, PrismaClient } from '@prisma/client';
 import { z } from 'zod';
 
 const prisma = new PrismaClient();
@@ -23,7 +23,7 @@ const integerValidator = z
  * @param {Response} res - Express Response object.
  * @returns {Promise<void>}
  */
-export const create = async (req: Request, res: Response): Promise<void> => {
+export const createPost = async (req: Request, res: Response): Promise<void> => {
     const createSchema = z.object({
         title: z.string().min(1).max(255),
         description: z.string().min(1).max(255),
@@ -45,13 +45,11 @@ export const create = async (req: Request, res: Response): Promise<void> => {
         const createdPost = await prisma.post.create({
             data: {
                 title: post.title,
-                description: post.description,
-                upvotes: post.upvotes,
-                downvotes: post.downvotes,
+                content: post.description,
                 authorId: post.authorId,
-                files: {
-                    create: post.files,
-                },
+                //files: {
+                //    create: post.files,
+                //},
             },
             include: {
                 files: true,
@@ -74,7 +72,7 @@ export const create = async (req: Request, res: Response): Promise<void> => {
  * @param {Response} res - Express Response object.
  * @returns {Promise<void>}
  */
-export const update = async (req: Request, res: Response): Promise<void> => {
+export const updatePost = async (req: Request, res: Response): Promise<void> => {
     const updateSchema = z.object({
         title: z.string().min(1).max(255).optional(),
         description: z.string().min(1).max(255).optional(),
@@ -120,13 +118,11 @@ export const update = async (req: Request, res: Response): Promise<void> => {
             where: { id },
             data: {
                 title: newPost.title,
-                description: newPost.description,
-                upvotes: newPost.upvotes,
-                downvotes: newPost.downvotes,
+                content: newPost.description,
                 authorId: newPost.authorId,
-                files: {
-                    createMany: { data: createdFiles },
-                },
+                //files: {
+                //    createMany: { data: createdFiles },
+                //},
             },
             include: {
                 files: true,
@@ -151,7 +147,7 @@ export const update = async (req: Request, res: Response): Promise<void> => {
  * @param {Response} res - Express Response object.
  * @returns {Promise<void>}
  */
-export const index = async (req: Request, res: Response): Promise<void> => {
+export const getAllPosts = async (req: Request, res: Response): Promise<void> => {
     try {
         const posts = await prisma.post.findMany({
             include: {
@@ -171,7 +167,7 @@ export const index = async (req: Request, res: Response): Promise<void> => {
  * @param {Response} res - Express Response object.
  * @returns {Promise<void>}
  */
-export const show = async (req: Request, res: Response): Promise<void> => {
+export const getPost = async (req: Request, res: Response): Promise<void> => {
     try {
         const id = await integerValidator.parseAsync(req.body.postId);
 
@@ -203,7 +199,7 @@ export const show = async (req: Request, res: Response): Promise<void> => {
  * @param {Response} res - Express Response object.
  * @returns {Promise<void>}
  */
-export const destroy = async (req: Request, res: Response): Promise<void> => {
+export const deletePost = async (req: Request, res: Response): Promise<void> => {
     try {
         const id = await integerValidator.parseAsync(req.body.postId);
 

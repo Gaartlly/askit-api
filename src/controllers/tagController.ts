@@ -23,18 +23,20 @@ const integerValidator = z
  * @param {Response} res - Express Response object.
  * @returns {Promise<void>}
  */
-export const create = async (req: Request, res: Response): Promise<void> => {
+export const createTag = async (req: Request, res: Response): Promise<void> => {
     const createSchema = z.object({
         key: z.string().min(1).max(255),
-        category: z.string().min(1).max(255),
-        postId: z.number().int(),
+        categoryId: z.number().int(),
     });
 
     try {
-        const tag = createSchema.parse(req.body);
+        const { key, categoryId } = createSchema.parse(req.body);
 
         const createdTag = await prisma.tag.create({
-            data: { key: tag.key, category: tag.category, postId: tag.postId },
+            data: {
+                key,
+                categoryId
+            },
         });
 
         res.status(201).json({ message: 'Tag created.', tag: createdTag });
@@ -54,7 +56,7 @@ export const create = async (req: Request, res: Response): Promise<void> => {
  * @param {Response} res - Express Response object.
  * @returns {Promise<void>}
  */
-export const update = async (req: Request, res: Response): Promise<void> => {
+export const updateTag = async (req: Request, res: Response): Promise<void> => {
     const updateSchema = z.object({
         key: z.string().min(1).max(255).optional(),
         category: z.string().min(1).max(255).optional(),
@@ -62,12 +64,16 @@ export const update = async (req: Request, res: Response): Promise<void> => {
     });
 
     try {
-        const id = await integerValidator.parseAsync(req.body.tagId);
-        const tag = updateSchema.parse(req.body);
+        const id = await integerValidator.parseAsync(req.params.tagId);
+        const { key } = updateSchema.parse(req.body);
 
         const updatedTag: Tag = await prisma.tag.update({
-            where: { id },
-            data: { key: tag.key, category: tag.category, postId: tag.postId },
+            where: {
+                id
+            },
+            data: {
+                key
+            },
         });
 
         res.status(200).json({ message: 'Tag updated.', tag: updatedTag });
@@ -89,7 +95,7 @@ export const update = async (req: Request, res: Response): Promise<void> => {
  * @param {Response} res - Express Response object.
  * @returns {Promise<void>}
  */
-export const index = async (req: Request, res: Response): Promise<void> => {
+export const getAllTags = async (req: Request, res: Response): Promise<void> => {
     try {
         const tags = await prisma.tag.findMany();
 
@@ -106,7 +112,7 @@ export const index = async (req: Request, res: Response): Promise<void> => {
  * @param {Response} res - Express Response object.
  * @returns {Promise<void>}
  */
-export const show = async (req: Request, res: Response): Promise<void> => {
+export const getTag = async (req: Request, res: Response): Promise<void> => {
     try {
         const id = await integerValidator.parseAsync(req.body.tagId);
         const tag = await prisma.tag.findUnique({
@@ -134,7 +140,7 @@ export const show = async (req: Request, res: Response): Promise<void> => {
  * @param {Response} res - Express Response object.
  * @returns {Promise<void>}
  */
-export const destroy = async (req: Request, res: Response): Promise<void> => {
+export const deleteTag = async (req: Request, res: Response): Promise<void> => {
     try {
         const id = await integerValidator.parseAsync(req.body.tagId);
         await prisma.tag.deleteMany({ where: { id } });
