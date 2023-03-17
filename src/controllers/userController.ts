@@ -107,8 +107,8 @@ export const updateUser = async (req: Request, res: Response): Promise<void> => 
     const updateUserSchema = z.object({
         newName: z.string().min(1).max(255).optional(),
         newRole: z.enum([Role.ADMIN, Role.USER]),
-        email: z.string().optional(),
-        newEmail: z.string().optional(),
+        email: z.string().email().optional(),
+        newEmail: z.string().email().optional(),
         newCourse: z.string().optional(),
         password: z.string().min(1).max(255).optional(),
         newPassword: z.string().min(1).max(255).optional(),
@@ -138,7 +138,7 @@ export const updateUser = async (req: Request, res: Response): Promise<void> => 
             throw new Error('Current email is wrong.');
             //res.status(400).json({ message: 'Current email is wrong!'})
         
-        const resultComparison = verifyPassword(password, user.password);
+        const resultComparison = await verifyPassword(password, user.password);
         if(password && !resultComparison)
             throw new Error('Current password is wrong.');
             //res.status(400).json({ message: 'Current password is wrong!'})
@@ -175,7 +175,7 @@ export const updateUser = async (req: Request, res: Response): Promise<void> => 
  * @param {Response} res - Express Response object.
  * @returns {Promise<void>}
  */
-export const deleteUser = async (req: Request, res: Response) => {
+export const deleteUser = async (req: Request, res: Response): Promise<void> => {
     try {
         const id = await integerValidator.parseAsync(req.body.tagId);
 
