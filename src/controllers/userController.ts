@@ -20,11 +20,10 @@ const integerValidator = z
 /**
  * Get all users.
  *
- * @param {Request} req - Express Request object.
  * @param {Response} res - Express Response object.
  * @returns {Promise<void>}
  */
-export const getUsers = async (_: Request, res: Response): Promise<void> => {
+export const getUsers = async (res: Response): Promise<void> => {
     try {
         const users = await prisma.user.findMany({
             select: {
@@ -53,17 +52,17 @@ export const getUsers = async (_: Request, res: Response): Promise<void> => {
  * @param {Response} res - Express Response object.
  * @returns {Promise<void>}
  */
-export const createUser = async (req: Request, res: Response) => {
+export const createUser = async (req: Request, res: Response): Promise<void> => {
     const createUserSchema = z.object({
         name: z.string(),
         email: z.string().email(),
         password: z.string(),
         role: z.enum([Role.ADMIN, Role.USER]),
         status: z.boolean(),
-        course: z.string(),
+        courseId: z.number(),
     });
     try {
-        const { name, email, role, status, course } = createUserSchema.parse(req.body);
+        const { name, email, role, status, courseId } = createUserSchema.parse(req.body);
         let { password } = createUserSchema.parse(req.body);
 
         const hash = await hashPassword(password, 11);
@@ -77,7 +76,7 @@ export const createUser = async (req: Request, res: Response) => {
                 password,
                 role,
                 status,
-                course,
+                courseId
             },
         });
 
@@ -92,7 +91,7 @@ export const createUser = async (req: Request, res: Response) => {
             },
         });
     } catch (error) {
-        res.status(500).json({ message: 'Internal server error', error: error.message });
+        res.status(500).json({ message: 'Internal server error', error: error });
     }
 };
 
@@ -150,7 +149,6 @@ export const updateUser = async (req: Request, res: Response): Promise<void> => 
             data:{
                 name: newName,
                 email: newEmail,
-                course: newCourse,
                 password: newPassword,
                 role: newRole
             }

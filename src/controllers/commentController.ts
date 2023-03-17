@@ -1,7 +1,6 @@
 import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { z } from 'zod';
-import { any, string, number } from 'zod';
 
 const prisma = new PrismaClient();
 
@@ -68,11 +67,12 @@ export const getCommentsByUserId = async (req: Request, res: Response): Promise<
  */
 export const createComment = async (req: Request, res: Response): Promise<void> => {
     const createCommentSchema = z.object({
-        text: string(),
-        category: string(),
-        postId: number(),
-        parentCommentId: number().optional(),
-        files: any().optional(),
+        authorId: z.number(), 
+        content: z.string().optional(),
+        category: z.string(),
+        postId: z.number(),
+        parentCommentId: z.number().optional(),
+        files: z.any().optional()
     });
     try {
         const { authorId, content, category, files, postId, parentCommentId } = createCommentSchema.parse(req.body);
@@ -133,18 +133,16 @@ export const deleteComment = async (req: Request, res: Response): Promise<void> 
  */
 export const updateComment = async (req: Request, res: Response): Promise<void> => {
    const updateCommentSchema = z.object({
-        text: string().optional(),
-        category: string().optional(),
-        postId: number().optional(),
-        parentCommentId: number().optional(),
-        upvotes: number().optional(),
-        downvotes: number().optional(),
-        files: any().optional(),
+        content: z.string().optional(),
+        category: z.string().optional(),
+        postId: z.number().optional(),
+        parentCommentId: z.number().optional(),
+        files: z.any().optional()
     });
     try {
         const id = await integerValidator.parseAsync(req.params.commentId);
 
-        const { content, category, upvotes, downvotes, postId, parentCommentId } = updateCommentSchema.parse(req.body);
+        const { content, category, postId, parentCommentId } = updateCommentSchema.parse(req.body);
 
         const updatedComment = await prisma.comment.update({
             where: {
@@ -153,8 +151,6 @@ export const updateComment = async (req: Request, res: Response): Promise<void> 
             data: {
                 content,
                 category,
-                upvotes,
-                downvotes,
                 postId,
                 parentCommentId,
             },
