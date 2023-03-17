@@ -5,17 +5,35 @@ import { z } from 'zod';
 
 const prisma = new PrismaClient();
 
-// Upload
-export const uploadFile = async (req: Request, res: Response) => {
-    try {
-        const uploadFileSchema = z.object({
-            title: z.string().min(1).max(255),
-            path: z.string().min(1),
-            postId: z.number().int(),
-            commentId: z.number().int(),
-        });
+const integerValidator = z
+    .string()
+    .refine(
+        (value) => {
+            return /^\d+$/.test(value);
+        },
+        {
+            message: 'Value must be a valid integer',
+        }
+    )
+    .transform((value) => parseInt(value));
 
-        const { title, path, postId, commentId } = uploadFileSchema.parse(req.body);
+/**
+ * Upload a file.
+ *
+ * @param {Request} req - Express Request object.
+ * @param {Response} res - Express Response object.
+ * @returns {Promise<void>}
+ */
+export const uploadFile = async (req: Request, res: Response): Promise<void> => {
+    const uploadFileSchema = z.object({
+        title: z.string().min(1).max(255),
+        path: z.string().min(1),
+        postId: z.number().int(),
+        commentId: z.number().int(),
+    });
+    try {
+        const postId = await integerValidator.parseAsync(req.body.postId);
+        const { title, path, commentId } = uploadFileSchema.parse(req.body);
 
         const result = await cloudinary.uploader.upload(path, {
             resource_type: 'image',
@@ -32,12 +50,21 @@ export const uploadFile = async (req: Request, res: Response) => {
 
         res.status(200).json({ message: 'File uploaded!', file: fileUploaded });
     } catch (error) {
-        res.status(400).json({ messageError: error.message });
+        if (error.name === 'ZodError') {
+            res.status(400).json({ error: error });
+        } else {
+            res.status(500).json({ message: 'Internal server error' });
+        }
     }
 };
 
-// Get all files
-export const getAllFiles = async (_: Request, res: Response) => {
+/**
+ * Get all filles.
+ *
+ * @param {Response} res - Express Response object.
+ * @returns {Promise<void>}
+ */
+export const getAllFiles = async (_: Request, res: Response): Promise<void> => {
     try {
         const files = await prisma.file.findMany();
 
@@ -47,56 +74,81 @@ export const getAllFiles = async (_: Request, res: Response) => {
     }
 };
 
-// Get file
-export const getFileById = async (req: Request, res: Response) => {
+/**
+ * Get a file by id.
+ *
+ * @param {Request} req - Express Request object.
+ * @param {Response} res - Express Response object.
+ * @returns {Promise<void>}
+ */
+export const getFileById = async (req: Request, res: Response): Promise<void> => {
     try {
-        const id = +req.params.id;
+        const id = await integerValidator.parseAsync(req.params.fileId);
 
-        const file = await prisma.file.findUniqueOrThrow({
+        const file = await prisma.file.findFirst({
             where: {
-                id: id,
+                id,
             },
         });
 
         res.status(200).json(file);
     } catch (error) {
-        res.status(404).json({ message: 'File not found!' });
+        if (error.name === 'ZodError') {
+            res.status(400).json({ error: error });
+        } else if (error.code === 'P2025') {
+            res.status(404).json({ message: 'File not found!' });
+        } else {
+            res.status(500).json({ message: 'Internal server error' });
+        }
     }
 };
 
-// Delete file
-export const deleteFile = async (req: Request, res: Response) => {
+/**
+ * Delete a file.
+ *
+ * @param {Request} req - Express Request object.
+ * @param {Response} res - Express Response object.
+ * @returns {Promise<void>}
+ */
+export const deleteFile = async (req: Request, res: Response): Promise<void> => {
     try {
-        const id = +req.params.id;
+        const id = await integerValidator.parseAsync(req.params.fileId);
 
         await prisma.file.delete({
             where: {
-                id: id,
+                id,
             },
         });
 
         res.status(200).json({ message: 'File deleted.' });
     } catch (error) {
-        res.status(404).json({ error: error.message });
+        if (error.name === 'ZodError') {
+            res.status(400).json({ error: error });
+        } else if (error.code === 'P2025') {
+            res.status(404).json({ message: 'File not found!' });
+        } else {
+            res.status(500).json({ message: 'Internal server error' });
+        }
     }
 };
 
-// Update file
+/**
+ * Update a file.
+ *
+ * @param {Request} req - Express Request object.
+ * @param {Response} res - Express Response object.
+ * @returns {Promise<void>}
+ */
 export const updateFile = async (req: Request, res: Response) => {
+    const updateFileSchema = z.object({
+        id: z.number().int(),
+        newTitle: z.string().min(1).max(255),
+        newPath: z.string().min(1),
+    });
     try {
-        const updateFileSchema = z.object({
-            id: z.number().int(),
-            newTitle: z.string().min(1).max(255),
-            newPath: z.string().min(1),
-        });
+        const id = await integerValidator.parseAsync(req.params.fileId);
 
-        const { id, newTitle, newPath } = updateFileSchema.parse(req.body);
-
-        await prisma.file.findFirstOrThrow({
-            where: {
-                id: id,
-            },
-        });
+        const { newTitle, newPath } = updateFileSchema.parse(req.body);
 
         const result = await cloudinary.uploader.upload(newPath, {
             resource_type: 'image',
@@ -104,7 +156,7 @@ export const updateFile = async (req: Request, res: Response) => {
 
         const fileUpdated = await prisma.file.update({
             where: {
-                id: id,
+                id,
             },
             data: {
                 title: newTitle,
@@ -114,6 +166,12 @@ export const updateFile = async (req: Request, res: Response) => {
 
         res.status(200).json({ message: 'File updated!', file: fileUpdated });
     } catch (error) {
-        res.status(400).json({ messageError: error.message });
+        if (error.name === 'ZodError') {
+            res.status(400).json({ error: error });
+        } else if (error.code === 'P2025') {
+            res.status(404).json({ message: 'File not found!' });
+        } else {
+            res.status(500).json({ message: 'Internal server error' });
+        }
     }
 };

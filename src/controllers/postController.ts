@@ -4,7 +4,26 @@ import { z } from 'zod';
 
 const prisma = new PrismaClient();
 
-export const create = async (req: Request, res: Response) => {
+const integerValidator = z
+    .string()
+    .refine(
+        (value) => {
+            return /^\d+$/.test(value);
+        },
+        {
+            message: 'Value must be a valid integer',
+        }
+    )
+    .transform((value) => parseInt(value));
+
+/**
+ * Create a new post.
+ *
+ * @param {Request} req - Express Request object.
+ * @param {Response} res - Express Response object.
+ * @returns {Promise<void>}
+ */
+export const create = async (req: Request, res: Response): Promise<void> => {
     const createSchema = z.object({
         title: z.string().min(1).max(255),
         description: z.string().min(1).max(255),
@@ -38,13 +57,24 @@ export const create = async (req: Request, res: Response) => {
                 files: true,
             },
         });
-        res.status(200).json({ message: 'Post created.', post: createdPost });
-    } catch (err) {
-        res.status(500).json({ message: 'Internal server error.', err: err.message });
+        res.status(201).json({ message: 'Post created.', post: createdPost });
+    } catch (error) {
+        if (error.name === 'ZodError') {
+            res.status(400).json({ error: error });
+        } else {
+            res.status(500).json({ message: 'Internal server error' });
+        }
     }
 };
 
-export const update = async (req: Request, res: Response) => {
+/**
+ * Update a post.
+ *
+ * @param {Request} req - Express Request object.
+ * @param {Response} res - Express Response object.
+ * @returns {Promise<void>}
+ */
+export const update = async (req: Request, res: Response): Promise<void> => {
     const updateSchema = z.object({
         title: z.string().min(1).max(255).optional(),
         description: z.string().min(1).max(255).optional(),
@@ -63,9 +93,9 @@ export const update = async (req: Request, res: Response) => {
     });
 
     try {
-        const { id } = req.params;
+        const id = await integerValidator.parseAsync(req.body.postId);
         const currentPost = await prisma.post.findUnique({
-            where: { id: Number(id) },
+            where: { id },
             include: {
                 files: true,
             },
@@ -87,7 +117,7 @@ export const update = async (req: Request, res: Response) => {
         }
 
         const updatedPost: Post = await prisma.post.update({
-            where: { id: Number(id) },
+            where: { id },
             data: {
                 title: newPost.title,
                 description: newPost.description,
@@ -102,56 +132,94 @@ export const update = async (req: Request, res: Response) => {
                 files: true,
             },
         });
+
         res.status(200).json({ message: 'Post updated.', post: updatedPost });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: 'Internal server error.', err: err.message });
+    } catch (error) {
+        if (error.name === 'ZodError') {
+            res.status(400).json({ error: error });
+        } else if (error.code === 'P2025') {
+            res.status(404).json({ message: 'Comment not found!' });
+        } else {
+            res.status(500).json({ message: 'Internal server error' });
+        }
     }
 };
-
-export const index = async (req: Request, res: Response) => {
+/**
+ * Get all posts.
+ *
+ * @param {Request} req - Express Request object.
+ * @param {Response} res - Express Response object.
+ * @returns {Promise<void>}
+ */
+export const index = async (req: Request, res: Response): Promise<void> => {
     try {
         const posts = await prisma.post.findMany({
             include: {
                 files: true,
             },
         });
-        res.json({ posts: posts });
-    } catch (err) {
-        res.status(500).json({ message: 'Internal server error.', err: err.message });
+        res.status(200).json({ posts: posts });
+    } catch (error) {
+        res.status(500).json({ message: 'Internal server error.', error: error.message });
     }
 };
 
-export const show = async (req: Request, res: Response) => {
+/**
+ * Get a post.
+ *
+ * @param {Request} req - Express Request object.
+ * @param {Response} res - Express Response object.
+ * @returns {Promise<void>}
+ */
+export const show = async (req: Request, res: Response): Promise<void> => {
     try {
-        const { id } = req.params;
+        const id = await integerValidator.parseAsync(req.body.postId);
+
         const post = await prisma.post.findUnique({
             where: {
-                id: Number(id),
+                id
             },
             include: {
                 files: true,
             },
         });
-        if (post === null) {
-            res.status(404).json({ message: `Post ${id} not found` });
+
+        res.status(200).json({ post: post });
+    } catch (error) {
+        if (error.name === 'ZodError') {
+            res.status(400).json({ error: error });
+        } else if (error.code === 'P2025') {
+            res.status(404).json({ message: 'Comment not found!' });
         } else {
-            res.json({ post: post });
+            res.status(500).json({ message: 'Internal server error' });
         }
-    } catch (err) {
-        res.status(500).json({ message: 'Internal server error.', err: err.message });
     }
 };
 
-export const destroy = async (req: Request, res: Response) => {
+/**
+ * Delete a post.
+ *
+ * @param {Request} req - Express Request object.
+ * @param {Response} res - Express Response object.
+ * @returns {Promise<void>}
+ */
+export const destroy = async (req: Request, res: Response): Promise<void> => {
     try {
-        const { id } = req.params;
-        const post = await prisma.post.findUnique({ where: { id: Number(id) } });
+        const id = await integerValidator.parseAsync(req.body.postId);
+
+        const post = await prisma.post.findUnique({ where: { id } });
         if (post) {
-            await prisma.post.deleteMany({ where: { id: post.id } });
+            await prisma.post.deleteMany({ where: { id } });
         }
+
         res.status(200).json({ message: 'Post deleted.' });
-    } catch (err) {
-        res.status(500).json({ message: 'Internal server error.', err: err.message });
+    } catch (error) {
+        if (error.name === 'ZodError') {
+            res.status(400).json({ error: error });
+        } else if (error.code === 'P2025') {
+            res.status(404).json({ message: 'Comment not found!' });
+        } else {
+            res.status(500).json({ message: 'Internal server error' });
+        }
     }
 };
