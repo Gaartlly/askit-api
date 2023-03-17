@@ -12,85 +12,211 @@ enum Role {
   USER
 }
 
+enum ReactionType {
+  UPVOTE
+  DOWNVOTE
+}
+
 model User {
   id Int @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updateAt DateTime @updatedAt
+
   name String
   email String @unique 
   password String
   role Role @default(USER) 
-  status Boolean @default(true) 
-  course String
+  status Boolean @default(true)
+
+  // Relationship fields
+  control UserControl? // User 1:1 UserControl
+  comments Comment[] // User 1:N Comment
+  posts Post[] // User 1:N Post
+  reactions Reaction[] // User 1:N Reaction
+  reports Report[] // User 1:N Report
+  courseId Int // User N:1 Course
+  course Course @relation(fields: [courseId], references: [id])
+  
+  @@map("user")
+}
+
+model Course {
+  id Int @id @default(autoincrement())
   createdAt DateTime @default(now())
   updateAt DateTime @updatedAt
 
-  posts Post[]
-  comments Comment[]
+  title String
 
-  @@map("user")
+  //Relationship fields
+  users User[] // Course 1:N User
+  
+  @@map("course")
+}
+
+model UserControl {
+  id Int @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updateAt DateTime @updatedAt
+
+  reason String
+
+  //Relationship fields
+  userId Int @unique // UserControl 1:1 User
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("usercontrol")
 }
 
 model Post {
   id Int @id @default(autoincrement())
-  title String
-  content String? 
-  upvotes Int @default(0)
-  downvotes Int @default(0)
-  authorId Int
   createdAt DateTime @default(now())
   updateAt DateTime @updatedAt
 
-  files File[]
-  tags Tag[]
-  comments Comment[]
+  title String
+  content String?
   
+  //Relationship fields
+  tags TagOnPost[] // Post N:N Tag (through TagOnPost)
+  files File[] // Post 1:N Files
+  comments Comment[] // Post 1:N Comment
+  reactions Reaction[] // Post 1:N Reaction
+  reports Report[] // Post 1:N Report
+  authorId Int // Post N:1 User
   author  User  @relation(fields: [authorId], references: [id])
+
   @@map("post")
 }
 
 model File {
   id Int @id @default(autoincrement())
-  title String
-  path String
-  postId Int
-  commentId Int?
   createdAt DateTime @default(now())
   updateAt DateTime @updatedAt
 
-  comment Comment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  title String
+  path String
+
+  //Relationship fields
+  postId Int // File N:1 Post
   post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  commentId Int? // File N:1 Comment
+  comment Comment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
 
   @@map("file")
 }
 
 model Comment {
   id Int @id @default(autoincrement())
-  content String? // A person could post only an image as an answer to the question.
-  category String
-  upvotes Int @default(0)
-  downvotes Int @default(0)
-  authorId Int
-  postId Int?
-  parentCommentId Int?
   createdAt DateTime @default(now())
   updateAt DateTime @updatedAt
+  
+  content String? // A person could post only an image as an answer to the question.
+  category String
 
-  files File[]
-  childComments Comment[] @relation("ChildComments")
-
+  //Relationship fields
+  files File[] // Comment 1:N File
+  childComments Comment[] @relation("ChildComments") //Comment 1:N Comment
+  reactions Reaction[] // Comment 1:N Reaction
+  reports Report[] // Comment 1:N Report
+  authorId Int // Comment N:1 User
   author User @relation(fields: [authorId], references: [id])
-  parentComment Comment? @relation("ChildComments", fields: [parentCommentId], references: [id], onDelete: Cascade)
+  postId Int? // Comment N:1 Post
   post Post? @relation(fields: [postId], references: [id])
+  parentCommentId Int? //Comment N:1 Comment
+  parentComment Comment? @relation("ChildComments", fields: [parentCommentId], references: [id], onDelete: Cascade)
+
   @@map("comment")
 }
 
 model Tag {
   id Int @id @default(autoincrement())
-  category String 
-  key String
-  postId Int
   createdAt DateTime @default(now())
   updateAt DateTime @updatedAt
 
-  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  key String
+
+  //Relationship fields
+  posts TagOnPost[] // Tag N:N Post (through TagOnPost)
+  reports TagOnReport[] // Tag N:N Report (through TagOnReport)
+  categoryId Int // Tag N:1 TagCategory
+  category TagCategory @relation(fields: [categoryId], references: [id])
+
   @@map("tag")
+}
+
+model TagCategory{
+  id Int @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updateAt DateTime @updatedAt
+
+  title String
+
+  //Relationship fields
+  tags Tag[] // TagCategory 1:N Tag
+
+  @@map("tagcategory")
+}
+
+model TagOnPost{
+  @@id([postId, tagId])
+  createdAt DateTime @default(now())
+  updateAt DateTime @updatedAt
+
+  //Relationship fields
+  tagId Int // TagOnPost N:1 Tag
+  tag Tag @relation(fields: [tagId], references: [id])
+  postId Int // TagOnPost N:1 Post
+  post Post @relation(fields: [postId], references: [id])
+
+  @@map("tagonpost")
+}
+
+model Reaction{
+  id Int @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updateAt DateTime @updatedAt
+
+  type ReactionType
+
+  //Relationship fields
+  authorId Int // Reaction N:1 User
+  author User @relation(fields: [authorId], references: [id])
+  postId Int? // Reaction N:1 Post
+  post Post? @relation(fields: [postId], references: [id])
+  commentId Int? // Reaction N:1 Post
+  comment Comment? @relation(fields: [commentId], references: [id])
+
+  @@map("reaction")
+}
+
+model Report{
+  id Int @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updateAt DateTime @updatedAt
+
+  reason String
+
+  //Relationship fields
+  tags TagOnReport[] // Report N:N Tag (through TagOnReport)
+  authorId Int // Report N:1 User
+  author User @relation(fields: [authorId], references: [id])
+  postId Int? // Report N:1 Post
+  post Post? @relation(fields: [postId], references: [id])
+  commentId Int? // Report N:1 Post
+  comment Comment? @relation(fields: [commentId], references: [id])
+
+  @@map("report")
+}
+
+model TagOnReport{
+  @@id([reportId, tagId])
+  createdAt DateTime @default(now())
+  updateAt DateTime @updatedAt
+
+  //Relationship fields
+  tagId Int // TagOnPost N:1 Tag
+  tag Tag @relation(fields: [tagId], references: [id])
+  reportId Int // TagOnPost N:1 Post
+  report Report @relation(fields: [reportId], references: [id])
+
+  @@map("tagonreport")
 }
