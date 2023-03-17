@@ -180,8 +180,8 @@ model Reaction{
   //Relationship fields
   authorId Int // Reaction N:1 User
   author User @relation(fields: [authorId], references: [id])
-  postId Int? // Reaction N:1 Post
-  post Post? @relation(fields: [postId], references: [id])
+  postId Int // Reaction N:1 Post
+  post Post @relation(fields: [postId], references: [id])
   commentId Int? // Reaction N:1 Post
   comment Comment? @relation(fields: [commentId], references: [id])
 
@@ -199,8 +199,8 @@ model Report{
   tags TagOnReport[] // Report N:N Tag (through TagOnReport)
   authorId Int // Report N:1 User
   author User @relation(fields: [authorId], references: [id])
-  postId Int? // Report N:1 Post
-  post Post? @relation(fields: [postId], references: [id])
+  postId Int // Report N:1 Post
+  post Post @relation(fields: [postId], references: [id])
   commentId Int? // Report N:1 Post
   comment Comment? @relation(fields: [commentId], references: [id])
 
