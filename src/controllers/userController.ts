@@ -1,9 +1,8 @@
 import { Response, Request } from 'express';
-import { PrismaClient, Role } from '@prisma/client';
+import { Role } from '@prisma/client';
 import { z } from 'zod';
 import { hashPassword, verifyPassword } from '../utils/bcryptUtil';
-
-const prisma = new PrismaClient();
+import prismaClient from '../services/prisma/prismaClient';
 
 const integerValidator = z
     .string()
@@ -23,9 +22,9 @@ const integerValidator = z
  * @param {Response} res - Express Response object.
  * @returns {Promise<void>}
  */
-export const getUsers = async (res: Response): Promise<void> => {
+export const getUsers = async (_: Request, res: Response): Promise<void> => {
     try {
-        const users = await prisma.user.findMany({
+        const users = await prismaClient.user.findMany({
             select: {
                 id: true,
                 name: true,
@@ -56,7 +55,7 @@ export const createUser = async (req: Request, res: Response): Promise<void> => 
     const createUserSchema = z.object({
         name: z.string(),
         email: z.string().email(),
-        password: z.string(),
+        password: z.string().min(8, 'Needs at least 8 characters!'),
         role: z.enum([Role.ADMIN, Role.USER]),
         status: z.boolean(),
         courseId: z.number(),
@@ -69,14 +68,14 @@ export const createUser = async (req: Request, res: Response): Promise<void> => 
         if (!hashPassword) throw new Error('Failed to encrypt password!');
         password = hash;
 
-        const user = await prisma.user.create({
+        const user = await prismaClient.user.create({
             data: {
                 name,
                 email,
                 password,
                 role,
                 status,
-                courseId
+                courseId,
             },
         });
 
@@ -103,55 +102,53 @@ export const createUser = async (req: Request, res: Response): Promise<void> => 
  * @returns {Promise<void>}
  */
 export const updateUser = async (req: Request, res: Response): Promise<void> => {
-    const updateUserSchema = z.object({
-        newName: z.string().min(1).max(255).optional(),
-        newRole: z.enum([Role.ADMIN, Role.USER]),
-        email: z.string().email().optional(),
-        newEmail: z.string().email().optional(),
-        newCourse: z.string().optional(),
-        password: z.string().min(1).max(255).optional(),
-        newPassword: z.string().min(1).max(255).optional(),
-    }).refine((data) => 
-        (data.email && !data.newEmail) || (!data.email && data.newEmail), {
+    const updateUserSchema = z
+        .object({
+            newName: z.string().min(1).max(255).optional(),
+            newRole: z.enum([Role.ADMIN, Role.USER]),
+            email: z.string().email().optional(),
+            newEmail: z.string().email().optional(),
+            newCourseId: z.number().optional(),
+            password: z.string().min(1).max(255).optional(),
+            newPassword: z.string().min(1).max(255).optional(),
+        })
+        .refine((data) => (data.email && !data.newEmail) || (!data.email && data.newEmail), {
             message: 'Email cannot be updated as some data is missing',
-            path: ['email', 'newEmail']
-        }
-    ).refine((data) =>
-        (data.password && !data.newPassword) || (!data.password && data.newPassword), {
+            path: ['email', 'newEmail'],
+        })
+        .refine((data) => (data.password && !data.newPassword) || (!data.password && data.newPassword), {
             message: 'Password cannot be updated as some data is missing',
-            path: ['password', 'password']
-        }
-    );
+            path: ['password', 'password'],
+        });
 
     try {
         const id = await integerValidator.parseAsync(req.body.tagId);
-        const { newName, email, newEmail, newCourse, password, newPassword, newRole } = await updateUserSchema.parseAsync(req.body);
+        const { newName, email, newEmail, newCourseId, password, newPassword, newRole } = await updateUserSchema.parseAsync(req.body);
 
-        const user = await prisma.user.findUniqueOrThrow({
+        const user = await prismaClient.user.findUniqueOrThrow({
             where: {
                 id: id,
             },
         });
 
-        if(email && email !== user.email)
-            throw new Error('Current email is wrong.');
-            //res.status(400).json({ message: 'Current email is wrong!'})
-        
-        const resultComparison = await verifyPassword(password, user.password);
-        if(password && !resultComparison)
-            throw new Error('Current password is wrong.');
-            //res.status(400).json({ message: 'Current password is wrong!'})
+        if (email && email !== user.email) throw new Error('Current email is wrong.');
+        //res.status(400).json({ message: 'Current email is wrong!'})
 
-        await prisma.user.update({
+        const resultComparison = await verifyPassword(password, user.password);
+        if (password && !resultComparison) throw new Error('Current password is wrong.');
+        //res.status(400).json({ message: 'Current password is wrong!'})
+
+        await prismaClient.user.update({
             where: {
-                id
+                id,
             },
-            data:{
+            data: {
                 name: newName,
                 email: newEmail,
                 password: newPassword,
-                role: newRole
-            }
+                role: newRole,
+                courseId: newCourseId,
+            },
         });
 
         res.status(200).json({ message: 'User updated!' });
@@ -164,7 +161,7 @@ export const updateUser = async (req: Request, res: Response): Promise<void> => 
             res.status(500).json({ message: 'Internal server error' });
         }
     }
-}
+};
 
 /**
  * Delete a user.
@@ -177,7 +174,7 @@ export const deleteUser = async (req: Request, res: Response): Promise<void> => 
     try {
         const id = await integerValidator.parseAsync(req.body.tagId);
 
-        await prisma.user.delete({
+        await prismaClient.user.delete({
             where: {
                 id: id,
             },

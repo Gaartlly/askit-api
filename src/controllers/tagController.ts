@@ -1,8 +1,6 @@
 import { Response, Request } from 'express';
-import { Tag, PrismaClient, Role } from '@prisma/client';
+import prismaClient from '../services/prisma/prismaClient';
 import { z } from 'zod';
-
-const prisma = new PrismaClient();
 
 const integerValidator = z
     .string()
@@ -32,10 +30,10 @@ export const createTag = async (req: Request, res: Response): Promise<void> => {
     try {
         const { key, categoryId } = createSchema.parse(req.body);
 
-        const createdTag = await prisma.tag.create({
+        const createdTag = await prismaClient.tag.create({
             data: {
                 key,
-                categoryId
+                categoryId,
             },
         });
 
@@ -67,12 +65,12 @@ export const updateTag = async (req: Request, res: Response): Promise<void> => {
         const id = await integerValidator.parseAsync(req.params.tagId);
         const { key } = updateSchema.parse(req.body);
 
-        const updatedTag: Tag = await prisma.tag.update({
+        const updatedTag = await prismaClient.tag.update({
             where: {
-                id
+                id,
             },
             data: {
-                key
+                key,
             },
         });
 
@@ -89,7 +87,7 @@ export const updateTag = async (req: Request, res: Response): Promise<void> => {
 };
 
 /**
- * Get all tags. 
+ * Get all tags.
  *
  * @param {Request} req - Express Request object.
  * @param {Response} res - Express Response object.
@@ -97,7 +95,7 @@ export const updateTag = async (req: Request, res: Response): Promise<void> => {
  */
 export const getAllTags = async (req: Request, res: Response): Promise<void> => {
     try {
-        const tags = await prisma.tag.findMany();
+        const tags = await prismaClient.tag.findMany();
 
         res.status(200).json({ tags: tags });
     } catch (error) {
@@ -115,12 +113,12 @@ export const getAllTags = async (req: Request, res: Response): Promise<void> => 
 export const getTag = async (req: Request, res: Response): Promise<void> => {
     try {
         const id = await integerValidator.parseAsync(req.body.tagId);
-        const tag = await prisma.tag.findUnique({
+        const tag = await prismaClient.tag.findUnique({
             where: {
                 id,
             },
         });
-        
+
         res.status(200).json({ tag: tag });
     } catch (error) {
         if (error.name === 'ZodError') {
@@ -143,7 +141,7 @@ export const getTag = async (req: Request, res: Response): Promise<void> => {
 export const deleteTag = async (req: Request, res: Response): Promise<void> => {
     try {
         const id = await integerValidator.parseAsync(req.body.tagId);
-        await prisma.tag.deleteMany({ where: { id } });
+        await prismaClient.tag.deleteMany({ where: { id } });
 
         res.status(200).json({ message: 'Tag deleted.' });
     } catch (error) {

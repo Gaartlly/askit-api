@@ -1,10 +1,8 @@
-import { PrismaClient } from '@prisma/client';
 import { Request, Response } from 'express';
 import { verifyPassword } from '../utils/bcryptUtil';
 import { z } from 'zod';
 import generateJwtToken from '../services/tokenJwtService/generateTokenJwt';
-
-const prisma = new PrismaClient();
+import prismaClient from '../services/prisma/prismaClient';
 
 export const login = async (req: Request, res: Response) => {
     try {
@@ -17,7 +15,7 @@ export const login = async (req: Request, res: Response) => {
 
         const { email, password } = userLoginSchema.parse(req.body);
 
-        const user = await prisma.user.findFirst({
+        const user = await prismaClient.user.findFirst({
             where: {
                 email: email,
             },

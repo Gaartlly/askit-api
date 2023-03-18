@@ -7,7 +7,7 @@ import fileRoutes from './routes/fileRoutes';
 import postRoutes from './routes/postRoutes';
 import userRoutes from './routes/userRoutes';
 import tagRoutes from './routes/tagRoutes';
-import { verifyAuthentication } from './middleware/authUserMiddleware';
+import verifyAuthentication from './middleware/authUserMiddleware';
 import loginRoutes from './routes/loginRoute';
 
 const app = express();
@@ -25,8 +25,7 @@ app.use('/api/file', verifyAuthentication, fileRoutes);
 app.use('/api/comment', verifyAuthentication, commentRoutes);
 app.use('/api/post', verifyAuthentication, postRoutes);
 app.use('/api/tag', verifyAuthentication, tagRoutes);
-app.use('/api', verifyAuthentication, loginRoutes);
-
+app.use('/api', loginRoutes);
 
 app.listen(port, () => {
     console.log(`App running at http://localhost:${port}`);
