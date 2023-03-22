@@ -72,7 +72,7 @@ export const createComment = async (req: Request, res: Response): Promise<void> 
         category: z.string(),
         postId: z.number(),
         parentCommentId: z.number().optional(),
-        files: z.any().optional()
+        files: z.array(z.object({ id: z.number() })).optional()
     });
     try {
         const { authorId, content, category, files, postId, parentCommentId } = createCommentSchema.parse(req.body);
@@ -84,6 +84,11 @@ export const createComment = async (req: Request, res: Response): Promise<void> 
                 category,
                 postId,
                 parentCommentId,
+                files: {
+                    connect: files.map((file) => ({
+                        id: file.id,
+                    }))
+                }
             },
         });
 
@@ -134,25 +139,18 @@ export const deleteComment = async (req: Request, res: Response): Promise<void> 
 export const updateComment = async (req: Request, res: Response): Promise<void> => {
    const updateCommentSchema = z.object({
         content: z.string().optional(),
-        category: z.string().optional(),
-        postId: z.number().optional(),
-        parentCommentId: z.number().optional(),
-        files: z.any().optional()
     });
     try {
         const id = await integerValidator.parseAsync(req.params.commentId);
 
-        const { content, category, postId, parentCommentId } = updateCommentSchema.parse(req.body);
+        const { content } = updateCommentSchema.parse(req.body);
 
         const updatedComment = await prisma.comment.update({
             where: {
-                id,
+                id
             },
             data: {
-                content,
-                category,
-                postId,
-                parentCommentId,
+                content
             },
         });
 
