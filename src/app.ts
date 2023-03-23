@@ -1,6 +1,6 @@
 import dotenv from 'dotenv';
 dotenv.config();
-import express from 'express';
+import express, { application } from 'express';
 import bodyParser from 'body-parser';
 import commentRoutes from './routes/commentRoutes';
 import fileRoutes from './routes/fileRoutes';
@@ -11,6 +11,7 @@ import { verifyAuthentication } from './middleware/authUserMiddleware';
 import loginRoutes from './routes/loginRoute';
 import swaggerUi from 'swagger-ui-express';
 import swaggerFile from './swagger_output.json';
+import { errorResponse } from './utils/error';
 
 const app = express();
 const port = process.env.PORT ? Number(process.env.PORT) : 4000;
@@ -31,6 +32,7 @@ app.use('/api/tag', verifyAuthentication, tagRoutes);
 app.use('/api', loginRoutes);
 
 
+app.use(errorResponse);
 app.listen(port, () => {
     console.log(`App running at http://localhost:${port}`);
 });

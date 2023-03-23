@@ -1,14 +1,18 @@
 import { PrismaClient } from '@prisma/client';
-import { Request, Response } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import { verifyPassword } from '../utils/bcryptUtil';
 import { z } from 'zod';
 import generateJwtToken from '../services/tokenJwtService/generateTokenJwt';
+import { BadRequestError } from '../utils/error';
+import { nextTick } from 'process';
 
 const prisma = new PrismaClient();
 
-export const login = async (req: Request, res: Response) => {
+export const login = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const errorMessage = 'Email or password incorrect!';
+
+        throw new BadRequestError('testeee');
 
         const userLoginSchema = z.object({
             email: z.string().min(1).max(255).email(),
@@ -31,6 +35,7 @@ export const login = async (req: Request, res: Response) => {
 
         res.status(200).json({ access_token: tokenJwt });
     } catch (error) {
-        res.status(500).json({ message: 'Internal server error!', error: error.message });
+        next(error);
     }
 };
+
