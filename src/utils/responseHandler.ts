@@ -1,8 +1,4 @@
-import { json } from "body-parser";
-import { NextFunction, Response, Request, response } from "express";
-import { stat } from "fs";
-import { any } from "zod";
-
+import { NextFunction, Response, Request } from "express";
 
 export class BaseError extends Error {
     statusCode: number;
@@ -34,8 +30,6 @@ export class NotFoundError extends BaseError {
     }
 }
 
-
-
 /**
  * 
  * @param error 
@@ -60,7 +54,6 @@ export const errorResponse = (error: any, req: Request, res: Response, next: Nex
 
 /**
  * 
- * @param message 
  * @param data 
  * @returns JSON formated response
  */
