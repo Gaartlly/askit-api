@@ -3,7 +3,7 @@ import { PrismaClient } from '@prisma/client';
 import { z } from 'zod';
 import { formatSuccessResponse } from '../utils/responseHandler';
 import { asyncHandler } from '../utils/responseHandler';
-import { integerValidator } from '../utils/zod';
+import  integerValidator from '../utils/integerValidator';
 
 const prisma = new PrismaClient();
 

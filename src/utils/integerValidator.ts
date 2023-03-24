@@ -1,6 +1,6 @@
 import z from 'zod';
 
-export const integerValidator = z
+const integerValidator = z
     .string()
     .refine(
         (value) => {
@@ -11,3 +11,5 @@ export const integerValidator = z
         }
     )
     .transform((value) => parseInt(value));
+
+export default integerValidator;
