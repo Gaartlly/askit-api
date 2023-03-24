@@ -204,7 +204,7 @@ model Report{
   post Post @relation(fields: [postId], references: [id])
   commentId Int? // Report N:1 Post
   comment Comment? @relation(fields: [commentId], references: [id])
-
+  @@unique([authorId, commentId, postId])
   @@map("report")
 }
 
