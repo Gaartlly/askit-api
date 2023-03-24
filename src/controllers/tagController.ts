@@ -26,16 +26,24 @@ const integerValidator = z
 export const createTag = async (req: Request, res: Response): Promise<void> => {
     const createSchema = z.object({
         key: z.string().min(1).max(255),
-        categoryId: z.number().int(),
+        categoryTitle: z.string().min(1).max(255),
     });
 
     try {
-        const { key, categoryId } = createSchema.parse(req.body);
+        const { key, categoryTitle } = createSchema.parse(req.body);
 
         const createdTag = await prisma.tag.create({
             data: {
                 key,
-                categoryId
+                category: {
+                    connectOrCreate: {
+                        where: { title: categoryTitle },
+                        create: { title: categoryTitle },
+                    },
+                },
+            },
+            include: {
+                category: true,
             },
         });
 
@@ -59,20 +67,28 @@ export const createTag = async (req: Request, res: Response): Promise<void> => {
 export const updateTag = async (req: Request, res: Response): Promise<void> => {
     const updateSchema = z.object({
         key: z.string().min(1).max(255).optional(),
-        category: z.string().min(1).max(255).optional(),
-        postId: z.number().int().optional(),
+        categoryTitle: z.string().min(1).max(255).optional(),
     });
 
     try {
         const id = await integerValidator.parseAsync(req.params.tagId);
-        const { key } = updateSchema.parse(req.body);
+        const { key, categoryTitle } = updateSchema.parse(req.body);
 
         const updatedTag: Tag = await prisma.tag.update({
             where: {
-                id
+                id,
             },
             data: {
-                key
+                key,
+                category: {
+                    connectOrCreate: {
+                        where: { title: categoryTitle },
+                        create: { title: categoryTitle },
+                    },
+                },
+            },
+            include: {
+                category: true,
             },
         });
 
@@ -89,7 +105,7 @@ export const updateTag = async (req: Request, res: Response): Promise<void> => {
 };
 
 /**
- * Get all tags. 
+ * Get all tags.
  *
  * @param {Request} req - Express Request object.
  * @param {Response} res - Express Response object.
@@ -97,7 +113,11 @@ export const updateTag = async (req: Request, res: Response): Promise<void> => {
  */
 export const getAllTags = async (req: Request, res: Response): Promise<void> => {
     try {
-        const tags = await prisma.tag.findMany();
+        const tags = await prisma.tag.findMany({
+            include: {
+                category: true,
+            },
+        });
 
         res.status(200).json({ tags: tags });
     } catch (error) {
@@ -119,8 +139,11 @@ export const getTag = async (req: Request, res: Response): Promise<void> => {
             where: {
                 id,
             },
+            include: {
+                category: true,
+            },
         });
-        
+
         res.status(200).json({ tag: tag });
     } catch (error) {
         if (error.name === 'ZodError') {
@@ -143,7 +166,7 @@ export const getTag = async (req: Request, res: Response): Promise<void> => {
 export const deleteTag = async (req: Request, res: Response): Promise<void> => {
     try {
         const id = await integerValidator.parseAsync(req.body.tagId);
-        await prisma.tag.deleteMany({ where: { id } });
+        await prisma.tag.delete({ where: { id } });
 
         res.status(200).json({ message: 'Tag deleted.' });
     } catch (error) {

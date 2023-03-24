@@ -148,7 +148,7 @@ model TagCategory{
   createdAt DateTime @default(now())
   updateAt DateTime @updatedAt
 
-  title String @db.VarChar(255)
+  title String @db.VarChar(255) @unique
 
   //Relationship fields
   tags Tag[] // TagCategory 1:N Tag
