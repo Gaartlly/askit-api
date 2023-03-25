@@ -173,8 +173,8 @@ router.get('/getAllFiles', getAllFiles);
  *               error:
  *                 type: NotFoundError
  *                 path: /api/getFileById
- *                 statusCode: 400
- *                 message: Bad request
+ *                 statusCode: 404
+ *                 message: Not found
  *
  *       500:
  *         content:
@@ -227,8 +227,8 @@ router.get('/getFileById/:fileId', getFileById);
  *               error:
  *                 type: NotFoundError
  *                 path: /api/deleteFile
- *                 statusCode: 400
- *                 message: Bad request
+ *                 statusCode: 404
+ *                 message: Not found
  *
  *       500:
  *         content:
@@ -287,8 +287,8 @@ router.delete('/deleteFile/:fileId', deleteFile);
  *               error:
  *                 type: NotFoundError
  *                 path: /api/updateFile
- *                 statusCode: 400
- *                 message: Bad request
+ *                 statusCode: 404
+ *                 message: Not found
  *
  *       500:
  *         content:
