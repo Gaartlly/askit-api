@@ -6,6 +6,12 @@ const router = express.Router();
 /**
  * @swagger
  * components:
+ *   securitySchemes:
+ *     bearerAuth:
+ *       type: https
+ *       scheme: bearer
+ *       bearerFormat: JWT
+ *
  *   schemas:
  *     File:
  *       type: object
@@ -35,8 +41,10 @@ const router = express.Router();
 
 /**
  * @swagger
- * /api/uploadFile:
+ * /api/file/uploadFile:
  *   post:
+ *     security:
+ *       - bearerAuth: []
  *     description: Upload new file.
  *     tags: [File]
  *     requestBody:
@@ -92,8 +100,10 @@ router.post('/uploadFile', uploadFile);
 
 /**
  * @swagger
- * /api/getAllFiles:
+ * /api/file/getAllFiles:
  *   get:
+ *     security:
+ *       - bearerAuth: []
  *     description: Retrieve all files.
  *     tags: [File]
  *
@@ -132,8 +142,10 @@ router.get('/getAllFiles', getAllFiles);
 
 /**
  * @swagger
- * /api/getFileById/{fileId}:
+ * /api/file/getFileById/{fileId}:
  *   get:
+ *     security:
+ *       - bearerAuth: []
  *     description: Retrieve file by id.
  *     tags: [File]
  *     parameters:
@@ -192,8 +204,10 @@ router.get('/getFileById/:fileId', getFileById);
 
 /**
  * @swagger
- * /api/deleteFile/{fileId}:
+ * /api/file/deleteFile/{fileId}:
  *   delete:
+ *     security:
+ *       - bearerAuth: []
  *     description: Delete file.
  *     tags: [File]
  *     parameters:
@@ -246,8 +260,10 @@ router.delete('/deleteFile/:fileId', deleteFile);
 
 /**
  * @swagger
- * /api/updateFile/{fileId}:
+ * /api/file/updateFile/{fileId}:
  *   put:
+ *     security:
+ *       - bearerAuth: []
  *     description: Update file.
  *     tags: [File]
  *     parameters:
