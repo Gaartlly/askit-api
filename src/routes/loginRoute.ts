@@ -43,6 +43,7 @@ const loginRoutes = Router();
  *         content:
  *           application/json:
  *             example:
+ *               response: Successful
  *               access_token: jidshjduashdasuhqipjew51eqw54ew4wewq4e6wq444re54qwr64wq
  *
  *       400:
