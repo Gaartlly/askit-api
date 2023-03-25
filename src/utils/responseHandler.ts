@@ -30,6 +30,12 @@ export class NotFoundError extends BaseError {
     }
 }
 
+export class InternalServerError extends BaseError {
+    constructor(message: string) {
+        super(500, message);
+    }
+}
+
 /**
  * 
  * @param error 
