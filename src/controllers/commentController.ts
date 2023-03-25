@@ -7,14 +7,14 @@ import  integerValidator from '../utils/integerValidator';
 
 const prisma = new PrismaClient();
 
-
 /**
  * Get all comments.
  *
  * @param {Request} req - Express Request object.
  * @param {Response} res - Express Response object.
+ * @returns {Promise<void>}
  */
-export const getAllComments = asyncHandler(async(req: Request, res: Response, next: NextFunction) => {
+export const getAllComments = asyncHandler(async(req: Request, res: Response, next: NextFunction): Promise<void> => {
     const comments = await prisma.comment.findMany();
     res.status(200).json(formatSuccessResponse(comments));
 });
@@ -26,23 +26,45 @@ export const getAllComments = asyncHandler(async(req: Request, res: Response, ne
  * @param {Response} res - Express Response object.
  * @returns {Promise<void>}
  */
-export const getCommentsByUserId = async (req: Request, res: Response): Promise<void> => {
-    const authorId = await integerValidator.parseAsync(req.params.authorId);
+export const getCommentsByUserId = asyncHandler(async(req: Request, res: Response): Promise<void> => {
+    const authorId = await integerValidator.parseAsync(req.params.userId);
+
+    await prisma.user.findUniqueOrThrow({
+        where: { id: authorId }
+    });
 
     const comments = await prisma.comment.findMany({
         where: { authorId }
     });
 
     res.status(200).json(formatSuccessResponse(comments));
-};
+});
+
+/**
+ * Get all comments of a user.
+ *
+ * @param {Request} req - Express Request object.
+ * @param {Response} res - Express Response object.
+ * @returns {Promise<void>}
+ */
+export const getMyComments = asyncHandler(async(req: Request, res: Response): Promise<void> => {
+    const authorId = await integerValidator.parseAsync(req.params.userId);
+
+    const comments = await prisma.comment.findMany({
+        where: { authorId }
+    });
+
+    res.status(200).json(formatSuccessResponse(comments));
+});
 
 /**
  * Create a new comment.
  *
  * @param {Request} req - Express Request object.
  * @param {Response} res - Express Response object.
+ * @returns {Promise<void>}
  */
-export const createComment = async (req: Request, res: Response): Promise<void> => {
+export const createComment = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const createCommentSchema = z.object({
         authorId: z.number(), 
         content: z.string().optional(),
@@ -65,7 +87,7 @@ export const createComment = async (req: Request, res: Response): Promise<void> 
     });
 
     res.status(201).json(formatSuccessResponse(comment));
-};
+});
 
 /**
  * Delete a comment.
@@ -73,7 +95,7 @@ export const createComment = async (req: Request, res: Response): Promise<void> 
  * @param {Request} req - Express Request object.
  * @param {Response} res - Express Response object.
  */
-export const deleteComment = async (req: Request, res: Response): Promise<void> => {
+export const deleteComment = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const id = await integerValidator.parseAsync(req.params.commentId);
 
     const deletedComment = await prisma.comment.delete({
@@ -81,7 +103,7 @@ export const deleteComment = async (req: Request, res: Response): Promise<void> 
     });
 
     res.status(200).json(formatSuccessResponse(deletedComment));
-};
+});
 
 /**
  * Update a comment.
@@ -90,7 +112,7 @@ export const deleteComment = async (req: Request, res: Response): Promise<void> 
  * @param {Response} res - Express Response object.
  * @returns {Promise<void>}
  */
-export const updateComment = async (req: Request, res: Response): Promise<void> => {
+export const updateComment = asyncHandler(async (req: Request, res: Response): Promise<void> => {
    const updateCommentSchema = z.object({
         content: z.string().optional(),
         category: z.string().optional(),
@@ -116,4 +138,4 @@ export const updateComment = async (req: Request, res: Response): Promise<void> 
     });
 
     res.status(200).json(formatSuccessResponse(updatedComment));
-};
+});

@@ -2,6 +2,8 @@ import { Response, Request } from 'express';
 import { PrismaClient, Role } from '@prisma/client';
 import { z } from 'zod';
 import { hashPassword, verifyPassword } from '../utils/bcryptUtil';
+import { asyncHandler, InternalServerError, UnauthorizedError } from '../utils/responseHandler';
+import { formatSuccessResponse } from '../utils/responseHandler';
 
 const prisma = new PrismaClient();
 
@@ -23,27 +25,23 @@ const integerValidator = z
  * @param {Response} res - Express Response object.
  * @returns {Promise<void>}
  */
-export const getUsers = async (res: Response): Promise<void> => {
-    try {
-        const users = await prisma.user.findMany({
-            select: {
-                id: true,
-                name: true,
-                email: true,
-                course: true,
-                password: false,
-                role: false,
-                status: false,
-            },
-            orderBy: {
-                name: 'asc',
-            },
-        });
-        res.status(200).json(users);
-    } catch (error) {
-        res.status(500).json({ message: 'Internal server error' });
-    }
-};
+export const getUsers = asyncHandler(async (res: Response): Promise<void> => {
+    const users = await prisma.user.findMany({
+        select: {
+            id: true,
+            name: true,
+            email: true,
+            course: true,
+            password: false,
+            role: false,
+            status: false,
+        },
+        orderBy: {
+            name: 'asc',
+        },
+    });
+    res.status(200).json(formatSuccessResponse(users));
+});
 
 /**
  * Create a new user.
@@ -52,7 +50,7 @@ export const getUsers = async (res: Response): Promise<void> => {
  * @param {Response} res - Express Response object.
  * @returns {Promise<void>}
  */
-export const createUser = async (req: Request, res: Response): Promise<void> => {
+export const createUser = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const createUserSchema = z.object({
         name: z.string(),
         email: z.string().email(),
@@ -61,39 +59,36 @@ export const createUser = async (req: Request, res: Response): Promise<void> => 
         status: z.boolean(),
         courseId: z.number(),
     });
-    try {
-        const { name, email, role, status, courseId } = createUserSchema.parse(req.body);
-        let { password } = createUserSchema.parse(req.body);
+    const { name, email, role, status, courseId } = createUserSchema.parse(req.body);
+    let { password } = createUserSchema.parse(req.body);
 
-        const hash = await hashPassword(password, 11);
-        if (!hashPassword) throw new Error('Failed to encrypt password!');
-        password = hash;
+    const hash = await hashPassword(password, 11);
 
-        const user = await prisma.user.create({
-            data: {
-                name,
-                email,
-                password,
-                role,
-                status,
-                courseId
-            },
-        });
+    if (!hashPassword) throw new InternalServerError('Failed to encrypt password!');
 
-        res.status(201).json({
-            message: 'User created!',
-            user: {
-                id: user.id,
-                name: user.name,
-                email: user.email,
-                role: user.role,
-                status: user.status,
-            },
-        });
-    } catch (error) {
-        res.status(500).json({ message: 'Internal server error', error: error });
-    }
-};
+    password = hash;
+
+    const user = await prisma.user.create({
+        data: {
+            name,
+            email,
+            password,
+            role,
+            status,
+            courseId
+        },
+    });
+
+    res.status(201).json(formatSuccessResponse({
+        user: {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            status: user.status,
+        }
+    }));
+});
 
 /**
  * Update a user.
@@ -102,7 +97,7 @@ export const createUser = async (req: Request, res: Response): Promise<void> => 
  * @param {Response} res - Express Response object.
  * @returns {Promise<void>}
  */
-export const updateUser = async (req: Request, res: Response): Promise<void> => {
+export const updateUser = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const updateUserSchema = z.object({
         newName: z.string().min(1).max(255).optional(),
         newRole: z.enum([Role.ADMIN, Role.USER]),
@@ -123,48 +118,36 @@ export const updateUser = async (req: Request, res: Response): Promise<void> => 
         }
     );
 
-    try {
-        const id = await integerValidator.parseAsync(req.body.tagId);
-        const { newName, email, newEmail, newCourse, password, newPassword, newRole } = await updateUserSchema.parseAsync(req.body);
+    const id = await integerValidator.parseAsync(req.body.tagId);
+    const { newName, email, newEmail, newCourse, password, newPassword, newRole } = await updateUserSchema.parseAsync(req.body);
 
-        const user = await prisma.user.findUniqueOrThrow({
-            where: {
-                id: id,
-            },
-        });
+    const user = await prisma.user.findUniqueOrThrow({
+        where: {
+            id: id,
+        },
+    });
 
-        if(email && email !== user.email)
-            throw new Error('Current email is wrong.');
-            //res.status(400).json({ message: 'Current email is wrong!'})
-        
-        const resultComparison = await verifyPassword(password, user.password);
-        if(password && !resultComparison)
-            throw new Error('Current password is wrong.');
-            //res.status(400).json({ message: 'Current password is wrong!'})
+    if(email && email !== user.email)
+        throw new UnauthorizedError('Current email is wrong.');
+    
+    const resultComparison = await verifyPassword(password, user.password);
+    if(password && !resultComparison)
+        throw new UnauthorizedError('Current password is wrong.');
 
-        await prisma.user.update({
-            where: {
-                id
-            },
-            data:{
-                name: newName,
-                email: newEmail,
-                password: newPassword,
-                role: newRole
-            }
-        });
-
-        res.status(200).json({ message: 'User updated!' });
-    } catch (error) {
-        if (error.name === 'ZodError') {
-            res.status(400).json({ error: error });
-        } else if (error.code === 'P2025') {
-            res.status(404).json({ message: 'User not found!' });
-        } else {
-            res.status(500).json({ message: 'Internal server error' });
+    const userUpdated = await prisma.user.update({
+        where: {
+            id
+        },
+        data:{
+            name: newName,
+            email: newEmail,
+            password: newPassword,
+            role: newRole
         }
-    }
-}
+    });
+
+    res.status(200).json(formatSuccessResponse(userUpdated));
+});
 
 /**
  * Delete a user.
@@ -173,24 +156,14 @@ export const updateUser = async (req: Request, res: Response): Promise<void> => 
  * @param {Response} res - Express Response object.
  * @returns {Promise<void>}
  */
-export const deleteUser = async (req: Request, res: Response): Promise<void> => {
-    try {
-        const id = await integerValidator.parseAsync(req.body.tagId);
+export const deleteUser = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    const id = await integerValidator.parseAsync(req.body.tagId);
 
-        await prisma.user.delete({
-            where: {
-                id: id,
-            },
-        });
-
-        res.status(200).json({ message: 'User deleted!' });
-    } catch (error) {
-        if (error.name === 'ZodError') {
-            res.status(400).json({ error: error });
-        } else if (error.code === 'P2025') {
-            res.status(404).json({ message: 'User not found!' });
-        } else {
-            res.status(500).json({ message: 'Internal server error' });
+    const deletedUser = await prisma.user.delete({
+        where: {
+            id: id
         }
-    }
-};
+    });
+
+    res.status(200).json(formatSuccessResponse(deletedUser));
+});
