@@ -139,9 +139,8 @@ export const deleteFile = async (req: Request, res: Response): Promise<void> => 
  * @param {Response} res - Express Response object.
  * @returns {Promise<void>}
  */
-export const updateFile = async (req: Request, res: Response) => {
+export const updateFile = async (req: Request, res: Response): Promise<void> => {
     const updateFileSchema = z.object({
-        id: z.number().int(),
         newTitle: z.string().min(1).max(255),
         newPath: z.string().min(1),
     });
