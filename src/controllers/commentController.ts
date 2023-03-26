@@ -76,6 +76,14 @@ export const createComment = asyncHandler(async (req: Request, res: Response): P
 
     const { authorId, content, category, files, postId, parentCommentId } = createCommentSchema.parse(req.body);
 
+    await prisma.user.findUniqueOrThrow({
+        where: { id: authorId }
+    });
+
+    await prisma.post.findUniqueOrThrow({
+        where: { id: postId }
+    });
+
     const comment = await prisma.comment.create({
         data: {
             authorId,
