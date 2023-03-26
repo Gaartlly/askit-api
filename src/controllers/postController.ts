@@ -26,35 +26,44 @@ const integerValidator = z
 export const createPost = async (req: Request, res: Response): Promise<void> => {
     const createSchema = z.object({
         title: z.string().min(1).max(255),
-        description: z.string().min(1).max(255),
-        upvotes: z.number().int().default(0),
-        downvotes: z.number().int().default(0),
+        content: z.string().min(1).max(255),
         authorId: z.number().int(),
-        files: z
-            .array(
-                z.object({
-                    title: z.string().min(1).max(255),
-                    path: z.string().min(1).max(255),
-                })
-            )
-            .optional(),
+        tags: z.array(
+            z.object({
+                key: z.string().min(1).max(255),
+                categoryId: z.number(),
+            })
+        ),
     });
 
     try {
-        const post = createSchema.parse(req.body);
+        const { title, content, authorId, tags } = createSchema.parse(req.body);
         const createdPost = await prisma.post.create({
             data: {
-                title: post.title,
-                content: post.description,
-                authorId: post.authorId,
-                //files: {
-                //    create: post.files,
-                //},
+                title,
+                content,
+                authorId,
+                tags: {
+                    connectOrCreate: tags.map((tag) => {
+                        const { key, categoryId } = tag;
+                        return {
+                            where: {
+                                key_categoryId: { key, categoryId },
+                            },
+                            create: {
+                                key,
+                                categoryId,
+                            },
+                        };
+                    }),
+                },
             },
             include: {
+                tags: true,
                 files: true,
             },
         });
+
         res.status(201).json({ message: 'Post created.', post: createdPost });
     } catch (error) {
         if (error.name === 'ZodError') {
@@ -75,16 +84,13 @@ export const createPost = async (req: Request, res: Response): Promise<void> => 
 export const updatePost = async (req: Request, res: Response): Promise<void> => {
     const updateSchema = z.object({
         title: z.string().min(1).max(255).optional(),
-        description: z.string().min(1).max(255).optional(),
-        upvotes: z.number().int().optional(),
-        downvotes: z.number().int().optional(),
-        authorId: z.number().int().optional(),
-        files: z
+        content: z.string().min(1).max(255).optional(),
+        authorId: z.number().int(),
+        tags: z
             .array(
                 z.object({
-                    id: z.number().int().optional(),
-                    title: z.string().min(1).max(255),
-                    path: z.string().min(1).max(255),
+                    key: z.string().min(1).max(255),
+                    categoryId: z.number(),
                 })
             )
             .optional(),
@@ -92,39 +98,32 @@ export const updatePost = async (req: Request, res: Response): Promise<void> => 
 
     try {
         const id = await integerValidator.parseAsync(req.body.postId);
-        const currentPost = await prisma.post.findUnique({
-            where: { id },
-            include: {
-                files: true,
-            },
-        });
 
-        if (currentPost === null) {
-            res.status(404).json({ message: `Post ${id} not found` });
-        }
-
-        const currentFilesIds = currentPost.files.map((file) => file.id);
-        const newPost = updateSchema.parse(req.body);
-        const createdFiles = newPost.files.filter((obj) => obj.id == undefined); //Arquivos que chegam sem id
-        const updatedFiles = newPost.files.filter((obj) => obj.id !== undefined); //Arquivos que chegam com id
-        const deletedFilesIds = currentFilesIds.filter((id) => !updatedFiles.map((obj) => obj.id).includes(id)); //Arquivos que não estão entre os novos
-
-        await prisma.file.deleteMany({ where: { id: { in: deletedFilesIds } } });
-        for (const file of updatedFiles) {
-            await prisma.file.update({ where: { id: file.id }, data: file });
-        }
+        const { title, content, authorId, tags } = updateSchema.parse(req.body);
 
         const updatedPost: Post = await prisma.post.update({
             where: { id },
             data: {
-                title: newPost.title,
-                content: newPost.description,
-                authorId: newPost.authorId,
-                //files: {
-                //    createMany: { data: createdFiles },
-                //},
+                title,
+                content,
+                authorId,
+                tags: {
+                    connectOrCreate: tags.map((tag) => {
+                        const { key, categoryId } = tag;
+                        return {
+                            where: {
+                                key_categoryId: { key, categoryId },
+                            },
+                            create: {
+                                key,
+                                categoryId,
+                            },
+                        };
+                    }),
+                },
             },
             include: {
+                tags: true,
                 files: true,
             },
         });
@@ -151,6 +150,7 @@ export const getAllPosts = async (req: Request, res: Response): Promise<void> =>
     try {
         const posts = await prisma.post.findMany({
             include: {
+                tags: true,
                 files: true,
             },
         });
@@ -169,13 +169,47 @@ export const getAllPosts = async (req: Request, res: Response): Promise<void> =>
  */
 export const getPost = async (req: Request, res: Response): Promise<void> => {
     try {
-        const id = await integerValidator.parseAsync(req.body.postId);
+        const postId = await integerValidator.parseAsync(req.body.postId);
 
         const post = await prisma.post.findUnique({
             where: {
-                id
+                id: postId,
             },
             include: {
+                tags: true,
+                files: true,
+            },
+        });
+
+        res.status(200).json({ post: post });
+    } catch (error) {
+        if (error.name === 'ZodError') {
+            res.status(400).json({ error: error });
+        } else if (error.code === 'P2025') {
+            res.status(404).json({ message: 'Comment not found!' });
+        } else {
+            res.status(500).json({ message: 'Internal server error' });
+        }
+    }
+};
+
+/**
+ * Get a post from an author.
+ *
+ * @param {Request} req - Express Request object.
+ * @param {Response} res - Express Response object.
+ * @returns {Promise<void>}
+ */
+export const getPostByAuthor = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const authorId = await integerValidator.parseAsync(req.body.authorId);
+
+        const post = await prisma.post.findMany({
+            where: {
+                authorId,
+            },
+            include: {
+                tags: true,
                 files: true,
             },
         });
@@ -205,7 +239,7 @@ export const deletePost = async (req: Request, res: Response): Promise<void> => 
 
         const post = await prisma.post.findUnique({ where: { id } });
         if (post) {
-            await prisma.post.deleteMany({ where: { id } });
+            await prisma.post.delete({ where: { id } });
         }
 
         res.status(200).json({ message: 'Post deleted.' });

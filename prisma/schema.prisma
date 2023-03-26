@@ -76,7 +76,7 @@ model Post {
   content String? @db.VarChar(8000)
   
   //Relationship fields
-  tags TagOnPost[] // Post N:N Tag (through TagOnPost)
+  tags Tag[] // Post N:N Tag (implicit)
   files File[] // Post 1:N Files
   comments Comment[] // Post 1:N Comment
   reactions Reaction[] // Post 1:N Reaction
@@ -135,11 +135,12 @@ model Tag {
   key String @db.VarChar(255)
 
   //Relationship fields
-  posts TagOnPost[] // Tag N:N Post (through TagOnPost)
-  reports TagOnReport[] // Tag N:N Report (through TagOnReport)
+  posts Post[] // Tag N:N Post (implicit)
+  reports Report[] // Tag N:N Report (implicit)
   categoryId Int // Tag N:1 TagCategory
   category TagCategory @relation(fields: [categoryId], references: [id])
-
+  
+  @@unique([key, categoryId])
   @@map("tag")
 }
 
@@ -154,20 +155,6 @@ model TagCategory{
   tags Tag[] // TagCategory 1:N Tag
 
   @@map("tagcategory")
-}
-
-model TagOnPost{
-  @@id([postId, tagId])
-  createdAt DateTime @default(now())
-  updateAt DateTime @updatedAt
-
-  //Relationship fields
-  tagId Int // TagOnPost N:1 Tag
-  tag Tag @relation(fields: [tagId], references: [id])
-  postId Int // TagOnPost N:1 Post
-  post Post @relation(fields: [postId], references: [id])
-
-  @@map("tagonpost")
 }
 
 model Reaction{
@@ -197,7 +184,7 @@ model Report{
   reason String @db.VarChar(1000)
 
   //Relationship fields
-  tags TagOnReport[] // Report N:N Tag (through TagOnReport)
+  tags Tag[] // Report N:N Tag (implicit)
   authorId Int // Report N:1 User
   author User @relation(fields: [authorId], references: [id])
   postId Int // Report N:1 Post
@@ -206,18 +193,4 @@ model Report{
   comment Comment? @relation(fields: [commentId], references: [id])
   @@unique([authorId, commentId, postId])
   @@map("report")
-}
-
-model TagOnReport{
-  @@id([reportId, tagId])
-  createdAt DateTime @default(now())
-  updateAt DateTime @updatedAt
-
-  //Relationship fields
-  tagId Int // TagOnPost N:1 Tag
-  tag Tag @relation(fields: [tagId], references: [id])
-  reportId Int // TagOnPost N:1 Post
-  report Report @relation(fields: [reportId], references: [id])
-
-  @@map("tagonreport")
 }
