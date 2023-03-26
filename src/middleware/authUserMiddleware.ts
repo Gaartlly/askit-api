@@ -1,10 +1,9 @@
 import { NextFunction, Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import { UnauthorizedError } from '../utils/responseHandler';
-import { asyncHandler } from '../utils/responseHandler';
 import { secretKey } from '../utils/tokenJwtUtil';
 
-export const verifyAuthentication = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+export const verifyAuthentication = async (req: Request, res: Response, next: NextFunction) => {
     const token = req.headers.authorization;
 
     if (!token)
@@ -15,4 +14,4 @@ export const verifyAuthentication = asyncHandler(async (req: Request, res: Respo
 
     jwt.verify(jwtToken, secretKey);
     return next();
-});
+};
