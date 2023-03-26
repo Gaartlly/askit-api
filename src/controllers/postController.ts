@@ -1,8 +1,7 @@
 import { Response, Request } from 'express';
 import { Post, PrismaClient } from '@prisma/client';
 import { z } from 'zod';
-import { asyncHandler } from '../utils/responseHandler';
-import { formatSuccessResponse } from '../utils/responseHandler';
+import { asyncHandler, formatSuccessResponse  } from '../utils/responseHandler';
 
 const prisma = new PrismaClient();
 

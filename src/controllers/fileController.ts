@@ -3,7 +3,6 @@ import cloudinary from '../config/cloudinaryConfig';
 import { PrismaClient } from '@prisma/client';
 import { z } from 'zod';
 import { asyncHandler, formatSuccessResponse } from '../utils/responseHandler';
-import { format } from 'path';
 
 const prisma = new PrismaClient();
 

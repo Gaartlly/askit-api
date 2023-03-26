@@ -1,6 +1,6 @@
 import dotenv from 'dotenv';
 dotenv.config();
-import express, { application } from 'express';
+import express from 'express';
 import bodyParser from 'body-parser';
 import commentRoutes from './routes/commentRoutes';
 import fileRoutes from './routes/fileRoutes';

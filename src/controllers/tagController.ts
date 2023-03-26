@@ -1,5 +1,5 @@
 import { Response, Request } from 'express';
-import { Tag, PrismaClient, Role } from '@prisma/client';
+import { Tag, PrismaClient } from '@prisma/client';
 import { z } from 'zod';
 import { asyncHandler, formatSuccessResponse } from '../utils/responseHandler';
 

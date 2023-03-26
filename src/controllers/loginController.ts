@@ -3,7 +3,7 @@ import { NextFunction, Request, Response } from 'express';
 import { verifyPassword } from '../utils/bcryptUtil';
 import { z } from 'zod';
 import generateJwtToken from '../services/tokenJwtService/generateTokenJwt';
-import { asyncHandler, BadRequestError, formatSuccessResponse, UnauthorizedError } from '../utils/responseHandler';
+import { asyncHandler, formatSuccessResponse, UnauthorizedError } from '../utils/responseHandler';
 
 const prisma = new PrismaClient();
 
