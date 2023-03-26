@@ -35,7 +35,7 @@ export const createTag = async (req: Request, res: Response): Promise<void> => {
         const createdTag = await prisma.tag.create({
             data: {
                 key,
-                categoryId
+                categoryId,
             },
         });
 
@@ -59,20 +59,20 @@ export const createTag = async (req: Request, res: Response): Promise<void> => {
 export const updateTag = async (req: Request, res: Response): Promise<void> => {
     const updateSchema = z.object({
         key: z.string().min(1).max(255).optional(),
-        category: z.string().min(1).max(255).optional(),
-        postId: z.number().int().optional(),
+        categoryId: z.number().int().optional(),
     });
 
     try {
-        const id = await integerValidator.parseAsync(req.params.tagId);
-        const { key } = updateSchema.parse(req.body);
+        const tagId = await integerValidator.parseAsync(req.params.tagId);
+        const { key, categoryId } = updateSchema.parse(req.body);
 
         const updatedTag: Tag = await prisma.tag.update({
             where: {
-                id
+                id: tagId,
             },
             data: {
-                key
+                key,
+                categoryId,
             },
         });
 
@@ -89,7 +89,7 @@ export const updateTag = async (req: Request, res: Response): Promise<void> => {
 };
 
 /**
- * Get all tags. 
+ * Get all tags.
  *
  * @param {Request} req - Express Request object.
  * @param {Response} res - Express Response object.
@@ -120,7 +120,7 @@ export const getTag = async (req: Request, res: Response): Promise<void> => {
                 id,
             },
         });
-        
+
         res.status(200).json({ tag: tag });
     } catch (error) {
         if (error.name === 'ZodError') {
@@ -142,8 +142,8 @@ export const getTag = async (req: Request, res: Response): Promise<void> => {
  */
 export const deleteTag = async (req: Request, res: Response): Promise<void> => {
     try {
-        const id = await integerValidator.parseAsync(req.body.tagId);
-        await prisma.tag.deleteMany({ where: { id } });
+        const tagId = await integerValidator.parseAsync(req.params.tagId);
+        await prisma.tag.deleteMany({ where: { id: tagId } });
 
         res.status(200).json({ message: 'Tag deleted.' });
     } catch (error) {
