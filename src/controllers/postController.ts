@@ -85,7 +85,7 @@ export const updatePost = async (req: Request, res: Response): Promise<void> => 
     const updateSchema = z.object({
         title: z.string().min(1).max(255).optional(),
         content: z.string().min(1).max(255).optional(),
-        authorId: z.number().int(),
+        authorId: z.number().int().optional(),
         tags: z
             .array(
                 z.object({
@@ -97,12 +97,12 @@ export const updatePost = async (req: Request, res: Response): Promise<void> => 
     });
 
     try {
-        const id = await integerValidator.parseAsync(req.body.postId);
+        const postId = await integerValidator.parseAsync(req.params.postId);
 
         const { title, content, authorId, tags } = updateSchema.parse(req.body);
 
         const updatedPost: Post = await prisma.post.update({
-            where: { id },
+            where: { id: postId },
             data: {
                 title,
                 content,
@@ -139,6 +139,49 @@ export const updatePost = async (req: Request, res: Response): Promise<void> => 
         }
     }
 };
+
+/**
+ * Update a post, disconnecting a tag from it.
+ *
+ * @param {Request} req - Express Request object.
+ * @param {Response} res - Express Response object.
+ * @returns {Promise<void>}
+ */
+export const disconnectTagFromPost = async (req: Request, res: Response): Promise<void> => {
+    const disconnectSchema = z.object({
+        postId: z.number().int(),
+        tagId: z.number().int(),
+    });
+
+    try {
+        const { postId, tagId } = disconnectSchema.parse(req.body);
+
+        const updatedPost: Post = await prisma.post.update({
+            where: { id: postId },
+            data: {
+                tags: {
+                    disconnect: {
+                        id: tagId,
+                    },
+                },
+            },
+            include: {
+                tags: true,
+            },
+        });
+
+        res.status(200).json({ message: 'Tag disconnected.', post: updatedPost });
+    } catch (error) {
+        if (error.name === 'ZodError') {
+            res.status(400).json({ error: error });
+        } else if (error.code === 'P2025') {
+            res.status(404).json({ message: 'Comment not found!' });
+        } else {
+            res.status(500).json({ message: 'Internal server error' });
+        }
+    }
+};
+
 /**
  * Get all posts.
  *
@@ -169,7 +212,7 @@ export const getAllPosts = async (req: Request, res: Response): Promise<void> =>
  */
 export const getPost = async (req: Request, res: Response): Promise<void> => {
     try {
-        const postId = await integerValidator.parseAsync(req.body.postId);
+        const postId = await integerValidator.parseAsync(req.params.postId);
 
         const post = await prisma.post.findUnique({
             where: {
@@ -194,15 +237,19 @@ export const getPost = async (req: Request, res: Response): Promise<void> => {
 };
 
 /**
- * Get a post from an author.
+ * Get all posts from an author.
  *
  * @param {Request} req - Express Request object.
  * @param {Response} res - Express Response object.
  * @returns {Promise<void>}
  */
-export const getPostByAuthor = async (req: Request, res: Response): Promise<void> => {
+export const getPostsByAuthor = async (req: Request, res: Response): Promise<void> => {
+    const getSchema = z.object({
+        authorId: z.number().int(),
+    });
+
     try {
-        const authorId = await integerValidator.parseAsync(req.body.authorId);
+        const { authorId } = getSchema.parse(req.body);
 
         const post = await prisma.post.findMany({
             where: {
@@ -235,7 +282,7 @@ export const getPostByAuthor = async (req: Request, res: Response): Promise<void
  */
 export const deletePost = async (req: Request, res: Response): Promise<void> => {
     try {
-        const id = await integerValidator.parseAsync(req.body.postId);
+        const id = await integerValidator.parseAsync(req.params.postId);
 
         const post = await prisma.post.findUnique({ where: { id } });
         if (post) {
