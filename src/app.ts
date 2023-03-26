@@ -11,7 +11,7 @@ import { verifyAuthentication } from './middleware/authUserMiddleware';
 import loginRoutes from './routes/loginRoute';
 import swaggerUi from 'swagger-ui-express';
 import swaggerFile from './swagger_output.json';
-import { errorResponse, successResponse } from './utils/responseHandler';
+import { errorResponse } from './utils/responseHandler';
 
 const app = express();
 const port = process.env.PORT ? Number(process.env.PORT) : 4000;
