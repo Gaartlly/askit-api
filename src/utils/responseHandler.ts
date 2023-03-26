@@ -1,3 +1,4 @@
+import { PrismaClientKnownRequestError, PrismaClientUnknownRequestError } from "@prisma/client/runtime/library";
 import { NextFunction, Response, Request } from "express";
 
 export class BaseError extends Error {
@@ -37,22 +38,67 @@ export class InternalServerError extends BaseError {
 }
 
 /**
+ * This function is a higher-order function that takes an async middleware function and returns a 
+ * wrapped function that catches any errors thrown by the middleware and passes them to the next function.
+ * 
+ * @param fn 
+ * @returns Promise
+ */
+export const asyncHandler = (fn: any) => (req: Request, res: Response, next: NextFunction) => Promise.resolve(fn(req, res, next)).catch(next);
+
+
+
+/**
+ * Return the HTTP error code based on the 'error' received.
+ * 
+ * @param error
+ */
+const errorCode = async(error:any): Promise<number> => {
+    if(error.statusCode)
+        return error.statusCode;
+
+    if(error instanceof PrismaClientKnownRequestError || error instanceof PrismaClientUnknownRequestError)
+        return 400;
+
+    switch (error.constructor.name) {
+        case 'ZodError':
+                return 400;
+        case 'NotFoundError':
+                return 400;
+        case 'JsonWebTokenError':
+                return 401;
+        case 'TokenExpiredError':
+                return 401
+        case 'NotBeforeError':
+                return 401
+    }
+
+    return 500;
+};
+
+/**
  * 
  * @param error 
  * @param req 
  * @param res 
  * @param next 
  */
-export const errorResponse = (error: any, req: Request, res: Response, next: NextFunction) => {
+export const errorResponse = async (error: any, req: Request, res: Response, next: NextFunction) => {
     const customError: boolean = error.constructor.name === 'NodeError' || error.constructor.name === 'SyntaxError' ? false : true;
+    const errorReponseCode = await errorCode(error);
 
-    res.status(error.statusCode || 500).json({
+    // Remove '\n' from message. It's necessary because prisma use it in their error messages.
+    let message = error.message;
+    message = message.replaceAll("\n", "");
+
+    res.status(errorReponseCode).json({
       response: 'Error',
       error: {
         type: customError === false ? 'UnhandledError' : error.constructor.name,
         path: req.path,
-        statusCode: error.statusCode || 500,
-        message: error.message
+        statusCode: errorReponseCode,
+        message: message,
+        rawError: error
       }
     });
     next(error);
@@ -69,12 +115,3 @@ export const formatSuccessResponse = (data: any) => {
         data: data
     };
 }
-
-/**
- * This function is a higher-order function that takes an async middleware function and returns a 
- * wrapped function that catches any errors thrown by the middleware and passes them to the next function.
- * 
- * @param fn 
- * @returns Promise
- */
-export const asyncHandler = (fn: any) => (req: Request, res: Response, next: NextFunction) => Promise.resolve(fn(req, res, next)).catch(next);
