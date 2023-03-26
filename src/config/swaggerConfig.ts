@@ -1,0 +1,17 @@
+import swaggerJsdoc from 'swagger-jsdoc';
+
+const options: swaggerJsdoc.Options = {
+    definition: {
+        openapi: '3.0.1',
+        info: {
+            title: 'AskIt API',
+            version: '1.0.0',
+        },
+    },
+    apis: [
+        './src/routes/*.ts'
+    ] 
+};
+
+const swaggerDocs = swaggerJsdoc(options);
+export default swaggerDocs;
