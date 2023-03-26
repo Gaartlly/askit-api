@@ -103,10 +103,10 @@ export const getAllReactions = async (req: Request, res: Response): Promise<void
  */
 export const getReaction = async (req: Request, res: Response): Promise<void> => {
     try {
-        const id = await integerValidator.parseAsync(req.body.reactionId);
+        const reactionId = await integerValidator.parseAsync(req.params.reactionId);
         const reaction = await prisma.reaction.findUnique({
             where: {
-                id,
+                id: reactionId,
             },
             include: {
                 author: true,
@@ -128,6 +128,43 @@ export const getReaction = async (req: Request, res: Response): Promise<void> =>
 };
 
 /**
+ * Get all reactions from an author.
+ *
+ * @param {Request} req - Express Request object.
+ * @param {Response} res - Express Response object.
+ * @returns {Promise<void>}
+ */
+export const getReactionsByAuthor = async (req: Request, res: Response): Promise<void> => {
+    const getSchema = z.object({
+        authorId: z.number().int(),
+    });
+
+    try {
+        const { authorId } = getSchema.parse(req.body);
+        const reactions = await prisma.reaction.findMany({
+            where: {
+                authorId: authorId,
+            },
+            include: {
+                author: true,
+                comment: true,
+                post: true,
+            },
+        });
+
+        res.status(200).json({ reactions: reactions });
+    } catch (error) {
+        if (error.name === 'ZodError') {
+            res.status(400).json({ error: error });
+        } else if (error.code === 'P2025') {
+            res.status(404).json({ message: 'Reaction not found!' });
+        } else {
+            res.status(500).json({ message: 'Internal server error' });
+        }
+    }
+};
+
+/**
  * Delete a reaction.
  *
  * @param {Request} req - Express Request object.
@@ -136,8 +173,8 @@ export const getReaction = async (req: Request, res: Response): Promise<void> =>
  */
 export const deleteReaction = async (req: Request, res: Response): Promise<void> => {
     try {
-        const id = await integerValidator.parseAsync(req.body.reactionId);
-        await prisma.reaction.delete({ where: { id } });
+        const reactionId = await integerValidator.parseAsync(req.params.reactionId);
+        await prisma.reaction.delete({ where: { id: reactionId } });
 
         res.status(200).json({ message: 'Reaction deleted.' });
     } catch (error) {
