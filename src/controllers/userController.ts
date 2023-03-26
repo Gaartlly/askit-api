@@ -25,7 +25,7 @@ const integerValidator = z
  * @param {Response} res - Express Response object.
  * @returns {Promise<void>}
  */
-export const getUsers = asyncHandler(async (res: Response): Promise<void> => {
+export const getUsers = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const users = await prisma.user.findMany({
         select: {
             id: true,
@@ -100,26 +100,26 @@ export const createUser = asyncHandler(async (req: Request, res: Response): Prom
 export const updateUser = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const updateUserSchema = z.object({
         newName: z.string().min(1).max(255).optional(),
-        newRole: z.enum([Role.ADMIN, Role.USER]),
+        newRole: z.enum([Role.ADMIN, Role.USER]).optional(),
         email: z.string().email().optional(),
         newEmail: z.string().email().optional(),
         newCourse: z.string().optional(),
         password: z.string().min(1).max(255).optional(),
         newPassword: z.string().min(1).max(255).optional(),
     }).refine((data) => 
-        (data.email && !data.newEmail) || (!data.email && data.newEmail), {
+        (data.email == data.newEmail) || (data.email && data.newEmail), {
             message: 'Email cannot be updated as some data is missing',
-            path: ['email', 'newEmail']
+            path: ['email', 'newEmail'],
         }
     ).refine((data) =>
-        (data.password && !data.newPassword) || (!data.password && data.newPassword), {
+        (data.password == data.newPassword) || (data.password && data.newPassword), {
             message: 'Password cannot be updated as some data is missing',
-            path: ['password', 'password']
+            path: ['password', 'newPassword']
         }
     );
 
-    const id = await integerValidator.parseAsync(req.body.tagId);
-    const { newName, email, newEmail, newCourse, password, newPassword, newRole } = await updateUserSchema.parseAsync(req.body);
+    const id = await integerValidator.parseAsync(req.params.userId);
+    const { newName, email, newEmail, password, newPassword, newRole } = await updateUserSchema.parseAsync(req.body);
 
     const user = await prisma.user.findUniqueOrThrow({
         where: {
@@ -130,9 +130,12 @@ export const updateUser = asyncHandler(async (req: Request, res: Response): Prom
     if(email && email !== user.email)
         throw new UnauthorizedError('Current email is wrong.');
     
-    const resultComparison = await verifyPassword(password, user.password);
-    if(password && !resultComparison)
-        throw new UnauthorizedError('Current password is wrong.');
+    if(password) {
+        const resultComparison = await verifyPassword(password, user.password);
+
+        if(resultComparison)
+            throw new UnauthorizedError('Current password is wrong.');
+    }
 
     const userUpdated = await prisma.user.update({
         where: {
