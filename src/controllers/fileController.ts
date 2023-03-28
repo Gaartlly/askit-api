@@ -32,7 +32,7 @@ export const uploadFile = asyncHandler(async (req: Request, res: Response): Prom
         postId: z.number().int(),
         commentId: z.number().int(),
     });
-    const postId = await integerValidator.parseAsync(req.body.postId);
+    const postId = await integerValidator.parseAsync(req.params.postId);
     const { title, path, commentId } = uploadFileSchema.parse(req.body);
 
     const result = await cloudinary.uploader.upload(path, {
@@ -109,7 +109,6 @@ export const deleteFile = asyncHandler(async (req: Request, res: Response): Prom
  */
 export const updateFile = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const updateFileSchema = z.object({
-        id: z.number().int(),
         newTitle: z.string().min(1).max(255),
         newPath: z.string().min(1),
     });

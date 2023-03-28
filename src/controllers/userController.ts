@@ -160,7 +160,7 @@ export const updateUser = asyncHandler(async (req: Request, res: Response): Prom
  * @returns {Promise<void>}
  */
 export const deleteUser = asyncHandler(async (req: Request, res: Response): Promise<void> => {
-    const id = await integerValidator.parseAsync(req.body.tagId);
+    const id = await integerValidator.parseAsync(req.params.userId);
 
     const deletedUser = await prisma.user.delete({
         where: {
