@@ -1,12 +1,12 @@
 import express from 'express';
 import {
-    createOrUpdateReport,
-    getAllReports,
-    getReport,
-    deleteReport,
-    disconnectTagFromReport,
-    getReportsByAuthor,
-} from '../controllers/reportController';
+    createOrUpdatePostReport,
+    getAllPostReports,
+    getPostReport,
+    deletePostReport,
+    disconnectTagFromPostReport,
+    getPostReportsByAuthor,
+} from '../controllers/postReportController';
 
 const router = express.Router();
 
@@ -20,7 +20,7 @@ const router = express.Router();
  *       bearerFormat: JWT
  *
  *   schemas:
- *     Report:
+ *     PostReport:
  *       type: object
  *       properties:
  *         id:
@@ -29,18 +29,14 @@ const router = express.Router();
  *         authorId:
  *           type: integer
  *           example: 2
- *         commentId:
- *           type: integer
- *           example: 3
  *         postId:
  *           type: integer
- *           example: 4
+ *           example: 3
  *         reason:
  *           type: string
  *           example: "Violação dos termos de uso."
  *       required:
  *         - authorId
- *         - commentId
  *         - postId
  *         - reason
  *
@@ -48,22 +44,21 @@ const router = express.Router();
 
 /**
  * @swagger
- * /api/report/createOrUpdateReport:
+ * /api/postReport/createOrUpdatePostReport:
  *   post:
  *     security:
  *       - bearerAuth: []
- *     description: Create a new report or update an existing one containing the same foreign keys.
- *     tags: [Report]
+ *     description: Create a new post report or update an existing one containing the same foreign keys.
+ *     tags: [PostReport]
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/Report'
+ *             $ref: '#/components/schemas/PostReport'
  *             example:
  *               authorId: 2
- *               commentId: 3
- *               postId: 4
+ *               postId: 3
  *               type: "Violação dos termos de uso"
  *     responses:
  *       200:
@@ -74,8 +69,7 @@ const router = express.Router();
  *               report:
  *                 id: 1
  *                 authorId: 2
- *                 commentId: 3
- *                 postId: 4
+ *                 postId: 3
  *                 type: "Violação dos termos de uso"
  *
  *       400:
@@ -85,7 +79,7 @@ const router = express.Router();
  *               response: Error
  *               error:
  *                 type: BadRequestError
- *                 path: /api/report/createOrUpdateReport
+ *                 path: /api/postReport/createOrUpdatePostReport
  *                 statusCode: 400
  *                 message: Bad request
  *
@@ -96,21 +90,21 @@ const router = express.Router();
  *               response: Error
  *               error:
  *                 type: InternalServerError
- *                 path: /api/report/createOrUpdateReport
+ *                 path: /api/postReport/createOrUpdatePostReport
  *                 statusCode: 500
  *                 message: Internal Server Error
  *
  */
-router.post('/createOrUpdateReport', createOrUpdateReport);
+router.post('/createOrUpdatePostReport', createOrUpdatePostReport);
 
 /**
  * @swagger
- * /api/report/disconnectTagFromReport:
+ * /api/postReport/disconnectTagFromPostReport:
  *   post:
  *     security:
  *       - bearerAuth: []
- *     description: Update an existing report disconnecting one of its tags.
- *     tags: [Report]
+ *     description: Update an existing post report disconnecting one of its tags.
+ *     tags: [PostReport]
  *     requestBody:
  *       required: true
  *       content:
@@ -118,14 +112,14 @@ router.post('/createOrUpdateReport', createOrUpdateReport);
  *           schema:
  *             type: object
  *             properties:
- *               postId:
+ *               postReportId:
  *                 type: integer
  *                 example: 1
  *               tagId:
  *                 type: integer
  *                 example: 1
  *             required:
- *               - postId
+ *               - postReportId
  *               - tagId
  *     responses:
  *       200:
@@ -136,8 +130,7 @@ router.post('/createOrUpdateReport', createOrUpdateReport);
  *               report:
  *                 id: 1
  *                 authorId: 2
- *                 commentId: 3
- *                 postId: 4
+ *                 postId: 3
  *                 type: "Violação dos termos de uso"
  *
  *       400:
@@ -147,7 +140,7 @@ router.post('/createOrUpdateReport', createOrUpdateReport);
  *               response: Error
  *               error:
  *                 type: BadRequestError
- *                 path: /api/report/disconnectTagFromReport
+ *                 path: /api/postReport/disconnectTagFromPostReport
  *                 statusCode: 400
  *                 message: Bad request
  *
@@ -158,21 +151,21 @@ router.post('/createOrUpdateReport', createOrUpdateReport);
  *               response: Error
  *               error:
  *                 type: InternalServerError
- *                 path: /api/report/disconnectTagFromReport
+ *                 path: /api/postReport/disconnectTagFromPostReport
  *                 statusCode: 500
  *                 message: Internal Server Error
  *
  */
-router.put('/disconnectTagFromReport/', disconnectTagFromReport);
+router.put('/disconnectTagFromPostReport/', disconnectTagFromPostReport);
 
 /**
  * @swagger
- * /api/report/getAllReports:
+ * /api/postReport/getAllPostReports:
  *   get:
  *     security:
  *       - bearerAuth: []
- *     description: Retrieve all reports.
- *     tags: [Report]
+ *     description: Retrieve all post reports.
+ *     tags: [PostReport]
  *
  *     responses:
  *       200:
@@ -189,7 +182,7 @@ router.put('/disconnectTagFromReport/', disconnectTagFromReport);
  *               response: Error
  *               error:
  *                 type: BadRequestError
- *                 path: /api/report/getAllReports
+ *                 path: /api/postReport/getAllPostReports
  *                 statusCode: 400
  *                 message: Bad request
  *
@@ -200,24 +193,24 @@ router.put('/disconnectTagFromReport/', disconnectTagFromReport);
  *               response: Error
  *               error:
  *                 type: InternalServerError
- *                 path: /api/report/getAllReports
+ *                 path: /api/postReport/getAllPostReports
  *                 statusCode: 500
  *                 message: Internal Server Error
  *
  */
-router.get('/getAllReports', getAllReports);
+router.get('/getAllPostReports', getAllPostReports);
 
 /**
  * @swagger
- * /api/report/getReport/{reportId}:
+ * /api/postReport/getPostReport/{postReportId}:
  *   get:
  *     security:
  *       - bearerAuth: []
- *     description: Retrieve a report by id.
- *     tags: [Report]
+ *     description: Retrieve a post report by id.
+ *     tags: [PostReport]
  *     parameters:
  *       - in: path
- *         name: reportId
+ *         name: postReportId
  *         required: true
  *
  *     responses:
@@ -228,7 +221,6 @@ router.get('/getAllReports', getAllReports);
  *               response: Successful
  *               report:
  *                 id: 1
- *                 commentId: 1
  *                 postId: 1
  *                 authorId: 1
  *                 type: "Violação dos termos de uso"
@@ -240,7 +232,7 @@ router.get('/getAllReports', getAllReports);
  *               response: Error
  *               error:
  *                 type: BadRequestError
- *                 path: /api/report/getReport
+ *                 path: /api/postReport/getPostReport
  *                 statusCode: 400
  *                 message: Bad request
  *
@@ -251,7 +243,7 @@ router.get('/getAllReports', getAllReports);
  *               response: Error
  *               error:
  *                 type: NotFoundError
- *                 path: /api/report/getReport
+ *                 path: /api/postReport/getPostReport
  *                 statusCode: 404
  *                 message: Not found
  *
@@ -262,21 +254,21 @@ router.get('/getAllReports', getAllReports);
  *               response: Error
  *               error:
  *                 type: InternalServerError
- *                 path: /api/report/getReport
+ *                 path: /api/postReport/getPostReport
  *                 statusCode: 500
  *                 message: Internal Server Error
  *
  */
-router.get('/getReport/:reportId', getReport);
+router.get('/getPostReport/:postReportId', getPostReport);
 
 /**
  * @swagger
- * /api/report/getReportsByAuthor:
+ * /api/postReport/getPostReportsByAuthor:
  *   get:
  *     security:
  *       - bearerAuth: []
- *     description: Retrieve all reports by an author.
- *     tags: [Report]
+ *     description: Retrieve all post reports by an author.
+ *     tags: [PostReport]
  *     requestBody:
  *       required: true
  *       content:
@@ -286,7 +278,7 @@ router.get('/getReport/:reportId', getReport);
  *             properties:
  *               authorId:
  *                 type: integer
- *                 description: The id of the author whose reports are being retrieved.
+ *                 description: The id of the author whose post reports are being retrieved.
  *                 example: 1
  *             required:
  *               - authorId
@@ -306,7 +298,7 @@ router.get('/getReport/:reportId', getReport);
  *               response: Error
  *               error:
  *                 type: BadRequestError
- *                 path: /api/report/getReportsByAuthor
+ *                 path: /api/postReport/getPostReportsByAuthor
  *                 statusCode: 400
  *                 message: Bad request
  *
@@ -317,24 +309,24 @@ router.get('/getReport/:reportId', getReport);
  *               response: Error
  *               error:
  *                 type: InternalServerError
- *                 path: /api/report/getReportsByAuthor
+ *                 path: /api/postReport/getPostReportsByAuthor
  *                 statusCode: 500
  *                 message: Internal Server Error
  *
  */
-router.get('/getReportsByAuthor/', getReportsByAuthor);
+router.get('/getPostReportsByAuthor/', getPostReportsByAuthor);
 
 /**
  * @swagger
- * /api/report/deleteReport/{reportId}:
+ * /api/postReport/deletePostReport/{postReportId}:
  *   delete:
  *     security:
  *       - bearerAuth: []
- *     description: Delete an report by id.
- *     tags: [Report]
+ *     description: Delete an post report by id.
+ *     tags: [PostReport]
  *     parameters:
  *       - in: path param
- *         name: reportId
+ *         name: postReportId
  *         required: true
  *
  *     responses:
@@ -351,7 +343,7 @@ router.get('/getReportsByAuthor/', getReportsByAuthor);
  *               response: Error
  *               error:
  *                 type: BadRequestError
- *                 path: /api/report/deleteReport
+ *                 path: /api/postReport/deletePostReport
  *                 statusCode: 400
  *                 message: Bad request
  *
@@ -362,7 +354,7 @@ router.get('/getReportsByAuthor/', getReportsByAuthor);
  *               response: Error
  *               error:
  *                 type: NotFoundError
- *                 path: /api/report/deleteReport
+ *                 path: /api/postReport/deletePostReport
  *                 statusCode: 404
  *                 message: Not found
  *
@@ -373,11 +365,11 @@ router.get('/getReportsByAuthor/', getReportsByAuthor);
  *               response: Error
  *               error:
  *                 type: InternalServerError
- *                 path: /api/report/deleteReport
+ *                 path: /api/postReport/deletePostReport
  *                 statusCode: 500
  *                 message: Internal Server Error
  *
  */
-router.delete('/deleteReport/:reportId', deleteReport);
+router.delete('/deletePostReport/:postReportId', deletePostReport);
 
 export default router;

@@ -1,5 +1,5 @@
 import { Response, Request } from 'express';
-import { Report, PrismaClient } from '@prisma/client';
+import { CommentReport, PrismaClient } from '@prisma/client';
 import { z } from 'zod';
 
 const prisma = new PrismaClient();
@@ -17,17 +17,16 @@ const integerValidator = z
     .transform((value) => parseInt(value));
 
 /**
- * Create a new report.
+ * Create a new comment report.
  *
  * @param {Request} req - Express Request object.
  * @param {Response} res - Express Response object.
  * @returns {Promise<void>}
  */
-export const createOrUpdateReport = async (req: Request, res: Response): Promise<void> => {
+export const createOrUpdateCommentReport = async (req: Request, res: Response): Promise<void> => {
     const createSchema = z.object({
         authorId: z.number(),
-        commentId: z.number().optional(),
-        postId: z.number(),
+        commentId: z.number(),
         reason: z.string().min(1).max(255),
         tags: z.array(
             z.object({
@@ -38,11 +37,11 @@ export const createOrUpdateReport = async (req: Request, res: Response): Promise
     });
 
     try {
-        const { authorId, commentId, postId, reason, tags } = createSchema.parse(req.body);
+        const { authorId, commentId, reason, tags } = createSchema.parse(req.body);
 
-        const createdReport = await prisma.report.upsert({
+        const createdCommentReport = await prisma.commentReport.upsert({
             where: {
-                authorId_commentId_postId: { authorId, commentId, postId },
+                authorId_commentId: { authorId, commentId },
             },
             update: {
                 reason: reason,
@@ -64,7 +63,6 @@ export const createOrUpdateReport = async (req: Request, res: Response): Promise
             },
             create: {
                 reason,
-                postId,
                 commentId,
                 authorId,
                 tags: {
@@ -84,7 +82,7 @@ export const createOrUpdateReport = async (req: Request, res: Response): Promise
             },
         });
 
-        res.status(201).json({ message: 'Report created/updated.', report: createdReport });
+        res.status(201).json({ message: 'Report created/updated.', report: createdCommentReport });
     } catch (error) {
         if (error.name === 'ZodError') {
             res.status(400).json({ error: error });
@@ -95,23 +93,23 @@ export const createOrUpdateReport = async (req: Request, res: Response): Promise
 };
 
 /**
- * Update a report, disconnecting a tag from it.
+ * Update a comment report, disconnecting a tag from it.
  *
  * @param {Request} req - Express Request object.
  * @param {Response} res - Express Response object.
  * @returns {Promise<void>}
  */
-export const disconnectTagFromReport = async (req: Request, res: Response): Promise<void> => {
+export const disconnectTagFromCommentReport = async (req: Request, res: Response): Promise<void> => {
     const updateSchema = z.object({
-        reportId: z.number().int(),
+        commentReportId: z.number().int(),
         tagId: z.number().int(),
     });
 
     try {
-        const { reportId, tagId } = updateSchema.parse(req.body);
+        const { commentReportId, tagId } = updateSchema.parse(req.body);
 
-        const updatedReport: Report = await prisma.report.update({
-            where: { id: reportId },
+        const updatedCommentReport: CommentReport = await prisma.commentReport.update({
+            where: { id: commentReportId },
             data: {
                 tags: {
                     disconnect: {
@@ -124,12 +122,12 @@ export const disconnectTagFromReport = async (req: Request, res: Response): Prom
             },
         });
 
-        res.status(200).json({ message: 'Tag disconnected.', report: updatedReport });
+        res.status(200).json({ message: 'Tag disconnected.', report: updatedCommentReport });
     } catch (error) {
         if (error.name === 'ZodError') {
             res.status(400).json({ error: error });
         } else if (error.code === 'P2025') {
-            res.status(404).json({ message: 'Comment not found!' });
+            res.status(404).json({ message: 'Report not found!' });
         } else {
             res.status(500).json({ message: 'Internal server error' });
         }
@@ -137,50 +135,48 @@ export const disconnectTagFromReport = async (req: Request, res: Response): Prom
 };
 
 /**
- * Get all reports.
+ * Get all commentReports.
  *
  * @param {Request} req - Express Request object.
  * @param {Response} res - Express Response object.
  * @returns {Promise<void>}
  */
-export const getAllReports = async (req: Request, res: Response): Promise<void> => {
+export const getAllCommentReports = async (req: Request, res: Response): Promise<void> => {
     try {
-        const reports = await prisma.report.findMany({
+        const commentReports = await prisma.commentReport.findMany({
             include: {
                 author: true,
                 comment: true,
-                post: true,
             },
         });
 
-        res.status(200).json({ reports: reports });
+        res.status(200).json({ reports: commentReports });
     } catch (error) {
         res.status(500).json({ message: 'Internal server error.', error: error.message });
     }
 };
 
 /**
- * Get a report.
+ * Get a commentReport.
  *
  * @param {Request} req - Express Request object.
  * @param {Response} res - Express Response object.
  * @returns {Promise<void>}
  */
-export const getReport = async (req: Request, res: Response): Promise<void> => {
+export const getCommentReport = async (req: Request, res: Response): Promise<void> => {
     try {
-        const id = await integerValidator.parseAsync(req.params.reportId);
-        const report = await prisma.report.findUnique({
+        const id = await integerValidator.parseAsync(req.params.commentReportId);
+        const commentReport = await prisma.commentReport.findUnique({
             where: {
                 id,
             },
             include: {
                 author: true,
                 comment: true,
-                post: true,
             },
         });
 
-        res.status(200).json({ report: report });
+        res.status(200).json({ report: commentReport });
     } catch (error) {
         if (error.name === 'ZodError') {
             res.status(400).json({ error: error });
@@ -193,30 +189,29 @@ export const getReport = async (req: Request, res: Response): Promise<void> => {
 };
 
 /**
- * Get all reports from an author.
+ * Get all commentReports from an author.
  *
  * @param {Request} req - Express Request object.
  * @param {Response} res - Express Response object.
  * @returns {Promise<void>}
  */
-export const getReportsByAuthor = async (req: Request, res: Response): Promise<void> => {
+export const getCommentReportsByAuthor = async (req: Request, res: Response): Promise<void> => {
     const getSchema = z.object({
         authorId: z.number().int(),
     });
 
     try {
         const { authorId } = getSchema.parse(req.body);
-        const report = await prisma.report.findMany({
+        const commentReport = await prisma.commentReport.findMany({
             where: {
                 authorId,
             },
             include: {
                 comment: true,
-                post: true,
             },
         });
 
-        res.status(200).json({ report: report });
+        res.status(200).json({ report: commentReport });
     } catch (error) {
         if (error.name === 'ZodError') {
             res.status(400).json({ error: error });
@@ -229,16 +224,16 @@ export const getReportsByAuthor = async (req: Request, res: Response): Promise<v
 };
 
 /**
- * Delete a report.
+ * Delete a commentReport.
  *
  * @param {Request} req - Express Request object.
  * @param {Response} res - Express Response object.
  * @returns {Promise<void>}
  */
-export const deleteReport = async (req: Request, res: Response): Promise<void> => {
+export const deleteCommentReport = async (req: Request, res: Response): Promise<void> => {
     try {
-        const id = await integerValidator.parseAsync(req.params.reportId);
-        await prisma.report.delete({ where: { id } });
+        const id = await integerValidator.parseAsync(req.params.commentReportId);
+        await prisma.commentReport.delete({ where: { id } });
 
         res.status(200).json({ message: 'Report deleted.' });
     } catch (error) {

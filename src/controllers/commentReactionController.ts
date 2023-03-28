@@ -1,5 +1,5 @@
 import { Response, Request } from 'express';
-import { Reaction, PrismaClient, ReactionType } from '@prisma/client';
+import { CommentReaction, PrismaClient, ReactionType } from '@prisma/client';
 import { z } from 'zod';
 
 const prisma = new PrismaClient();
@@ -17,13 +17,13 @@ const integerValidator = z
     .transform((value) => parseInt(value));
 
 /**
- * Create a new reaction.
+ * Create a new comment reaction.
  *
  * @param {Request} req - Express Request object.
  * @param {Response} res - Express Response object.
  * @returns {Promise<void>}
  */
-export const createOrUpdateReaction = async (req: Request, res: Response): Promise<void> => {
+export const createOrUpdateCommentReaction = async (req: Request, res: Response): Promise<void> => {
     const createSchema = z.object({
         authorId: z.number(),
         commentId: z.number().optional(),
@@ -34,9 +34,9 @@ export const createOrUpdateReaction = async (req: Request, res: Response): Promi
     try {
         const { authorId, commentId, postId, type } = createSchema.parse(req.body);
 
-        const createdReaction = await prisma.reaction.upsert({
+        const createdCommentReaction = await prisma.commentReaction.upsert({
             where: {
-                authorId_commentId_postId: { authorId, commentId, postId },
+                authorId_commentId: { authorId, commentId },
             },
             update: {
                 type: type,
@@ -44,12 +44,11 @@ export const createOrUpdateReaction = async (req: Request, res: Response): Promi
             create: {
                 type,
                 authorId,
-                postId,
                 commentId,
             },
         });
 
-        res.status(201).json({ message: 'Reaction created/updated.', reaction: createdReaction });
+        res.status(201).json({ message: 'Reaction created/updated.', reaction: createdCommentReaction });
     } catch (error) {
         if (error.name === 'ZodError') {
             res.status(400).json({ error: error });
@@ -60,50 +59,48 @@ export const createOrUpdateReaction = async (req: Request, res: Response): Promi
 };
 
 /**
- * Get all reactions.
+ * Get all comment reactions.
  *
  * @param {Request} req - Express Request object.
  * @param {Response} res - Express Response object.
  * @returns {Promise<void>}
  */
-export const getAllReactions = async (req: Request, res: Response): Promise<void> => {
+export const getAllCommentReactions = async (req: Request, res: Response): Promise<void> => {
     try {
-        const reactions = await prisma.reaction.findMany({
+        const commentReactions = await prisma.commentReaction.findMany({
             include: {
                 author: true,
                 comment: true,
-                post: true,
             },
         });
 
-        res.status(200).json({ reactions: reactions });
+        res.status(200).json({ reactions: commentReactions });
     } catch (error) {
         res.status(500).json({ message: 'Internal server error.', error: error.message });
     }
 };
 
 /**
- * Get a reaction.
+ * Get a comment reaction.
  *
  * @param {Request} req - Express Request object.
  * @param {Response} res - Express Response object.
  * @returns {Promise<void>}
  */
-export const getReaction = async (req: Request, res: Response): Promise<void> => {
+export const getCommentReaction = async (req: Request, res: Response): Promise<void> => {
     try {
-        const reactionId = await integerValidator.parseAsync(req.params.reactionId);
-        const reaction = await prisma.reaction.findUnique({
+        const commentReactionId = await integerValidator.parseAsync(req.params.commentReactionId);
+        const commentReaction = await prisma.commentReaction.findUnique({
             where: {
-                id: reactionId,
+                id: commentReactionId,
             },
             include: {
                 author: true,
                 comment: true,
-                post: true,
             },
         });
 
-        res.status(200).json({ reaction: reaction });
+        res.status(200).json({ reaction: commentReaction });
     } catch (error) {
         if (error.name === 'ZodError') {
             res.status(400).json({ error: error });
@@ -116,31 +113,30 @@ export const getReaction = async (req: Request, res: Response): Promise<void> =>
 };
 
 /**
- * Get all reactions from an author.
+ * Get all comment reactions from an author.
  *
  * @param {Request} req - Express Request object.
  * @param {Response} res - Express Response object.
  * @returns {Promise<void>}
  */
-export const getReactionsByAuthor = async (req: Request, res: Response): Promise<void> => {
+export const getCommentReactionsByAuthor = async (req: Request, res: Response): Promise<void> => {
     const getSchema = z.object({
         authorId: z.number().int(),
     });
 
     try {
         const { authorId } = getSchema.parse(req.body);
-        const reactions = await prisma.reaction.findMany({
+        const commentReactions = await prisma.commentReaction.findMany({
             where: {
                 authorId: authorId,
             },
             include: {
                 author: true,
                 comment: true,
-                post: true,
             },
         });
 
-        res.status(200).json({ reactions: reactions });
+        res.status(200).json({ reactions: commentReactions });
     } catch (error) {
         if (error.name === 'ZodError') {
             res.status(400).json({ error: error });
@@ -153,16 +149,16 @@ export const getReactionsByAuthor = async (req: Request, res: Response): Promise
 };
 
 /**
- * Delete a reaction.
+ * Delete a comment reaction.
  *
  * @param {Request} req - Express Request object.
  * @param {Response} res - Express Response object.
  * @returns {Promise<void>}
  */
-export const deleteReaction = async (req: Request, res: Response): Promise<void> => {
+export const deleteCommentReaction = async (req: Request, res: Response): Promise<void> => {
     try {
-        const reactionId = await integerValidator.parseAsync(req.params.reactionId);
-        await prisma.reaction.delete({ where: { id: reactionId } });
+        const commentReactionId = await integerValidator.parseAsync(req.params.commentReactionId);
+        await prisma.commentReaction.delete({ where: { id: commentReactionId } });
 
         res.status(200).json({ message: 'Reaction deleted.' });
     } catch (error) {

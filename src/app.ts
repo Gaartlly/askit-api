@@ -7,8 +7,10 @@ import fileRoutes from './routes/fileRoutes';
 import postRoutes from './routes/postRoutes';
 import userRoutes from './routes/userRoutes';
 import tagRoutes from './routes/tagRoutes';
-import reactionRoutes from './routes/reactionRoutes';
-import reportRoutes from './routes/reportRoutes';
+import commentReactionRoutes from './routes/commentReactionRoutes';
+import postReactionRoutes from './routes/postReactionRoutes';
+import commentReportRoutes from './routes/commentReportRoutes';
+import postReportRoutes from './routes/postReportRoutes';
 import userControlRoutes from './routes/userControlRoutes';
 import { verifyAuthentication } from './middleware/authUserMiddleware';
 import loginRoutes from './routes/loginRoute';
@@ -35,11 +37,13 @@ app.use(
 app.use('/api/user', userRoutes);
 app.use('/api/file', verifyAuthentication, fileRoutes);
 app.use('/api/comment', verifyAuthentication, commentRoutes);
-app.use('/api/post', postRoutes);
-app.use('/api/tag', tagRoutes);
-app.use('/api/reaction', reactionRoutes);
-app.use('/api/report', reportRoutes);
-app.use('/api/userControl', userControlRoutes);
+app.use('/api/post', verifyAuthentication, postRoutes);
+app.use('/api/tag', verifyAuthentication, tagRoutes);
+app.use('/api/commentReaction', verifyAuthentication, commentReactionRoutes);
+app.use('/api/postReaction', verifyAuthentication, postReactionRoutes);
+app.use('/api/commentReport', verifyAuthentication, commentReportRoutes);
+app.use('/api/postReport', verifyAuthentication, postReportRoutes);
+app.use('/api/userControl', verifyAuthentication, userControlRoutes);
 app.use('/api', loginRoutes);
 
 app.listen(port, () => {

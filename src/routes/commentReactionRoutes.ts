@@ -1,11 +1,11 @@
 import express from 'express';
 import {
-    createOrUpdateReaction,
-    getAllReactions,
-    getReaction,
-    deleteReaction,
-    getReactionsByAuthor,
-} from '../controllers/reactionController';
+    createOrUpdateCommentReaction,
+    getAllCommentReactions,
+    getCommentReaction,
+    deleteCommentReaction,
+    getCommentReactionsByAuthor,
+} from '../controllers/commentReactionController';
 
 const router = express.Router();
 
@@ -23,7 +23,7 @@ const router = express.Router();
  *       type: string
  *       enum: [UPVOTE, DOWNVOTE]
  *
- *     Reaction:
+ *     CommentReaction:
  *       type: object
  *       properties:
  *         id:
@@ -35,38 +35,33 @@ const router = express.Router();
  *         commentId:
  *           type: integer
  *           example: 3
- *         postId:
- *           type: integer
- *           example: 4
  *         type:
  *           $ref: '#/components/schemas/ReactionType'
  *           example: UPVOTE
  *       required:
  *         - authorId
  *         - commentId
- *         - postId
  *         - type
  *
  */
 
 /**
  * @swagger
- * /api/reaction/createOrUpdateReaction:
+ * /api/commentReaction/createOrUpdateCommentReaction:
  *   post:
  *     security:
  *       - bearerAuth: []
- *     description: Create a new reaction or update an existing one containing the same foreign keys.
- *     tags: [Reaction]
+ *     description: Create a new comment reaction or update an existing one containing the same foreign keys.
+ *     tags: [CommentReaction]
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/Reaction'
+ *             $ref: '#/components/schemas/CommentReaction'
  *             example:
  *               authorId: 2
  *               commentId: 3
- *               postId: 4
  *               type: UPVOTE
  *     responses:
  *       200:
@@ -78,7 +73,6 @@ const router = express.Router();
  *                 id: 1
  *                 authorId: 2
  *                 commentId: 3
- *                 postId: 4
  *                 type: UPVOTE
  *
  *       400:
@@ -88,7 +82,7 @@ const router = express.Router();
  *               response: Error
  *               error:
  *                 type: BadRequestError
- *                 path: /api/reaction/createOrUpdateReaction
+ *                 path: /api/commentReaction/createOrUpdateCommentReaction
  *                 statusCode: 400
  *                 message: Bad request
  *
@@ -99,21 +93,21 @@ const router = express.Router();
  *               response: Error
  *               error:
  *                 type: InternalServerError
- *                 path: /api/reaction/createOrUpdateReaction
+ *                 path: /api/commentReaction/createOrUpdateCommentReaction
  *                 statusCode: 500
  *                 message: Internal Server Error
  *
  */
-router.post('/createOrUpdateReaction', createOrUpdateReaction);
+router.post('/createOrUpdateCommentReaction', createOrUpdateCommentReaction);
 
 /**
  * @swagger
- * /api/reaction/getAllReactions:
+ * /api/commentReaction/getAllCommentReactions:
  *   get:
  *     security:
  *       - bearerAuth: []
- *     description: Retrieve all reactions.
- *     tags: [Reaction]
+ *     description: Retrieve all comment reactions.
+ *     tags: [CommentReaction]
  *
  *     responses:
  *       200:
@@ -130,7 +124,7 @@ router.post('/createOrUpdateReaction', createOrUpdateReaction);
  *               response: Error
  *               error:
  *                 type: BadRequestError
- *                 path: /api/reaction/getAllReactions
+ *                 path: /api/commentReaction/getAllCommentReactions
  *                 statusCode: 400
  *                 message: Bad request
  *
@@ -141,24 +135,24 @@ router.post('/createOrUpdateReaction', createOrUpdateReaction);
  *               response: Error
  *               error:
  *                 type: InternalServerError
- *                 path: /api/reaction/getAllReactions
+ *                 path: /api/commentReaction/getAllCommentReactions
  *                 statusCode: 500
  *                 message: Internal Server Error
  *
  */
-router.get('/getAllReactions', getAllReactions);
+router.get('/getAllCommentReactions', getAllCommentReactions);
 
 /**
  * @swagger
- * /api/reaction/getReaction/{reactionId}:
+ * /api/commentReaction/getCommentReaction/{commentReactionId}:
  *   get:
  *     security:
  *       - bearerAuth: []
- *     description: Retrieve a reaction by id.
- *     tags: [Reaction]
+ *     description: Retrieve a comment reaction by id.
+ *     tags: [CommentReaction]
  *     parameters:
  *       - in: path
- *         name: reactionId
+ *         name: commentReactionId
  *         required: true
  *
  *     responses:
@@ -170,7 +164,6 @@ router.get('/getAllReactions', getAllReactions);
  *               reaction:
  *                 id: 1
  *                 commentId: 1
- *                 postId: 1
  *                 authorId: 1
  *                 type: UPVOTE
  *
@@ -181,7 +174,7 @@ router.get('/getAllReactions', getAllReactions);
  *               response: Error
  *               error:
  *                 type: BadRequestError
- *                 path: /api/reaction/getReaction
+ *                 path: /api/commentReaction/getCommentReaction
  *                 statusCode: 400
  *                 message: Bad request
  *
@@ -192,7 +185,7 @@ router.get('/getAllReactions', getAllReactions);
  *               response: Error
  *               error:
  *                 type: NotFoundError
- *                 path: /api/reaction/getReaction
+ *                 path: /api/commentReaction/getCommentReaction
  *                 statusCode: 404
  *                 message: Not found
  *
@@ -203,21 +196,21 @@ router.get('/getAllReactions', getAllReactions);
  *               response: Error
  *               error:
  *                 type: InternalServerError
- *                 path: /api/reaction/getReaction
+ *                 path: /api/commentReaction/getCommentReaction
  *                 statusCode: 500
  *                 message: Internal Server Error
  *
  */
-router.get('/getReaction/:reactionId', getReaction);
+router.get('/getCommentReaction/:commentReactionId', getCommentReaction);
 
 /**
  * @swagger
- * /api/reaction/getReactionsByAuthor:
+ * /api/commentReaction/getCommentReactionsByAuthor:
  *   get:
  *     security:
  *       - bearerAuth: []
- *     description: Retrieve all reactions by an author.
- *     tags: [Reaction]
+ *     description: Retrieve all comment reactions by an author.
+ *     tags: [CommentReaction]
  *     requestBody:
  *       required: true
  *       content:
@@ -227,7 +220,7 @@ router.get('/getReaction/:reactionId', getReaction);
  *             properties:
  *               authorId:
  *                 type: integer
- *                 description: The id of the author whose reactions are being retrieved.
+ *                 description: The id of the author whose comment reactions are being retrieved.
  *                 example: 1
  *             required:
  *               - authorId
@@ -247,7 +240,7 @@ router.get('/getReaction/:reactionId', getReaction);
  *               response: Error
  *               error:
  *                 type: BadRequestError
- *                 path: /api/reaction/getReactionsByAuthor
+ *                 path: /api/commentReaction/getCommentReactionsByAuthor
  *                 statusCode: 400
  *                 message: Bad request
  *
@@ -258,24 +251,24 @@ router.get('/getReaction/:reactionId', getReaction);
  *               response: Error
  *               error:
  *                 type: InternalServerError
- *                 path: /api/reaction/getReactionsByAuthor
+ *                 path: /api/commentReaction/getCommentReactionsByAuthor
  *                 statusCode: 500
  *                 message: Internal Server Error
  *
  */
-router.get('/getReactionsByAuthor/', getReactionsByAuthor);
+router.get('/getCommentReactionsByAuthor/', getCommentReactionsByAuthor);
 
 /**
  * @swagger
- * /api/reaction/deleteReaction/{reactionId}:
+ * /api/commentReaction/deleteCommentReaction/{commentReactionId}:
  *   delete:
  *     security:
  *       - bearerAuth: []
- *     description: Delete an reaction by id.
- *     tags: [Reaction]
+ *     description: Delete an comment reaction by id.
+ *     tags: [CommentReaction]
  *     parameters:
  *       - in: path param
- *         name: reactionId
+ *         name: commentReactionId
  *         required: true
  *
  *     responses:
@@ -292,7 +285,7 @@ router.get('/getReactionsByAuthor/', getReactionsByAuthor);
  *               response: Error
  *               error:
  *                 type: BadRequestError
- *                 path: /api/reaction/deleteReaction
+ *                 path: /api/commentReaction/deleteCommentReaction
  *                 statusCode: 400
  *                 message: Bad request
  *
@@ -303,7 +296,7 @@ router.get('/getReactionsByAuthor/', getReactionsByAuthor);
  *               response: Error
  *               error:
  *                 type: NotFoundError
- *                 path: /api/reaction/deleteReaction
+ *                 path: /api/commentReaction/deleteCommentReaction
  *                 statusCode: 404
  *                 message: Not found
  *
@@ -314,11 +307,11 @@ router.get('/getReactionsByAuthor/', getReactionsByAuthor);
  *               response: Error
  *               error:
  *                 type: InternalServerError
- *                 path: /api/reaction/deleteReaction
+ *                 path: /api/commentReaction/deleteCommentReaction
  *                 statusCode: 500
  *                 message: Internal Server Error
  *
  */
-router.delete('/deleteReaction/:reactionId', deleteReaction);
+router.delete('/deleteCommentReaction/:commentReactionId', deleteCommentReaction);
 
 export default router;
