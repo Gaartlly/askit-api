@@ -35,11 +35,11 @@ app.use(
 app.use('/api/user', userRoutes);
 app.use('/api/file', verifyAuthentication, fileRoutes);
 app.use('/api/comment', verifyAuthentication, commentRoutes);
-app.use('/api/post', verifyAuthentication, postRoutes);
-app.use('/api/tag', verifyAuthentication, tagRoutes);
-app.use('/api/reaction', verifyAuthentication, reactionRoutes);
-app.use('/api/report', verifyAuthentication, reportRoutes);
-app.use('/api/userControl', verifyAuthentication, userControlRoutes);
+app.use('/api/post', postRoutes);
+app.use('/api/tag', tagRoutes);
+app.use('/api/reaction', reactionRoutes);
+app.use('/api/report', reportRoutes);
+app.use('/api/userControl', userControlRoutes);
 app.use('/api', loginRoutes);
 
 app.listen(port, () => {

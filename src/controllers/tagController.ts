@@ -114,7 +114,7 @@ export const getAllTags = async (req: Request, res: Response): Promise<void> => 
  */
 export const getTag = async (req: Request, res: Response): Promise<void> => {
     try {
-        const id = await integerValidator.parseAsync(req.body.tagId);
+        const id = await integerValidator.parseAsync(req.params.tagId);
         const tag = await prisma.tag.findUnique({
             where: {
                 id,
@@ -143,7 +143,7 @@ export const getTag = async (req: Request, res: Response): Promise<void> => {
 export const deleteTag = async (req: Request, res: Response): Promise<void> => {
     try {
         const tagId = await integerValidator.parseAsync(req.params.tagId);
-        await prisma.tag.deleteMany({ where: { id: tagId } });
+        await prisma.tag.delete({ where: { id: tagId } });
 
         res.status(200).json({ message: 'Tag deleted.' });
     } catch (error) {

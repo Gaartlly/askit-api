@@ -212,7 +212,7 @@ router.get('/getReaction/:reactionId', getReaction);
 
 /**
  * @swagger
- * /api/reaction/getReactionByAuthor:
+ * /api/reaction/getReactionsByAuthor:
  *   get:
  *     security:
  *       - bearerAuth: []
@@ -247,7 +247,7 @@ router.get('/getReaction/:reactionId', getReaction);
  *               response: Error
  *               error:
  *                 type: BadRequestError
- *                 path: /api/reaction/getReactionByAuthor
+ *                 path: /api/reaction/getReactionsByAuthor
  *                 statusCode: 400
  *                 message: Bad request
  *
@@ -258,12 +258,12 @@ router.get('/getReaction/:reactionId', getReaction);
  *               response: Error
  *               error:
  *                 type: InternalServerError
- *                 path: /api/reaction/getReactionByAuthor
+ *                 path: /api/reaction/getReactionsByAuthor
  *                 statusCode: 500
  *                 message: Internal Server Error
  *
  */
-router.get('/getReactionByAuthor/', getReactionsByAuthor);
+router.get('/getReactionsByAuthor/', getReactionsByAuthor);
 
 /**
  * @swagger

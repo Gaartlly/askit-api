@@ -312,6 +312,6 @@ router.get('/getTag/:tagId', getTag);
  *                 message: Internal Server Error
  *
  */
-router.get('/deleteTag/:tagId', deleteTag);
+router.delete('/deleteTag/:tagId', deleteTag);
 
 export default router;

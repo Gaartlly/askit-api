@@ -42,22 +42,10 @@ export const createOrUpdateReaction = async (req: Request, res: Response): Promi
                 type: type,
             },
             create: {
-                type: type,
-                author: {
-                    connect: {
-                        id: authorId,
-                    },
-                },
-                comment: {
-                    connect: {
-                        id: commentId,
-                    },
-                },
-                post: {
-                    connect: {
-                        id: postId,
-                    },
-                },
+                type,
+                authorId,
+                postId,
+                commentId,
             },
         });
 

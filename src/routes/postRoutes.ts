@@ -334,7 +334,7 @@ router.get('/getPost/:postId', getPost);
 
 /**
  * @swagger
- * /api/post/getPostByAuthor:
+ * /api/post/getPostsByAuthor:
  *   get:
  *     security:
  *       - bearerAuth: []
@@ -369,7 +369,7 @@ router.get('/getPost/:postId', getPost);
  *               response: Error
  *               error:
  *                 type: BadRequestError
- *                 path: /api/post/getPostByAuthor
+ *                 path: /api/post/getPostsByAuthor
  *                 statusCode: 400
  *                 message: Bad request
  *
@@ -380,12 +380,12 @@ router.get('/getPost/:postId', getPost);
  *               response: Error
  *               error:
  *                 type: InternalServerError
- *                 path: /api/post/getPostByAuthor
+ *                 path: /api/post/getPostsByAuthor
  *                 statusCode: 500
  *                 message: Internal Server Error
  *
  */
-router.get('/getPostByAuthor/', getPostsByAuthor);
+router.get('/getPostsByAuthor/', getPostsByAuthor);
 
 /**
  * @swagger

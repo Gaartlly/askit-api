@@ -251,7 +251,7 @@ export const getPostsByAuthor = async (req: Request, res: Response): Promise<voi
     try {
         const { authorId } = getSchema.parse(req.body);
 
-        const post = await prisma.post.findMany({
+        const posts = await prisma.post.findMany({
             where: {
                 authorId,
             },
@@ -261,7 +261,7 @@ export const getPostsByAuthor = async (req: Request, res: Response): Promise<voi
             },
         });
 
-        res.status(200).json({ post: post });
+        res.status(200).json({ posts: posts });
     } catch (error) {
         if (error.name === 'ZodError') {
             res.status(400).json({ error: error });

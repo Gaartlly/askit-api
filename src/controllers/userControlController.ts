@@ -114,7 +114,7 @@ export const getAllUserControls = async (req: Request, res: Response): Promise<v
  */
 export const getUserControl = async (req: Request, res: Response): Promise<void> => {
     try {
-        const id = await integerValidator.parseAsync(req.body.userControlId);
+        const id = await integerValidator.parseAsync(req.params.userControlId);
         const userControl = await prisma.userControl.findUnique({
             where: {
                 id,
@@ -143,7 +143,7 @@ export const getUserControl = async (req: Request, res: Response): Promise<void>
 export const deleteUserControl = async (req: Request, res: Response): Promise<void> => {
     try {
         const userControlId = await integerValidator.parseAsync(req.params.userControlId);
-        await prisma.userControl.deleteMany({ where: { id: userControlId } });
+        await prisma.userControl.delete({ where: { id: userControlId } });
 
         res.status(200).json({ message: 'UserControl deleted.' });
     } catch (error) {

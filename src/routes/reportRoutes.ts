@@ -271,7 +271,7 @@ router.get('/getReport/:reportId', getReport);
 
 /**
  * @swagger
- * /api/report/getReportByAuthor:
+ * /api/report/getReportsByAuthor:
  *   get:
  *     security:
  *       - bearerAuth: []
@@ -306,7 +306,7 @@ router.get('/getReport/:reportId', getReport);
  *               response: Error
  *               error:
  *                 type: BadRequestError
- *                 path: /api/report/getReportByAuthor
+ *                 path: /api/report/getReportsByAuthor
  *                 statusCode: 400
  *                 message: Bad request
  *
@@ -317,12 +317,12 @@ router.get('/getReport/:reportId', getReport);
  *               response: Error
  *               error:
  *                 type: InternalServerError
- *                 path: /api/report/getReportByAuthor
+ *                 path: /api/report/getReportsByAuthor
  *                 statusCode: 500
  *                 message: Internal Server Error
  *
  */
-router.get('/getReportByAuthor/', getReportsByAuthor);
+router.get('/getReportsByAuthor/', getReportsByAuthor);
 
 /**
  * @swagger

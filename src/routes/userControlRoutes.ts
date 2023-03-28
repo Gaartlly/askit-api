@@ -318,6 +318,6 @@ router.get('/getUserControl/:userControlId', getUserControl);
  *                 message: Internal Server Error
  *
  */
-router.get('/deleteUserControl/:userControlId', deleteUserControl);
+router.delete('/deleteUserControl/:userControlId', deleteUserControl);
 
 export default router;
