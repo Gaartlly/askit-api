@@ -2,8 +2,7 @@ import { Response, Request } from 'express';
 import { PrismaClient, Role } from '@prisma/client';
 import { z } from 'zod';
 import { hashPassword, verifyPassword } from '../utils/bcryptUtil';
-import { asyncHandler, InternalServerError, UnauthorizedError } from '../utils/responseHandler';
-import { formatSuccessResponse } from '../utils/responseHandler';
+import { asyncHandler, InternalServerError, UnauthorizedError, formatSuccessResponse} from '../utils/responseHandler';
 
 const prisma = new PrismaClient();
 
