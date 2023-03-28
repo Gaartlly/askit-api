@@ -1,8 +1,6 @@
 import { Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
+import prismaClient from '../services/prisma/prismaClient';
 import { z } from 'zod';
-
-const prisma = new PrismaClient();
 
 const integerValidator = z
     .string()
@@ -25,7 +23,7 @@ const integerValidator = z
  */
 export const getAllComments = async (req: Request, res: Response): Promise<void> => {
     try {
-        const comments = await prisma.comment.findMany();
+        const comments = await prismaClient.comment.findMany();
 
         res.status(200).json(comments);
     } catch (error) {
@@ -44,7 +42,7 @@ export const getCommentsByUserId = async (req: Request, res: Response): Promise<
     try {
         const authorId = await integerValidator.parseAsync(req.params.authorId);
 
-        const comments = await prisma.comment.findMany({
+        const comments = await prismaClient.comment.findMany({
             where: { authorId },
         });
 
@@ -67,17 +65,17 @@ export const getCommentsByUserId = async (req: Request, res: Response): Promise<
  */
 export const createComment = async (req: Request, res: Response): Promise<void> => {
     const createCommentSchema = z.object({
-        authorId: z.number(), 
+        authorId: z.number(),
         content: z.string().optional(),
         category: z.string(),
         postId: z.number(),
         parentCommentId: z.number().optional(),
-        files: z.any().optional()
+        files: z.any().optional(),
     });
     try {
         const { authorId, content, category, files, postId, parentCommentId } = createCommentSchema.parse(req.body);
-      
-        const comment = await prisma.comment.create({
+
+        const comment = await prismaClient.comment.create({
             data: {
                 authorId,
                 content,
@@ -108,7 +106,7 @@ export const deleteComment = async (req: Request, res: Response): Promise<void> 
     try {
         const id = await integerValidator.parseAsync(req.params.commentId);
 
-        const deletedComment = await prisma.comment.delete({
+        const deletedComment = await prismaClient.comment.delete({
             where: { id },
         });
 
@@ -132,19 +130,19 @@ export const deleteComment = async (req: Request, res: Response): Promise<void> 
  * @returns {Promise<void>}
  */
 export const updateComment = async (req: Request, res: Response): Promise<void> => {
-   const updateCommentSchema = z.object({
+    const updateCommentSchema = z.object({
         content: z.string().optional(),
         category: z.string().optional(),
         postId: z.number().optional(),
         parentCommentId: z.number().optional(),
-        files: z.any().optional()
+        files: z.any().optional(),
     });
     try {
         const id = await integerValidator.parseAsync(req.params.commentId);
 
         const { content, category, postId, parentCommentId } = updateCommentSchema.parse(req.body);
 
-        const updatedComment = await prisma.comment.update({
+        const updatedComment = await prismaClient.comment.update({
             where: {
                 id,
             },

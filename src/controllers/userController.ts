@@ -1,10 +1,9 @@
 import { Response, Request } from 'express';
-import { PrismaClient, Role } from '@prisma/client';
+import { Role } from '@prisma/client';
 import { z } from 'zod';
 import { hashPassword, verifyPassword } from '../utils/bcryptUtil';
 import validateUserIdentity from '../services/tokenJwtService/validateUserIdentity';
-
-const prisma = new PrismaClient();
+import prismaClient from '../services/prisma/prismaClient';
 
 const integerValidator = z
     .string()
@@ -26,7 +25,7 @@ const integerValidator = z
  */
 export const getUsers = async (_: Request, res: Response): Promise<void> => {
     try {
-        const users = await prisma.user.findMany({
+        const users = await prismaClient.user.findMany({
             select: {
                 id: true,
                 name: true,
@@ -66,7 +65,7 @@ export const createUser = async (req: Request, res: Response): Promise<void> => 
             .min(1)
             .max(255)
             .refine((val) => val.endsWith('@ufpr.br' || '@inf.ufpr.br')),
-        password: z.string().min(8).max(255),
+        password: z.string().min(8, 'Needs at least 8 characters!').max(255),
         role: z.enum([Role.ADMIN, Role.USER, Role.MOD]),
         status: z.boolean(),
         courseId: z.number(),
@@ -79,7 +78,7 @@ export const createUser = async (req: Request, res: Response): Promise<void> => 
         if (!hashPassword) throw new Error('Failed to encrypt password!');
         password = hash;
 
-        const user = await prisma.user.create({
+        const user = await prismaClient.user.create({
             data: {
                 name,
                 email,
@@ -131,23 +130,20 @@ export const updateUser = async (req: Request, res: Response): Promise<void> => 
                 password: z.string().min(8).max(255).optional(),
                 newPassword: z.string().min(8).max(255).optional(),
             })
-            .refine(
-                (data) => {
-                    if ((!data.email && data.newEmail) || (data.email && !data.newEmail)) return false;
-                    if ((data.password && !data.newPassword) || (!data.password && data.newPassword)) return false;
+        .refine((data) => (data.email && !data.newEmail) || (!data.email && data.newEmail), {
+            message: 'Email cannot be updated as some data is missing',
+            path: ['email', 'newEmail'],
+        })
+        .refine((data) => (data.password && !data.newPassword) || (!data.password && data.newPassword), {
+            message: 'Password cannot be updated as some data is missing',
+            path: ['password', 'password'],
+        });
 
-                    return true;
-                },
-                {
-                    message: 'Email or password cannot be updated as some data is missing',
-                }
-            );
+    try {
+        const id = await integerValidator.parseAsync(req.body.tagId);
+        const { newName, email, newEmail, newCourseId, password, newPassword, newRole } = await updateUserSchema.parseAsync(req.body);
 
-        const id = await integerValidator.parseAsync(req.params.userId);
-
-        const { newName, email, newEmail, newCourseId, password, newPassword } = await updateUserSchema.parseAsync(req.body);
-
-        const user = await prisma.user.findUniqueOrThrow({
+        const user = await prismaClient.user.findUniqueOrThrow({
             where: {
                 id: id,
             },
@@ -166,7 +162,7 @@ export const updateUser = async (req: Request, res: Response): Promise<void> => 
         const encriptedNewPassword = await hashPassword(newPassword, 11);
         if (!encriptedNewPassword) throw new Error('Unable to update password!');
 
-        await prisma.user.update({
+        await prismaClient.user.update({
             where: {
                 id,
             },
@@ -210,7 +206,7 @@ export const deleteUser = async (req: Request, res: Response): Promise<void> => 
         // validating if the target user of the delete is the same as the token
         if (!validateUserIdentity(user.email, req.headers.authorization)) throw new Error();
 
-        await prisma.user.delete({
+        await prismaClient.user.delete({
             where: {
                 id: userId,
             },

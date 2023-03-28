@@ -1,8 +1,8 @@
 import express from 'express';
-import { verifyAuthentication } from '../middleware/authUserMiddleware';
 import { createUser, deleteUser, getUsers, updateUser } from '../controllers/userController';
 import adminMiddleware from '../middleware/adminMiddleware';
 import moderatorMiddleware from '../middleware/moderatorMiddleware';
+import verifyAuthentication from '../middleware/authUserMiddleware';
 
 const router = express.Router();
 
