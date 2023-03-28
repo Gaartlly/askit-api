@@ -212,7 +212,7 @@ router.get('/getReaction/:reactionId', getReaction);
 
 /**
  * @swagger
- * /api/reaction/getReactionByAuthor
+ * /api/reaction/getReactionByAuthor:
  *   get:
  *     security:
  *       - bearerAuth: []

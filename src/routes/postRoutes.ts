@@ -334,7 +334,7 @@ router.get('/getPost/:postId', getPost);
 
 /**
  * @swagger
- * /api/post/getPostByAuthor
+ * /api/post/getPostByAuthor:
  *   get:
  *     security:
  *       - bearerAuth: []

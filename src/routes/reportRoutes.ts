@@ -271,7 +271,7 @@ router.get('/getReport/:reportId', getReport);
 
 /**
  * @swagger
- * /api/report/getReportByAuthor
+ * /api/report/getReportByAuthor:
  *   get:
  *     security:
  *       - bearerAuth: []
