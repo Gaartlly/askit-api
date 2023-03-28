@@ -1,5 +1,6 @@
 import { secretKey } from '../../utils/tokenJwtUtil';
 import { sign } from 'jsonwebtoken';
+import { InternalServerError } from '../../utils/responseHandler';
 
 const generateJwtToken = async (userEmail: string, userRole: string): Promise<string> => {
     const expiresIn = 20 * 60;
@@ -16,7 +17,7 @@ const generateJwtToken = async (userEmail: string, userRole: string): Promise<st
         }
     );
 
-    if (!tokenJwt) throw new Error('Unable to create token JWT');
+    if (!tokenJwt) throw new InternalServerError('Unable to create token JWT');
 
     return tokenJwt;
 };
