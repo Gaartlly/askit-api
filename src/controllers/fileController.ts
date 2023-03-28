@@ -1,9 +1,7 @@
 import { Response, Request } from 'express';
 import cloudinary from '../config/cloudinaryConfig';
-import { PrismaClient } from '@prisma/client';
 import { z } from 'zod';
-
-const prisma = new PrismaClient();
+import prismaClient from '../services/prisma/prismaClient';
 
 const integerValidator = z
     .string()
@@ -39,7 +37,7 @@ export const uploadFile = async (req: Request, res: Response): Promise<void> => 
             resource_type: 'image',
         });
 
-        const fileUploaded = await prisma.file.create({
+        const fileUploaded = await prismaClient.file.create({
             data: {
                 title: title,
                 path: result.secure_url || result.url,
@@ -66,7 +64,7 @@ export const uploadFile = async (req: Request, res: Response): Promise<void> => 
  */
 export const getAllFiles = async (_: Request, res: Response): Promise<void> => {
     try {
-        const files = await prisma.file.findMany();
+        const files = await prismaClient.file.findMany();
 
         res.status(200).json({ files: files });
     } catch (error) {
@@ -85,7 +83,7 @@ export const getFileById = async (req: Request, res: Response): Promise<void> =>
     try {
         const id = await integerValidator.parseAsync(req.params.fileId);
 
-        const file = await prisma.file.findFirst({
+        const file = await prismaClient.file.findFirst({
             where: {
                 id,
             },
@@ -114,7 +112,7 @@ export const deleteFile = async (req: Request, res: Response): Promise<void> => 
     try {
         const id = await integerValidator.parseAsync(req.params.fileId);
 
-        await prisma.file.delete({
+        await prismaClient.file.delete({
             where: {
                 id,
             },
@@ -153,7 +151,7 @@ export const updateFile = async (req: Request, res: Response): Promise<void> => 
             resource_type: 'image',
         });
 
-        const fileUpdated = await prisma.file.update({
+        const fileUpdated = await prismaClient.file.update({
             where: {
                 id,
             },
