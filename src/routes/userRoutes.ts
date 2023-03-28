@@ -68,7 +68,7 @@ const router = express.Router();
  *             courseId: 1
  *
  *     responses:
- *       200:
+ *       201:
  *         content:
  *           application/json:
  *             example:

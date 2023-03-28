@@ -61,7 +61,7 @@ const router = express.Router();
  *             postId: 3
  *             commentId: 1
  *     responses:
- *       200:
+ *       201:
  *         content:
  *           application/json:
  *             example:
