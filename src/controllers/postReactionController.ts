@@ -17,7 +17,7 @@ const integerValidator = z
     .transform((value) => parseInt(value));
 
 /**
- * Create a new comment reaction.
+ * Create a new post reaction.
  *
  * @param {Request} req - Express Request object.
  * @param {Response} res - Express Response object.
@@ -26,17 +26,16 @@ const integerValidator = z
 export const createOrUpdatePostReaction = async (req: Request, res: Response): Promise<void> => {
     const createSchema = z.object({
         authorId: z.number(),
-        commentId: z.number().optional(),
         postId: z.number(),
         type: z.enum([ReactionType.DOWNVOTE, ReactionType.UPVOTE]),
     });
 
     try {
-        const { authorId, commentId, postId, type } = createSchema.parse(req.body);
+        const { authorId, postId, type } = createSchema.parse(req.body);
 
-        const createdPostReaction = await prisma.commentReaction.upsert({
+        const createdPostReaction = await prisma.postReaction.upsert({
             where: {
-                authorId_commentId: { authorId, commentId },
+                authorId_postId: { authorId, postId },
             },
             update: {
                 type: type,
@@ -44,7 +43,7 @@ export const createOrUpdatePostReaction = async (req: Request, res: Response): P
             create: {
                 type,
                 authorId,
-                commentId,
+                postId,
             },
         });
 
@@ -59,7 +58,7 @@ export const createOrUpdatePostReaction = async (req: Request, res: Response): P
 };
 
 /**
- * Get all comment reactions.
+ * Get all post reactions.
  *
  * @param {Request} req - Express Request object.
  * @param {Response} res - Express Response object.
@@ -67,21 +66,21 @@ export const createOrUpdatePostReaction = async (req: Request, res: Response): P
  */
 export const getAllPostReactions = async (req: Request, res: Response): Promise<void> => {
     try {
-        const commentReactions = await prisma.commentReaction.findMany({
+        const postReactions = await prisma.postReaction.findMany({
             include: {
                 author: true,
-                comment: true,
+                post: true,
             },
         });
 
-        res.status(200).json({ reactions: commentReactions });
+        res.status(200).json({ reactions: postReactions });
     } catch (error) {
         res.status(500).json({ message: 'Internal server error.', error: error.message });
     }
 };
 
 /**
- * Get a comment reaction.
+ * Get a post reaction.
  *
  * @param {Request} req - Express Request object.
  * @param {Response} res - Express Response object.
@@ -89,18 +88,18 @@ export const getAllPostReactions = async (req: Request, res: Response): Promise<
  */
 export const getPostReaction = async (req: Request, res: Response): Promise<void> => {
     try {
-        const commentReactionId = await integerValidator.parseAsync(req.params.commentReactionId);
-        const commentReaction = await prisma.commentReaction.findUnique({
+        const postReactionId = await integerValidator.parseAsync(req.params.postReactionId);
+        const postReaction = await prisma.postReaction.findUnique({
             where: {
-                id: commentReactionId,
+                id: postReactionId,
             },
             include: {
                 author: true,
-                comment: true,
+                post: true,
             },
         });
 
-        res.status(200).json({ reaction: commentReaction });
+        res.status(200).json({ reaction: postReaction });
     } catch (error) {
         if (error.name === 'ZodError') {
             res.status(400).json({ error: error });
@@ -113,7 +112,7 @@ export const getPostReaction = async (req: Request, res: Response): Promise<void
 };
 
 /**
- * Get all comment reactions from an author.
+ * Get all post reactions from an author.
  *
  * @param {Request} req - Express Request object.
  * @param {Response} res - Express Response object.
@@ -126,17 +125,17 @@ export const getPostReactionsByAuthor = async (req: Request, res: Response): Pro
 
     try {
         const { authorId } = getSchema.parse(req.body);
-        const commentReactions = await prisma.commentReaction.findMany({
+        const postReactions = await prisma.postReaction.findMany({
             where: {
                 authorId: authorId,
             },
             include: {
                 author: true,
-                comment: true,
+                post: true,
             },
         });
 
-        res.status(200).json({ reactions: commentReactions });
+        res.status(200).json({ reactions: postReactions });
     } catch (error) {
         if (error.name === 'ZodError') {
             res.status(400).json({ error: error });
@@ -149,7 +148,7 @@ export const getPostReactionsByAuthor = async (req: Request, res: Response): Pro
 };
 
 /**
- * Delete a comment reaction.
+ * Delete a post reaction.
  *
  * @param {Request} req - Express Request object.
  * @param {Response} res - Express Response object.
@@ -157,8 +156,8 @@ export const getPostReactionsByAuthor = async (req: Request, res: Response): Pro
  */
 export const deletePostReaction = async (req: Request, res: Response): Promise<void> => {
     try {
-        const commentReactionId = await integerValidator.parseAsync(req.params.commentReactionId);
-        await prisma.commentReaction.delete({ where: { id: commentReactionId } });
+        const postReactionId = await integerValidator.parseAsync(req.params.postReactionId);
+        await prisma.postReaction.delete({ where: { id: postReactionId } });
 
         res.status(200).json({ message: 'Reaction deleted.' });
     } catch (error) {

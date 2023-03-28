@@ -100,7 +100,7 @@ router.post('/createOrUpdatePostReport', createOrUpdatePostReport);
 /**
  * @swagger
  * /api/postReport/disconnectTagFromPostReport:
- *   post:
+ *   put:
  *     security:
  *       - bearerAuth: []
  *     description: Update an existing post report disconnecting one of its tags.
@@ -266,7 +266,7 @@ router.get('/getPostReport/:postReportId', getPostReport);
 /**
  * @swagger
  * /api/postReport/getPostReportsByAuthor:
- *   get:
+ *   post:
  *     security:
  *       - bearerAuth: []
  *     description: Retrieve all post reports by an author.
@@ -316,7 +316,7 @@ router.get('/getPostReport/:postReportId', getPostReport);
  *                 message: Internal Server Error
  *
  */
-router.get('/getPostReportsByAuthor/', getPostReportsByAuthor);
+router.post('/getPostReportsByAuthor/', getPostReportsByAuthor);
 
 /**
  * @swagger

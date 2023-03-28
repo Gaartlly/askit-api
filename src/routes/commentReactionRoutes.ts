@@ -208,7 +208,7 @@ router.get('/getCommentReaction/:commentReactionId', getCommentReaction);
 /**
  * @swagger
  * /api/commentReaction/getCommentReactionsByAuthor:
- *   get:
+ *   post:
  *     security:
  *       - bearerAuth: []
  *     description: Retrieve all comment reactions by an author.
@@ -258,7 +258,7 @@ router.get('/getCommentReaction/:commentReactionId', getCommentReaction);
  *                 message: Internal Server Error
  *
  */
-router.get('/getCommentReactionsByAuthor/', getCommentReactionsByAuthor);
+router.post('/getCommentReactionsByAuthor/', getCommentReactionsByAuthor);
 
 /**
  * @swagger

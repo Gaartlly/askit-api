@@ -173,7 +173,7 @@ router.put('/updatePost/:postId', updatePost);
 /**
  * @swagger
  * /api/post/disconnectTagFromPost:
- *   post:
+ *   put:
  *     security:
  *       - bearerAuth: []
  *     description: Disconnect a tag from a post.
@@ -339,7 +339,7 @@ router.get('/getPost/:postId', getPost);
 /**
  * @swagger
  * /api/post/getPostsByAuthor:
- *   get:
+ *   post:
  *     security:
  *       - bearerAuth: []
  *     description: Retrieve all posts by an author.
@@ -389,7 +389,7 @@ router.get('/getPost/:postId', getPost);
  *                 message: Internal Server Error
  *
  */
-router.get('/getPostsByAuthor/', getPostsByAuthor);
+router.post('/getPostsByAuthor/', getPostsByAuthor);
 
 /**
  * @swagger

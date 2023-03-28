@@ -66,6 +66,7 @@ export const createPost = async (req: Request, res: Response): Promise<void> => 
 
         res.status(201).json({ message: 'Post created.', post: createdPost });
     } catch (error) {
+        console.error(error);
         if (error.name === 'ZodError') {
             res.status(400).json({ error: error });
         } else {

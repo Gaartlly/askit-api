@@ -80,6 +80,11 @@ export const createOrUpdatePostReport = async (req: Request, res: Response): Pro
                     }),
                 },
             },
+            include: {
+                tags: true,
+                author: true,
+                post: true,
+            },
         });
 
         res.status(201).json({ message: 'Report created/updated.', report: createdPostReport });
@@ -147,6 +152,7 @@ export const getAllPostReports = async (req: Request, res: Response): Promise<vo
             include: {
                 author: true,
                 post: true,
+                tags: true,
             },
         });
 
@@ -173,6 +179,7 @@ export const getPostReport = async (req: Request, res: Response): Promise<void> 
             include: {
                 author: true,
                 post: true,
+                tags: true,
             },
         });
 
@@ -211,7 +218,7 @@ export const getPostReportsByAuthor = async (req: Request, res: Response): Promi
             },
         });
 
-        res.status(200).json({ report: postReport });
+        res.status(200).json({ reports: postReport });
     } catch (error) {
         if (error.name === 'ZodError') {
             res.status(400).json({ error: error });

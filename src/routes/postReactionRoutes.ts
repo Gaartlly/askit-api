@@ -208,7 +208,7 @@ router.get('/getPostReaction/:postReactionId', getPostReaction);
 /**
  * @swagger
  * /api/postReaction/getPostReactionsByAuthor:
- *   get:
+ *   post:
  *     security:
  *       - bearerAuth: []
  *     description: Retrieve all post reactions by an author.
@@ -258,7 +258,7 @@ router.get('/getPostReaction/:postReactionId', getPostReaction);
  *                 message: Internal Server Error
  *
  */
-router.get('/getPostReactionsByAuthor/', getPostReactionsByAuthor);
+router.post('/getPostReactionsByAuthor/', getPostReactionsByAuthor);
 
 /**
  * @swagger

@@ -100,7 +100,7 @@ router.post('/createOrUpdateCommentReport', createOrUpdateCommentReport);
 /**
  * @swagger
  * /api/commentReport/disconnectTagFromCommentReport:
- *   post:
+ *   put:
  *     security:
  *       - bearerAuth: []
  *     description: Update an existing comment report disconnecting one of its tags.
@@ -266,7 +266,7 @@ router.get('/getCommentReport/:commentReportId', getCommentReport);
 /**
  * @swagger
  * /api/commentReport/getCommentReportsByAuthor:
- *   get:
+ *   post:
  *     security:
  *       - bearerAuth: []
  *     description: Retrieve all comment reports by an author.
@@ -316,7 +316,7 @@ router.get('/getCommentReport/:commentReportId', getCommentReport);
  *                 message: Internal Server Error
  *
  */
-router.get('/getCommentReportsByAuthor/', getCommentReportsByAuthor);
+router.post('/getCommentReportsByAuthor/', getCommentReportsByAuthor);
 
 /**
  * @swagger

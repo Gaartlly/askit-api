@@ -80,6 +80,11 @@ export const createOrUpdateCommentReport = async (req: Request, res: Response): 
                     }),
                 },
             },
+            include: {
+                tags: true,
+                author: true,
+                comment: true,
+            },
         });
 
         res.status(201).json({ message: 'Report created/updated.', report: createdCommentReport });
@@ -147,6 +152,7 @@ export const getAllCommentReports = async (req: Request, res: Response): Promise
             include: {
                 author: true,
                 comment: true,
+                tags: true,
             },
         });
 
@@ -173,6 +179,7 @@ export const getCommentReport = async (req: Request, res: Response): Promise<voi
             include: {
                 author: true,
                 comment: true,
+                tags: true,
             },
         });
 
@@ -211,7 +218,7 @@ export const getCommentReportsByAuthor = async (req: Request, res: Response): Pr
             },
         });
 
-        res.status(200).json({ report: commentReport });
+        res.status(200).json({ reports: commentReport });
     } catch (error) {
         if (error.name === 'ZodError') {
             res.status(400).json({ error: error });
