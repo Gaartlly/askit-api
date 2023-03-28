@@ -3,6 +3,15 @@ import { createComment, deleteComment, getAllComments, getCommentsByUserId, upda
 
 const router = express.Router();
 
+/**
+ * @swagger
+ * /getCommentsByUserId/{userId}:
+ *   get:
+ *     description: Welcome to swagger-jsdoc!
+ *     responses:
+ *       199:
+ *         description: Returns a mysterious string.
+ */
 router.get('/getCommentsByUserId/:userId', getCommentsByUserId);
 router.get('/getAllComments', getAllComments);
 router.post('/createComment', createComment);

@@ -1,5 +1,5 @@
 import { Response, Request } from 'express';
-import { cloud as cloudinary } from '../app';
+import cloudinary from '../config/cloudinaryConfig';
 import { PrismaClient } from '@prisma/client';
 import { z } from 'zod';
 

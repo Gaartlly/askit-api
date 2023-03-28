@@ -3,6 +3,7 @@
         "module": "ES6",
         "esModuleInterop": true,
         "allowSyntheticDefaultImports": true,
+        "rootDir": "./src",
         "target": "ES6",
         "noImplicitAny": true,
         "moduleResolution": "node",
