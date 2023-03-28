@@ -2,7 +2,7 @@ import { Response, Request } from 'express';
 import { Role } from '@prisma/client';
 import { z } from 'zod';
 import { hashPassword, verifyPassword } from '../utils/bcryptUtil';
-import { asyncHandler, InternalServerError, UnauthorizedError, formatSuccessResponse} from '../utils/responseHandler';
+import { asyncHandler, InternalServerError, UnauthorizedError, formatSuccessResponse } from '../utils/responseHandler';
 import validateUserIdentity from '../services/tokenJwtService/validateUserIdentity';
 import prismaClient from '../services/prisma/prismaClient';
 import integerValidator from '../utils/integerValidator';
@@ -68,20 +68,22 @@ export const createUser = asyncHandler(async (req: Request, res: Response): Prom
             password,
             role,
             status,
-            courseId
+            courseId,
         },
     });
 
-    res.status(201).json(formatSuccessResponse({
-        user: {
-            id: user.id,
-            name: user.name,
-            email: user.email,
-            role: user.role,
-            status: user.status,
-            courseId: user.courseId,
-        }
-    }));
+    res.status(201).json(
+        formatSuccessResponse({
+            user: {
+                id: user.id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                status: user.status,
+                courseId: user.courseId,
+            },
+        })
+    );
 });
 
 /**
@@ -91,7 +93,7 @@ export const createUser = asyncHandler(async (req: Request, res: Response): Prom
  * @param {Response} res - Express Response object.
  * @returns {Promise<void>}
  */
-export const updateUser = async (req: Request, res: Response): Promise<void> => {
+export const updateUser = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const updateUserSchema = z
         .object({
             newName: z.string().min(1).max(255).optional(),
@@ -109,17 +111,14 @@ export const updateUser = async (req: Request, res: Response): Promise<void> => 
             password: z.string().min(8).max(255).optional(),
             newPassword: z.string().min(8).max(255).optional(),
         })
-    .refine((data) => 
-    (data.email == data.newEmail) || (data.email && data.newEmail), {
-        message: 'Email cannot be updated as some data is missing',
-        path: ['email', 'newEmail'],
-    }
-    ).refine((data) =>
-        (data.password == data.newPassword) || (data.password && data.newPassword), {
+        .refine((data) => data.email == data.newEmail || (data.email && data.newEmail), {
+            message: 'Email cannot be updated as some data is missing',
+            path: ['email', 'newEmail'],
+        })
+        .refine((data) => data.password == data.newPassword || (data.password && data.newPassword), {
             message: 'Password cannot be updated as some data is missing',
-            path: ['password', 'newPassword']
-        }
-    );
+            path: ['password', 'newPassword'],
+        });
 
     const id = await integerValidator.parseAsync(req.body.tagId);
     const { newName, email, newEmail, newCourseId, password, newPassword } = await updateUserSchema.parseAsync(req.body);
@@ -155,15 +154,17 @@ export const updateUser = async (req: Request, res: Response): Promise<void> => 
         },
     });
 
-    res.status(200).json(formatSuccessResponse({
-        user: {
-            id: newUser.id,
-            name: newUser.name,
-            email: newUser.email,
-            courseId: user.courseId,
-        }
-    }));
-};
+    res.status(200).json(
+        formatSuccessResponse({
+            user: {
+                id: newUser.id,
+                name: newUser.name,
+                email: newUser.email,
+                courseId: user.courseId,
+            },
+        })
+    );
+});
 
 /**
  * Delete a user.
@@ -178,7 +179,7 @@ export const deleteUser = asyncHandler(async (req: Request, res: Response): Prom
     const user = await prismaClient.user.findUniqueOrThrow({
         where: {
             id,
-        }
+        },
     });
 
     // validating if the target user of the delete is the same as the token
@@ -186,8 +187,8 @@ export const deleteUser = asyncHandler(async (req: Request, res: Response): Prom
 
     const deletedUser = await prismaClient.user.delete({
         where: {
-            id: id
-        }
+            id: id,
+        },
     });
 
     res.status(200).json(formatSuccessResponse(deletedUser));
