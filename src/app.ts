@@ -7,7 +7,7 @@ import fileRoutes from './routes/fileRoutes';
 import postRoutes from './routes/postRoutes';
 import userRoutes from './routes/userRoutes';
 import tagRoutes from './routes/tagRoutes';
-import { verifyAuthentication } from './middleware/authUserMiddleware';
+import verifyAuthentication from './middleware/authUserMiddleware';
 import loginRoutes from './routes/loginRoute';
 import swaggerDocs from './config/swaggerConfig';
 import swaggerUi from 'swagger-ui-express';

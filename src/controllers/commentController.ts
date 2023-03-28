@@ -1,10 +1,8 @@
 import { NextFunction, Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
+import prismaClient from '../services/prisma/prismaClient';
 import { z } from 'zod';
 import { formatSuccessResponse, asyncHandler } from '../utils/responseHandler';
 import  integerValidator from '../utils/integerValidator';
-
-const prisma = new PrismaClient();
 
 /**
  * Get all comments.
@@ -14,7 +12,7 @@ const prisma = new PrismaClient();
  * @returns {Promise<void>}
  */
 export const getAllComments = asyncHandler(async(req: Request, res: Response, next: NextFunction): Promise<void> => {
-    const comments = await prisma.comment.findMany();
+    const comments = await prismaClient.comment.findMany();
     res.status(200).json(formatSuccessResponse(comments));
 });
 
@@ -28,11 +26,11 @@ export const getAllComments = asyncHandler(async(req: Request, res: Response, ne
 export const getCommentsByUserId = asyncHandler(async(req: Request, res: Response): Promise<void> => {
     const authorId = await integerValidator.parseAsync(req.params.userId);
 
-    await prisma.user.findUniqueOrThrow({
+    await prismaClient.user.findUniqueOrThrow({
         where: { id: authorId }
     });
 
-    const comments = await prisma.comment.findMany({
+    const comments = await prismaClient.comment.findMany({
         where: { authorId }
     });
 
@@ -49,7 +47,7 @@ export const getCommentsByUserId = asyncHandler(async(req: Request, res: Respons
 export const getMyComments = asyncHandler(async(req: Request, res: Response): Promise<void> => {
     const authorId = await integerValidator.parseAsync(req.params.userId);
 
-    const comments = await prisma.comment.findMany({
+    const comments = await prismaClient.comment.findMany({
         where: { authorId }
     });
 
@@ -65,25 +63,25 @@ export const getMyComments = asyncHandler(async(req: Request, res: Response): Pr
  */
 export const createComment = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const createCommentSchema = z.object({
-        authorId: z.number(), 
+        authorId: z.number(),
         content: z.string().optional(),
         category: z.string(),
         postId: z.number(),
         parentCommentId: z.number().optional(),
-        files: z.any().optional()
+        files: z.any().optional(),
     });
 
     const { authorId, content, category, files, postId, parentCommentId } = createCommentSchema.parse(req.body);
 
-    await prisma.user.findUniqueOrThrow({
+    await prismaClient.user.findUniqueOrThrow({
         where: { id: authorId }
     });
 
-    await prisma.post.findUniqueOrThrow({
+    await prismaClient.post.findUniqueOrThrow({
         where: { id: postId }
     });
 
-    const comment = await prisma.comment.create({
+    const comment = await prismaClient.comment.create({
         data: {
             authorId,
             content,
@@ -105,7 +103,7 @@ export const createComment = asyncHandler(async (req: Request, res: Response): P
 export const deleteComment = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const id = await integerValidator.parseAsync(req.params.commentId);
 
-    const deletedComment = await prisma.comment.delete({
+    const deletedComment = await prismaClient.comment.delete({
         where: { id },
     });
 
@@ -125,14 +123,14 @@ export const updateComment = asyncHandler(async (req: Request, res: Response): P
         category: z.string().optional(),
         postId: z.number().optional(),
         parentCommentId: z.number().optional(),
-        files: z.any().optional()
+        files: z.any().optional(),
     });
 
     const id = await integerValidator.parseAsync(req.params.commentId);
 
     const { content, category, postId, parentCommentId } = updateCommentSchema.parse(req.body);
 
-    const updatedComment = await prisma.comment.update({
+    const updatedComment = await prismaClient.comment.update({
         where: {
             id,
         },

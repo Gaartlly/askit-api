@@ -1,22 +1,11 @@
 import { Response, Request } from 'express';
-import { PrismaClient, Role } from '@prisma/client';
+import { Role } from '@prisma/client';
 import { z } from 'zod';
 import { hashPassword, verifyPassword } from '../utils/bcryptUtil';
 import { asyncHandler, InternalServerError, UnauthorizedError, formatSuccessResponse} from '../utils/responseHandler';
-
-const prisma = new PrismaClient();
-
-const integerValidator = z
-    .string()
-    .refine(
-        (value) => {
-            return /^\d+$/.test(value);
-        },
-        {
-            message: 'Value must be a valid integer',
-        }
-    )
-    .transform((value) => parseInt(value));
+import validateUserIdentity from '../services/tokenJwtService/validateUserIdentity';
+import prismaClient from '../services/prisma/prismaClient';
+import integerValidator from '../utils/integerValidator';
 
 /**
  * Get all users.
@@ -25,7 +14,7 @@ const integerValidator = z
  * @returns {Promise<void>}
  */
 export const getUsers = asyncHandler(async (req: Request, res: Response): Promise<void> => {
-    const users = await prisma.user.findMany({
+    const users = await prismaClient.user.findMany({
         select: {
             id: true,
             name: true,
@@ -51,10 +40,15 @@ export const getUsers = asyncHandler(async (req: Request, res: Response): Promis
  */
 export const createUser = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const createUserSchema = z.object({
-        name: z.string(),
-        email: z.string().email(),
-        password: z.string(),
-        role: z.enum([Role.ADMIN, Role.USER]),
+        name: z.string().min(1).max(255),
+        email: z
+            .string()
+            .email()
+            .min(1)
+            .max(255)
+            .refine((val) => val.endsWith('@ufpr.br' || '@inf.ufpr.br')),
+        password: z.string().min(8, 'Needs at least 8 characters!').max(255),
+        role: z.enum([Role.ADMIN, Role.USER, Role.MOD]),
         status: z.boolean(),
         courseId: z.number(),
     });
@@ -67,7 +61,7 @@ export const createUser = asyncHandler(async (req: Request, res: Response): Prom
 
     password = hash;
 
-    const user = await prisma.user.create({
+    const user = await prismaClient.user.create({
         data: {
             name,
             email,
@@ -85,6 +79,7 @@ export const createUser = asyncHandler(async (req: Request, res: Response): Prom
             email: user.email,
             role: user.role,
             status: user.status,
+            courseId: user.courseId,
         }
     }));
 });
@@ -96,20 +91,29 @@ export const createUser = asyncHandler(async (req: Request, res: Response): Prom
  * @param {Response} res - Express Response object.
  * @returns {Promise<void>}
  */
-export const updateUser = asyncHandler(async (req: Request, res: Response): Promise<void> => {
-    const updateUserSchema = z.object({
-        newName: z.string().min(1).max(255).optional(),
-        newRole: z.enum([Role.ADMIN, Role.USER]).optional(),
-        email: z.string().email().optional(),
-        newEmail: z.string().email().optional(),
-        newCourse: z.string().optional(),
-        password: z.string().min(1).max(255).optional(),
-        newPassword: z.string().min(1).max(255).optional(),
-    }).refine((data) => 
-        (data.email == data.newEmail) || (data.email && data.newEmail), {
-            message: 'Email cannot be updated as some data is missing',
-            path: ['email', 'newEmail'],
-        }
+export const updateUser = async (req: Request, res: Response): Promise<void> => {
+    const updateUserSchema = z
+        .object({
+            newName: z.string().min(1).max(255).optional(),
+            email: z
+                .string()
+                .email()
+                .refine((val) => val.endsWith('@ufpr.br'))
+                .optional(),
+            newEmail: z
+                .string()
+                .email()
+                .refine((val) => val.endsWith('@ufpr.br'))
+                .optional(),
+            newCourseId: z.number().int().optional(),
+            password: z.string().min(8).max(255).optional(),
+            newPassword: z.string().min(8).max(255).optional(),
+        })
+    .refine((data) => 
+    (data.email == data.newEmail) || (data.email && data.newEmail), {
+        message: 'Email cannot be updated as some data is missing',
+        path: ['email', 'newEmail'],
+    }
     ).refine((data) =>
         (data.password == data.newPassword) || (data.password && data.newPassword), {
             message: 'Password cannot be updated as some data is missing',
@@ -117,39 +121,49 @@ export const updateUser = asyncHandler(async (req: Request, res: Response): Prom
         }
     );
 
-    const id = await integerValidator.parseAsync(req.params.userId);
-    const { newName, email, newEmail, password, newPassword, newRole } = await updateUserSchema.parseAsync(req.body);
+    const id = await integerValidator.parseAsync(req.body.tagId);
+    const { newName, email, newEmail, newCourseId, password, newPassword } = await updateUserSchema.parseAsync(req.body);
 
-    const user = await prisma.user.findUniqueOrThrow({
+    const user = await prismaClient.user.findUniqueOrThrow({
         where: {
             id: id,
         },
     });
 
-    if(email && email !== user.email)
-        throw new UnauthorizedError('Current email is wrong.');
-    
-    if(password) {
-        const resultComparison = await verifyPassword(password, user.password);
+    // validating if the target user of the update is the same as the token
+    if (!validateUserIdentity(user.email, req.headers.authorization)) throw new Error('Unauthorized user');
 
-        if(resultComparison)
-            throw new UnauthorizedError('Current password is wrong.');
+    if (email && email !== user.email) throw new UnauthorizedError('Current email or password is wrong.');
+
+    if (password) {
+        const resultComparison = await verifyPassword(password, user.password);
+        if (!resultComparison) throw new UnauthorizedError('Current email or password is wrong.');
     }
 
-    const userUpdated = await prisma.user.update({
+    const encriptedNewPassword = await hashPassword(newPassword, 11);
+    if (!encriptedNewPassword) throw new InternalServerError('Unable to update password!');
+
+    const newUser = await prismaClient.user.update({
         where: {
-            id
+            id,
         },
-        data:{
+        data: {
             name: newName,
             email: newEmail,
-            password: newPassword,
-            role: newRole
-        }
+            password: encriptedNewPassword,
+            courseId: newCourseId,
+        },
     });
 
-    res.status(200).json(formatSuccessResponse(userUpdated));
-});
+    res.status(200).json(formatSuccessResponse({
+        user: {
+            id: newUser.id,
+            name: newUser.name,
+            email: newUser.email,
+            courseId: user.courseId,
+        }
+    }));
+};
 
 /**
  * Delete a user.
@@ -161,7 +175,16 @@ export const updateUser = asyncHandler(async (req: Request, res: Response): Prom
 export const deleteUser = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const id = await integerValidator.parseAsync(req.params.userId);
 
-    const deletedUser = await prisma.user.delete({
+    const user = await prismaClient.user.findUniqueOrThrow({
+        where: {
+            id,
+        }
+    });
+
+    // validating if the target user of the delete is the same as the token
+    if (!validateUserIdentity(user.email, req.headers.authorization)) throw new UnauthorizedError('Unauthorized user');
+
+    const deletedUser = await prismaClient.user.delete({
         where: {
             id: id
         }
