@@ -23,7 +23,7 @@ export const login = asyncHandler(async (req: Request, res: Response, next: Next
         },
     });
 
-    if (!user || !verifyPassword(password, user.password)) 
+    if (!user || !(await verifyPassword(password, user.password))) 
         throw new UnauthorizedError(errorMessage);
 
     const tokenJwt = await generateJwtToken(user.id);
