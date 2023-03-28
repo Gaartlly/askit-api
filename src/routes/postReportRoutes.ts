@@ -209,9 +209,11 @@ router.get('/getAllPostReports', getAllPostReports);
  *     description: Retrieve a post report by id.
  *     tags: [PostReport]
  *     parameters:
- *       - in: path
- *         name: postReportId
+ *       - name: postReportId
+ *         in: path
  *         required: true
+ *         schema:
+ *           type: integer
  *
  *     responses:
  *       200:
@@ -325,9 +327,11 @@ router.get('/getPostReportsByAuthor/', getPostReportsByAuthor);
  *     description: Delete an post report by id.
  *     tags: [PostReport]
  *     parameters:
- *       - in: path param
- *         name: postReportId
+ *       - name: postReportId
+ *         in: path
  *         required: true
+ *         schema:
+ *           type: integer
  *
  *     responses:
  *       200:

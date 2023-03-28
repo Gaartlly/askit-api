@@ -95,9 +95,11 @@ router.post('/createTag', createTag);
  *     description: Update an tag by id.
  *     tags: [Tag]
  *     parameters:
- *       - in: path param
- *         name: tagId
+ *       - name: tagId
+ *         in: path
  *         required: true
+ *         schema:
+ *           type: integer
  *     requestBody:
  *       required: false
  *       content:
@@ -207,9 +209,11 @@ router.get('/getAllTags', getAllTags);
  *     description: Retrieve a tag by id.
  *     tags: [Tag]
  *     parameters:
- *       - in: path param
- *         name: tagId
+ *       - name: tagId
+ *         in: path
  *         required: true
+ *         schema:
+ *           type: integer
  *
  *     responses:
  *       200:
@@ -267,9 +271,11 @@ router.get('/getTag/:tagId', getTag);
  *     description: Delete an tag by id.
  *     tags: [Tag]
  *     parameters:
- *       - in: path param
- *         name: tagId
+ *       - name: tagId
+ *         in: path
  *         required: true
+ *         schema:
+ *           type: integer
  *
  *     responses:
  *       200:

@@ -106,9 +106,11 @@ router.post('/createPost', createPost);
  *     description: Update a post by id.
  *     tags: [Post]
  *     parameters:
- *       - in: path
- *         name: postId
+ *       - name: postId
+ *         in: path
  *         required: true
+ *         schema:
+ *           type: integer
  *     requestBody:
  *       required: true
  *       content:
@@ -280,9 +282,11 @@ router.get('/getAllPosts', getAllPosts);
  *     description: Retrieve a post by id.
  *     tags: [Post]
  *     parameters:
- *       - in: path
- *         name: postId
+ *       - name: postId
+ *         in: path
  *         required: true
+ *         schema:
+ *           type: integer
  *
  *     responses:
  *       200:
@@ -396,9 +400,11 @@ router.get('/getPostsByAuthor/', getPostsByAuthor);
  *     description: Delete an post by id.
  *     tags: [Post]
  *     parameters:
- *       - in: path param
- *         name: postId
+ *       - name: postId
+ *         in: path
  *         required: true
+ *         schema:
+ *           type: integer
  *
  *     responses:
  *       200:

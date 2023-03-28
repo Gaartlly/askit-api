@@ -209,9 +209,11 @@ router.get('/getAllCommentReports', getAllCommentReports);
  *     description: Retrieve a comment report by id.
  *     tags: [CommentReport]
  *     parameters:
- *       - in: path
- *         name: commentReportId
+ *       - name: commentReportId
+ *         in: path
  *         required: true
+ *         schema:
+ *           type: integer
  *
  *     responses:
  *       200:
@@ -325,9 +327,11 @@ router.get('/getCommentReportsByAuthor/', getCommentReportsByAuthor);
  *     description: Delete an comment report by id.
  *     tags: [CommentReport]
  *     parameters:
- *       - in: path param
- *         name: commentReportId
+ *       - name: commentReportId
+ *         in: path
  *         required: true
+ *         schema:
+ *           type: integer
  *
  *     responses:
  *       200:

@@ -151,9 +151,11 @@ router.get('/getAllPostReactions', getAllPostReactions);
  *     description: Retrieve a post reaction by id.
  *     tags: [PostReaction]
  *     parameters:
- *       - in: path
- *         name: postReactionId
+ *       - name: postReactionId
+ *         in: path
  *         required: true
+ *         schema:
+ *           type: integer
  *
  *     responses:
  *       200:
@@ -267,9 +269,11 @@ router.get('/getPostReactionsByAuthor/', getPostReactionsByAuthor);
  *     description: Delete an post reaction by id.
  *     tags: [PostReaction]
  *     parameters:
- *       - in: path param
- *         name: postReactionId
+ *       - name: postReactionId
+ *         in: path
  *         required: true
+ *         schema:
+ *           type: integer
  *
  *     responses:
  *       200:

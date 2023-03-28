@@ -151,9 +151,11 @@ router.get('/getAllCommentReactions', getAllCommentReactions);
  *     description: Retrieve a comment reaction by id.
  *     tags: [CommentReaction]
  *     parameters:
- *       - in: path
- *         name: commentReactionId
+ *       - name: commentReactionId
+ *         in: path
  *         required: true
+ *         schema:
+ *           type: integer
  *
  *     responses:
  *       200:
@@ -267,9 +269,11 @@ router.get('/getCommentReactionsByAuthor/', getCommentReactionsByAuthor);
  *     description: Delete an comment reaction by id.
  *     tags: [CommentReaction]
  *     parameters:
- *       - in: path param
- *         name: commentReactionId
+ *       - name: commentReactionId
+ *         in: path
  *         required: true
+ *         schema:
+ *           type: integer
  *
  *     responses:
  *       200:

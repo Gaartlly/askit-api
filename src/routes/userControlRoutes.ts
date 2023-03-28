@@ -101,9 +101,11 @@ router.post('/createUserControl', createUserControl);
  *     description: Update an userControl by id.
  *     tags: [UserControl]
  *     parameters:
- *       - in: path param
- *         name: userControlId
+ *       - name: userControlId
+ *         in: path
  *         required: true
+ *         schema:
+ *           type: integer
  *     requestBody:
  *       required: false
  *       content:
@@ -213,9 +215,11 @@ router.get('/getAllUserControls', getAllUserControls);
  *     description: Retrieve a userControl by id.
  *     tags: [UserControl]
  *     parameters:
- *       - in: path param
- *         name: userControlId
+ *       - name: userControlId
+ *         in: path
  *         required: true
+ *         schema:
+ *           type: integer
  *
  *     responses:
  *       200:
@@ -273,9 +277,11 @@ router.get('/getUserControl/:userControlId', getUserControl);
  *     description: Delete an userControl by id.
  *     tags: [UserControl]
  *     parameters:
- *       - in: path param
- *         name: userControlId
+ *       - name: userControlId
+ *         in: path
  *         required: true
+ *         schema:
+ *           type: integer
  *
  *     responses:
  *       200:
