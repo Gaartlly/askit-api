@@ -1,8 +1,6 @@
 import { Response, Request } from 'express';
-import { Post, PrismaClient } from '@prisma/client';
 import { z } from 'zod';
-
-const prisma = new PrismaClient();
+import prismaClient from '../services/prisma/prismaClient';
 
 const integerValidator = z
     .string()
@@ -42,7 +40,7 @@ export const createPost = async (req: Request, res: Response): Promise<void> => 
 
     try {
         const post = createSchema.parse(req.body);
-        const createdPost = await prisma.post.create({
+        const createdPost = await prismaClient.post.create({
             data: {
                 title: post.title,
                 content: post.description,
@@ -92,7 +90,7 @@ export const updatePost = async (req: Request, res: Response): Promise<void> => 
 
     try {
         const id = await integerValidator.parseAsync(req.body.postId);
-        const currentPost = await prisma.post.findUnique({
+        const currentPost = await prismaClient.post.findUnique({
             where: { id },
             include: {
                 files: true,
@@ -109,12 +107,12 @@ export const updatePost = async (req: Request, res: Response): Promise<void> => 
         const updatedFiles = newPost.files.filter((obj) => obj.id !== undefined); //Arquivos que chegam com id
         const deletedFilesIds = currentFilesIds.filter((id) => !updatedFiles.map((obj) => obj.id).includes(id)); //Arquivos que não estão entre os novos
 
-        await prisma.file.deleteMany({ where: { id: { in: deletedFilesIds } } });
+        await prismaClient.file.deleteMany({ where: { id: { in: deletedFilesIds } } });
         for (const file of updatedFiles) {
-            await prisma.file.update({ where: { id: file.id }, data: file });
+            await prismaClient.file.update({ where: { id: file.id }, data: file });
         }
 
-        const updatedPost: Post = await prisma.post.update({
+        const updatedPost = await prismaClient.post.update({
             where: { id },
             data: {
                 title: newPost.title,
@@ -149,7 +147,7 @@ export const updatePost = async (req: Request, res: Response): Promise<void> => 
  */
 export const getAllPosts = async (req: Request, res: Response): Promise<void> => {
     try {
-        const posts = await prisma.post.findMany({
+        const posts = await prismaClient.post.findMany({
             include: {
                 files: true,
             },
@@ -171,9 +169,9 @@ export const getPost = async (req: Request, res: Response): Promise<void> => {
     try {
         const id = await integerValidator.parseAsync(req.body.postId);
 
-        const post = await prisma.post.findUnique({
+        const post = await prismaClient.post.findUnique({
             where: {
-                id
+                id,
             },
             include: {
                 files: true,
@@ -203,9 +201,9 @@ export const deletePost = async (req: Request, res: Response): Promise<void> => 
     try {
         const id = await integerValidator.parseAsync(req.body.postId);
 
-        const post = await prisma.post.findUnique({ where: { id } });
+        const post = await prismaClient.post.findUnique({ where: { id } });
         if (post) {
-            await prisma.post.deleteMany({ where: { id } });
+            await prismaClient.post.deleteMany({ where: { id } });
         }
 
         res.status(200).json({ message: 'Post deleted.' });
