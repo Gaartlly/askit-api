@@ -12,10 +12,11 @@ import postReactionRoutes from './routes/postReactionRoutes';
 import commentReportRoutes from './routes/commentReportRoutes';
 import postReportRoutes from './routes/postReportRoutes';
 import userControlRoutes from './routes/userControlRoutes';
-import { verifyAuthentication } from './middleware/authUserMiddleware';
+import verifyAuthentication from './middleware/authUserMiddleware';
 import loginRoutes from './routes/loginRoute';
 import swaggerDocs from './config/swaggerConfig';
 import swaggerUi from 'swagger-ui-express';
+import { errorResponse } from './utils/responseHandler';
 
 const app = express();
 const port = process.env.PORT ? Number(process.env.PORT) : 4000;
@@ -46,6 +47,7 @@ app.use('/api/postReport', verifyAuthentication, postReportRoutes);
 app.use('/api/userControl', verifyAuthentication, userControlRoutes);
 app.use('/api', loginRoutes);
 
+app.use(errorResponse);
 app.listen(port, () => {
     console.log(`App running at http://localhost:${port}`);
 });

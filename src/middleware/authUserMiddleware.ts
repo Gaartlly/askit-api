@@ -1,19 +1,18 @@
 import { NextFunction, Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
+import { UnauthorizedError } from '../utils/responseHandler';
 import { secretKey } from '../utils/tokenJwtUtil';
+import extractBearerToken from '../services/tokenJwtService/extractBearerToken';
 
-export const verifyAuthentication = async (req: Request, res: Response, next: NextFunction) => {
+const verifyAuthentication = async (req: Request, res: Response, next: NextFunction) => {
     const token = req.headers.authorization;
 
-    if (!token) return res.status(401).json({ message: 'Token is missing!' });
+    if (!token)
+        throw new UnauthorizedError('Authentication token not found!'); 
 
-    // Bearer token
-    const [_, jwtToken] = token.split(' ');
-
-    try {
-        jwt.verify(jwtToken, secretKey);
-        return next();
-    } catch (error) {
-        return res.status(401).json({ message: 'Invalid token!' });
-    }
+    const jwtToken = extractBearerToken(token);
+    jwt.verify(jwtToken, secretKey);
+    return next();
 };
+
+export default verifyAuthentication;
