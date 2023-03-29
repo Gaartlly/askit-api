@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { asyncHandler, formatSuccessResponse } from '../utils/responseHandler';
 import prismaClient from '../services/prisma/prismaClient';
 import integerValidator from '../utils/integerValidator';
-import { Post } from '@prisma/client';
+import { File, Post, Tag } from '@prisma/client';
 
 /**
  * Create a new post.
@@ -26,7 +26,7 @@ export const createPost = asyncHandler(async (req: Request, res: Response): Prom
     });
 
     const { title, content, authorId, tags } = createSchema.parse(req.body);
-    const createdPost = await prismaClient.post.create({
+    const createdPost: Post & { tags: Tag[]; files: File[] } = await prismaClient.post.create({
         data: {
             title,
             content,
@@ -36,7 +36,10 @@ export const createPost = asyncHandler(async (req: Request, res: Response): Prom
                     const { key, categoryId } = tag;
                     return {
                         where: {
-                            key_categoryId: { key, categoryId },
+                            key_categoryId: {
+                                key,
+                                categoryId,
+                            },
                         },
                         create: {
                             key,
@@ -76,12 +79,11 @@ export const updatePost = asyncHandler(async (req: Request, res: Response): Prom
             .optional(),
     });
 
-    const postId = await integerValidator.parseAsync(req.params.postId);
-
+    const id = await integerValidator.parseAsync(req.params.postId);
     const { title, content, authorId, tags } = updateSchema.parse(req.body);
 
-    const updatedPost: Post = await prismaClient.post.update({
-        where: { id: postId },
+    const updatedPost: Post & { tags: Tag[]; files: File[] } = await prismaClient.post.update({
+        where: { id },
         data: {
             title,
             content,
@@ -125,8 +127,10 @@ export const disconnectTagFromPost = asyncHandler(async (req: Request, res: Resp
 
     const { postId, tagId } = disconnectSchema.parse(req.body);
 
-    const updatedPost: Post = await prismaClient.post.update({
-        where: { id: postId },
+    const updatedPost: Post & { tags: Tag[] } = await prismaClient.post.update({
+        where: {
+            id: postId,
+        },
         data: {
             tags: {
                 disconnect: {
@@ -150,7 +154,7 @@ export const disconnectTagFromPost = asyncHandler(async (req: Request, res: Resp
  * @returns {Promise<void>}
  */
 export const getAllPosts = asyncHandler(async (req: Request, res: Response): Promise<void> => {
-    const posts = await prismaClient.post.findMany({
+    const posts: (Post & { tags: Tag[]; files: File[] })[] = await prismaClient.post.findMany({
         include: {
             tags: true,
             files: true,
@@ -170,7 +174,7 @@ export const getAllPosts = asyncHandler(async (req: Request, res: Response): Pro
 export const getPost = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const id = await integerValidator.parseAsync(req.params.postId);
 
-    const post = await prismaClient.post.findUniqueOrThrow({
+    const post: Post & { tags: Tag[]; files: File[] } = await prismaClient.post.findUniqueOrThrow({
         where: {
             id,
         },
@@ -197,7 +201,7 @@ export const getPostsByAuthor = asyncHandler(async (req: Request, res: Response)
 
     const { authorId } = getSchema.parse(req.body);
 
-    const posts = await prismaClient.post.findMany({
+    const posts: (Post & { tags: Tag[]; files: File[] })[] = await prismaClient.post.findMany({
         where: {
             authorId,
         },
@@ -219,8 +223,11 @@ export const getPostsByAuthor = asyncHandler(async (req: Request, res: Response)
  */
 export const deletePost = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const id = await integerValidator.parseAsync(req.params.postId);
-
-    const post = await prismaClient.post.delete({ where: { id } });
+    const post = await prismaClient.post.delete({
+        where: {
+            id,
+        },
+    });
 
     res.status(200).json(formatSuccessResponse(post));
 });

@@ -1,8 +1,8 @@
 import { Response, Request } from 'express';
-import { PostReaction, PrismaClient, ReactionType } from '@prisma/client';
+import { Post, PostReaction, ReactionType, User } from '@prisma/client';
+import { asyncHandler, formatSuccessResponse } from '../utils/responseHandler';
+import prismaClient from '../services/prisma/prismaClient';
 import { z } from 'zod';
-
-const prisma = new PrismaClient();
 
 const integerValidator = z
     .string()
@@ -23,39 +23,35 @@ const integerValidator = z
  * @param {Response} res - Express Response object.
  * @returns {Promise<void>}
  */
-export const createOrUpdatePostReaction = async (req: Request, res: Response): Promise<void> => {
+export const createOrUpdatePostReaction = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const createSchema = z.object({
         authorId: z.number(),
         postId: z.number(),
         type: z.enum([ReactionType.DOWNVOTE, ReactionType.UPVOTE]),
     });
 
-    try {
-        const { authorId, postId, type } = createSchema.parse(req.body);
+    const { authorId, postId, type } = createSchema.parse(req.body);
 
-        const createdPostReaction = await prisma.postReaction.upsert({
-            where: {
-                authorId_postId: { authorId, postId },
-            },
-            update: {
-                type: type,
-            },
-            create: {
-                type,
-                authorId,
-                postId,
-            },
-        });
+    const createdPostReaction: PostReaction & { author: User; post: Post } = await prismaClient.postReaction.upsert({
+        where: {
+            authorId_postId: { authorId, postId },
+        },
+        update: {
+            type,
+        },
+        create: {
+            type,
+            authorId,
+            postId,
+        },
+        include: {
+            author: true,
+            post: true,
+        },
+    });
 
-        res.status(201).json({ message: 'Reaction created/updated.', reaction: createdPostReaction });
-    } catch (error) {
-        if (error.name === 'ZodError') {
-            res.status(400).json({ error: error });
-        } else {
-            res.status(500).json({ message: 'Internal server error' });
-        }
-    }
-};
+    res.status(201).json(formatSuccessResponse(createdPostReaction));
+});
 
 /**
  * Get all post reactions.
@@ -64,20 +60,16 @@ export const createOrUpdatePostReaction = async (req: Request, res: Response): P
  * @param {Response} res - Express Response object.
  * @returns {Promise<void>}
  */
-export const getAllPostReactions = async (req: Request, res: Response): Promise<void> => {
-    try {
-        const postReactions = await prisma.postReaction.findMany({
-            include: {
-                author: true,
-                post: true,
-            },
-        });
+export const getAllPostReactions = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    const postReactions: (PostReaction & { author: User; post: Post })[] = await prismaClient.postReaction.findMany({
+        include: {
+            author: true,
+            post: true,
+        },
+    });
 
-        res.status(200).json({ reactions: postReactions });
-    } catch (error) {
-        res.status(500).json({ message: 'Internal server error.', error: error.message });
-    }
-};
+    res.status(200).json(formatSuccessResponse(postReactions));
+});
 
 /**
  * Get a post reaction.
@@ -86,30 +78,20 @@ export const getAllPostReactions = async (req: Request, res: Response): Promise<
  * @param {Response} res - Express Response object.
  * @returns {Promise<void>}
  */
-export const getPostReaction = async (req: Request, res: Response): Promise<void> => {
-    try {
-        const postReactionId = await integerValidator.parseAsync(req.params.postReactionId);
-        const postReaction = await prisma.postReaction.findUnique({
-            where: {
-                id: postReactionId,
-            },
-            include: {
-                author: true,
-                post: true,
-            },
-        });
+export const getPostReaction = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    const id = await integerValidator.parseAsync(req.params.postReactionId);
+    const postReaction: PostReaction & { author: User; post: Post } = await prismaClient.postReaction.findUnique({
+        where: {
+            id,
+        },
+        include: {
+            author: true,
+            post: true,
+        },
+    });
 
-        res.status(200).json({ reaction: postReaction });
-    } catch (error) {
-        if (error.name === 'ZodError') {
-            res.status(400).json({ error: error });
-        } else if (error.code === 'P2025') {
-            res.status(404).json({ message: 'Reaction not found!' });
-        } else {
-            res.status(500).json({ message: 'Internal server error' });
-        }
-    }
-};
+    res.status(200).json(formatSuccessResponse(postReaction));
+});
 
 /**
  * Get all post reactions from an author.
@@ -118,34 +100,24 @@ export const getPostReaction = async (req: Request, res: Response): Promise<void
  * @param {Response} res - Express Response object.
  * @returns {Promise<void>}
  */
-export const getPostReactionsByAuthor = async (req: Request, res: Response): Promise<void> => {
+export const getPostReactionsByAuthor = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const getSchema = z.object({
         authorId: z.number().int(),
     });
 
-    try {
-        const { authorId } = getSchema.parse(req.body);
-        const postReactions = await prisma.postReaction.findMany({
-            where: {
-                authorId: authorId,
-            },
-            include: {
-                author: true,
-                post: true,
-            },
-        });
+    const { authorId } = getSchema.parse(req.body);
+    const postReactions: (PostReaction & { author: User; post: Post })[] = await prismaClient.postReaction.findMany({
+        where: {
+            authorId,
+        },
+        include: {
+            author: true,
+            post: true,
+        },
+    });
 
-        res.status(200).json({ reactions: postReactions });
-    } catch (error) {
-        if (error.name === 'ZodError') {
-            res.status(400).json({ error: error });
-        } else if (error.code === 'P2025') {
-            res.status(404).json({ message: 'Reaction not found!' });
-        } else {
-            res.status(500).json({ message: 'Internal server error' });
-        }
-    }
-};
+    res.status(200).json(formatSuccessResponse(postReactions));
+});
 
 /**
  * Delete a post reaction.
@@ -154,19 +126,13 @@ export const getPostReactionsByAuthor = async (req: Request, res: Response): Pro
  * @param {Response} res - Express Response object.
  * @returns {Promise<void>}
  */
-export const deletePostReaction = async (req: Request, res: Response): Promise<void> => {
-    try {
-        const postReactionId = await integerValidator.parseAsync(req.params.postReactionId);
-        await prisma.postReaction.delete({ where: { id: postReactionId } });
+export const deletePostReaction = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    const id = await integerValidator.parseAsync(req.params.postReactionId);
+    const postReaction: PostReaction = await prismaClient.postReaction.delete({
+        where: {
+            id,
+        },
+    });
 
-        res.status(200).json({ message: 'Reaction deleted.' });
-    } catch (error) {
-        if (error.name === 'ZodError') {
-            res.status(400).json({ error: error });
-        } else if (error.code === 'P2025') {
-            res.status(404).json({ message: 'Reaction not found!' });
-        } else {
-            res.status(500).json({ message: 'Internal server error' });
-        }
-    }
-};
+    res.status(200).json(formatSuccessResponse(postReaction));
+});

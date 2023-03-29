@@ -1,8 +1,8 @@
 import { Response, Request } from 'express';
-import { PostReport, PrismaClient } from '@prisma/client';
+import { PostReport, Tag, Post, User } from '@prisma/client';
+import { asyncHandler, formatSuccessResponse } from '../utils/responseHandler';
+import prismaClient from '../services/prisma/prismaClient';
 import { z } from 'zod';
-
-const prisma = new PrismaClient();
 
 const integerValidator = z
     .string()
@@ -23,7 +23,7 @@ const integerValidator = z
  * @param {Response} res - Express Response object.
  * @returns {Promise<void>}
  */
-export const createOrUpdatePostReport = async (req: Request, res: Response): Promise<void> => {
+export const createOrUpdatePostReport = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const createSchema = z.object({
         authorId: z.number(),
         postId: z.number(),
@@ -36,66 +36,58 @@ export const createOrUpdatePostReport = async (req: Request, res: Response): Pro
         ),
     });
 
-    try {
-        const { authorId, postId, reason, tags } = createSchema.parse(req.body);
+    const { authorId, postId, reason, tags } = createSchema.parse(req.body);
 
-        const createdPostReport = await prisma.postReport.upsert({
-            where: {
-                authorId_postId: { authorId, postId },
+    const createdPostReport: PostReport & { post: Post; author: User; tags: Tag[] } = await prismaClient.postReport.upsert({
+        where: {
+            authorId_postId: { authorId, postId },
+        },
+        update: {
+            reason: reason,
+            tags: {
+                set: [],
+                connectOrCreate: tags.map((tag) => {
+                    const { key, categoryId } = tag;
+                    return {
+                        where: {
+                            key_categoryId: { key, categoryId },
+                        },
+                        create: {
+                            key,
+                            categoryId,
+                        },
+                    };
+                }),
             },
-            update: {
-                reason: reason,
-                tags: {
-                    set: [],
-                    connectOrCreate: tags.map((tag) => {
-                        const { key, categoryId } = tag;
-                        return {
-                            where: {
-                                key_categoryId: { key, categoryId },
-                            },
-                            create: {
-                                key,
-                                categoryId,
-                            },
-                        };
-                    }),
-                },
+        },
+        create: {
+            reason,
+            postId,
+            authorId,
+            tags: {
+                connectOrCreate: tags.map((tag) => {
+                    const { key, categoryId } = tag;
+                    return {
+                        where: {
+                            key_categoryId: { key, categoryId },
+                        },
+                        create: {
+                            key,
+                            categoryId,
+                        },
+                    };
+                }),
             },
-            create: {
-                reason,
-                postId,
-                authorId,
-                tags: {
-                    connectOrCreate: tags.map((tag) => {
-                        const { key, categoryId } = tag;
-                        return {
-                            where: {
-                                key_categoryId: { key, categoryId },
-                            },
-                            create: {
-                                key,
-                                categoryId,
-                            },
-                        };
-                    }),
-                },
-            },
-            include: {
-                tags: true,
-                author: true,
-                post: true,
-            },
-        });
+        },
+        include: {
+            tags: true,
+            author: true,
+            post: true,
+        },
+    });
 
-        res.status(201).json({ message: 'Report created/updated.', report: createdPostReport });
-    } catch (error) {
-        if (error.name === 'ZodError') {
-            res.status(400).json({ error: error });
-        } else {
-            res.status(500).json({ message: 'Internal server error' });
-        }
-    }
-};
+    res.status(201).json(formatSuccessResponse(createdPostReport));
+});
 
 /**
  * Update a post report, disconnecting a tag from it.
@@ -104,40 +96,30 @@ export const createOrUpdatePostReport = async (req: Request, res: Response): Pro
  * @param {Response} res - Express Response object.
  * @returns {Promise<void>}
  */
-export const disconnectTagFromPostReport = async (req: Request, res: Response): Promise<void> => {
+export const disconnectTagFromPostReport = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const updateSchema = z.object({
         postReportId: z.number().int(),
         tagId: z.number().int(),
     });
 
-    try {
-        const { postReportId, tagId } = updateSchema.parse(req.body);
+    const { postReportId, tagId } = updateSchema.parse(req.body);
 
-        const updatedPostReport: PostReport = await prisma.postReport.update({
-            where: { id: postReportId },
-            data: {
-                tags: {
-                    disconnect: {
-                        id: tagId,
-                    },
+    const updatedPostReport: PostReport & { tags: Tag[] } = await prismaClient.postReport.update({
+        where: { id: postReportId },
+        data: {
+            tags: {
+                disconnect: {
+                    id: tagId,
                 },
             },
-            include: {
-                tags: true,
-            },
-        });
+        },
+        include: {
+            tags: true,
+        },
+    });
 
-        res.status(200).json({ message: 'Tag disconnected.', report: updatedPostReport });
-    } catch (error) {
-        if (error.name === 'ZodError') {
-            res.status(400).json({ error: error });
-        } else if (error.code === 'P2025') {
-            res.status(404).json({ message: 'Report not found!' });
-        } else {
-            res.status(500).json({ message: 'Internal server error' });
-        }
-    }
-};
+    res.status(200).json(formatSuccessResponse(updatedPostReport));
+});
 
 /**
  * Get all postReports.
@@ -146,21 +128,17 @@ export const disconnectTagFromPostReport = async (req: Request, res: Response): 
  * @param {Response} res - Express Response object.
  * @returns {Promise<void>}
  */
-export const getAllPostReports = async (req: Request, res: Response): Promise<void> => {
-    try {
-        const postReports = await prisma.postReport.findMany({
-            include: {
-                author: true,
-                post: true,
-                tags: true,
-            },
-        });
+export const getAllPostReports = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    const postReports: (PostReport & { post: Post; author: User; tags: Tag[] })[] = await prismaClient.postReport.findMany({
+        include: {
+            author: true,
+            post: true,
+            tags: true,
+        },
+    });
 
-        res.status(200).json({ reports: postReports });
-    } catch (error) {
-        res.status(500).json({ message: 'Internal server error.', error: error.message });
-    }
-};
+    res.status(200).json(formatSuccessResponse(postReports));
+});
 
 /**
  * Get a postReport.
@@ -169,31 +147,21 @@ export const getAllPostReports = async (req: Request, res: Response): Promise<vo
  * @param {Response} res - Express Response object.
  * @returns {Promise<void>}
  */
-export const getPostReport = async (req: Request, res: Response): Promise<void> => {
-    try {
-        const id = await integerValidator.parseAsync(req.params.postReportId);
-        const postReport = await prisma.postReport.findUnique({
-            where: {
-                id,
-            },
-            include: {
-                author: true,
-                post: true,
-                tags: true,
-            },
-        });
+export const getPostReport = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    const id = await integerValidator.parseAsync(req.params.postReportId);
+    const postReport: PostReport & { post: Post; author: User; tags: Tag[] } = await prismaClient.postReport.findUnique({
+        where: {
+            id,
+        },
+        include: {
+            author: true,
+            post: true,
+            tags: true,
+        },
+    });
 
-        res.status(200).json({ report: postReport });
-    } catch (error) {
-        if (error.name === 'ZodError') {
-            res.status(400).json({ error: error });
-        } else if (error.code === 'P2025') {
-            res.status(404).json({ message: 'Report not found!' });
-        } else {
-            res.status(500).json({ message: 'Internal server error' });
-        }
-    }
-};
+    res.status(200).json(formatSuccessResponse(postReport));
+});
 
 /**
  * Get all postReports from an author.
@@ -202,33 +170,23 @@ export const getPostReport = async (req: Request, res: Response): Promise<void> 
  * @param {Response} res - Express Response object.
  * @returns {Promise<void>}
  */
-export const getPostReportsByAuthor = async (req: Request, res: Response): Promise<void> => {
+export const getPostReportsByAuthor = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const getSchema = z.object({
         authorId: z.number().int(),
     });
 
-    try {
-        const { authorId } = getSchema.parse(req.body);
-        const postReport = await prisma.postReport.findMany({
-            where: {
-                authorId,
-            },
-            include: {
-                post: true,
-            },
-        });
+    const { authorId } = getSchema.parse(req.body);
+    const postReport: (PostReport & { post: Post })[] = await prismaClient.postReport.findMany({
+        where: {
+            authorId,
+        },
+        include: {
+            post: true,
+        },
+    });
 
-        res.status(200).json({ reports: postReport });
-    } catch (error) {
-        if (error.name === 'ZodError') {
-            res.status(400).json({ error: error });
-        } else if (error.code === 'P2025') {
-            res.status(404).json({ message: 'Report not found!' });
-        } else {
-            res.status(500).json({ message: 'Internal server error' });
-        }
-    }
-};
+    res.status(200).json(formatSuccessResponse(postReport));
+});
 
 /**
  * Delete a postReport.
@@ -237,19 +195,9 @@ export const getPostReportsByAuthor = async (req: Request, res: Response): Promi
  * @param {Response} res - Express Response object.
  * @returns {Promise<void>}
  */
-export const deletePostReport = async (req: Request, res: Response): Promise<void> => {
-    try {
-        const id = await integerValidator.parseAsync(req.params.postReportId);
-        await prisma.postReport.delete({ where: { id } });
+export const deletePostReport = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    const id = await integerValidator.parseAsync(req.params.postReportId);
+    const postReport: PostReport = await prismaClient.postReport.delete({ where: { id } });
 
-        res.status(200).json({ message: 'Report deleted.' });
-    } catch (error) {
-        if (error.name === 'ZodError') {
-            res.status(400).json({ error: error });
-        } else if (error.code === 'P2025') {
-            res.status(404).json({ message: 'Report not found!' });
-        } else {
-            res.status(500).json({ message: 'Internal server error' });
-        }
-    }
-};
+    res.status(200).json(formatSuccessResponse(postReport));
+});
