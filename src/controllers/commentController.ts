@@ -3,6 +3,7 @@ import prismaClient from '../services/prisma/prismaClient';
 import { z } from 'zod';
 import { formatSuccessResponse, asyncHandler } from '../utils/responseHandler';
 import  integerValidator from '../utils/integerValidator';
+import jwt from 'jsonwebtoken';
 
 /**
  * Get all comments.
@@ -45,10 +46,13 @@ export const getCommentsByUserId = asyncHandler(async(req: Request, res: Respons
  * @returns {Promise<void>}
  */
 export const getMyComments = asyncHandler(async(req: Request, res: Response): Promise<void> => {
-    const authorId = await integerValidator.parseAsync(req.params.userId);
+    // Extract Id from token
+    const { id } = jwt.decode(req.headers.authorization) as {
+        id: number;
+    };
 
     const comments = await prismaClient.comment.findMany({
-        where: { authorId }
+        where: { id }
     });
 
     res.status(200).json(formatSuccessResponse(comments));
@@ -63,7 +67,7 @@ export const getMyComments = asyncHandler(async(req: Request, res: Response): Pr
  */
 export const createComment = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const createCommentSchema = z.object({
-        authorId: z.number(),
+        authorId: z.number().int(),
         content: z.string().optional(),
         category: z.string(),
         postId: z.number(),
@@ -71,7 +75,7 @@ export const createComment = asyncHandler(async (req: Request, res: Response): P
         files: z.any().optional(),
     });
 
-    const { authorId, content, category, files, postId, parentCommentId } = createCommentSchema.parse(req.body);
+    const { authorId, content, category, postId, parentCommentId } = createCommentSchema.parse(req.body);
 
     await prismaClient.user.findUniqueOrThrow({
         where: { id: authorId }
@@ -121,14 +125,12 @@ export const updateComment = asyncHandler(async (req: Request, res: Response): P
    const updateCommentSchema = z.object({
         content: z.string().optional(),
         category: z.string().optional(),
-        postId: z.number().optional(),
-        parentCommentId: z.number().optional(),
         files: z.any().optional(),
     });
 
     const id = await integerValidator.parseAsync(req.params.commentId);
 
-    const { content, category, postId, parentCommentId } = updateCommentSchema.parse(req.body);
+    const { content, category } = updateCommentSchema.parse(req.body);
 
     const updatedComment = await prismaClient.comment.update({
         where: {
@@ -137,8 +139,6 @@ export const updateComment = asyncHandler(async (req: Request, res: Response): P
         data: {
             content,
             category,
-            postId,
-            parentCommentId,
         },
     });
 
