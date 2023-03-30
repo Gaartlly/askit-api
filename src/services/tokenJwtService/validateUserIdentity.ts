@@ -5,8 +5,6 @@ export default function validateUserIdentity(userId: number, token: string): boo
     const access_token = extractBearerToken(token);
 
     const sub = jwt.decode(access_token).sub;
-    console.log(sub);
-
     if (!sub) throw new Error('Unauthorized user');
 
     if (userId !== Number(sub)) return false;
