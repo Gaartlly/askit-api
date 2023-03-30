@@ -51,7 +51,7 @@ const router = express.Router();
 
 /**
  * @swagger
- * /api/user/createUser:
+ * /api/user/create-user:
  *   post:
  *     description: Create new user.
  *     tags: [User]
@@ -115,11 +115,11 @@ const router = express.Router();
  *                 message: Internal Server Error
  *
  */
-router.post('/createUser', createUser);
+router.post('/create-user', createUser);
 
 /**
  * @swagger
- * /api/user/getUsers:
+ * /api/user/get-users:
  *   get:
  *     security:
  *       - bearerAuth: []
@@ -141,7 +141,7 @@ router.post('/createUser', createUser);
  *               response: Error
  *               error:
  *                 type: BadRequestError
- *                 path: /api/getUsers
+ *                 path: /api/get-users
  *                 statusCode: 400
  *                 message: Bad request
  *
@@ -152,7 +152,7 @@ router.post('/createUser', createUser);
  *               response: Error
  *               error:
  *                 type: NotFoundError
- *                 path: /api/getUsers
+ *                 path: /api/get-users
  *                 statusCode: 404
  *                 message: Not found
  *
@@ -163,12 +163,12 @@ router.post('/createUser', createUser);
  *               response: Error
  *               error:
  *                 type: InternalServerError
- *                 path: /api/getUsers
+ *                 path: /api/get-users
  *                 statusCode: 500
  *                 message: Internal Server Error
  *
  */
-router.get('/getUsers', verifyAuthentication, getUsers);
+router.get('/get-users', verifyAuthentication, getUsers);
 
 /**
  * @swagger
@@ -202,7 +202,7 @@ router.get('/getUsers', verifyAuthentication, getUsers);
  *               response: Error
  *               error:
  *                 type: BadRequestError
- *                 path: /api/updateUser
+ *                 path: /api/update-user
  *                 statusCode: 400
  *                 message: Bad request
  *
@@ -213,7 +213,7 @@ router.get('/getUsers', verifyAuthentication, getUsers);
  *               response: Error
  *               error:
  *                 type: NotFoundError
- *                 path: /api/updateUser
+ *                 path: /api/update-user
  *                 statusCode: 404
  *                 message: Not found
  *
@@ -224,16 +224,16 @@ router.get('/getUsers', verifyAuthentication, getUsers);
  *               response: Error
  *               error:
  *                 type: InternalServerError
- *                 path: /api/updateUser
+ *                 path: /api/update-user
  *                 statusCode: 500
  *                 message: Internal Server Error
  *
  */
-router.put('/updateUser/:userId', verifyAuthentication, updateUser);
+router.put('/update-user/:id', verifyAuthentication, updateUser);
 
 /**
  * @swagger
- * /api/user/deleteUser/{userId}:
+ * /api/user/delete-user/{userId}:
  *   delete:
  *     security:
  *       - bearerAuth: []
@@ -258,7 +258,7 @@ router.put('/updateUser/:userId', verifyAuthentication, updateUser);
  *               response: Error
  *               error:
  *                 type: BadRequestError
- *                 path: /api/deleteUser
+ *                 path: /api/delete-user
  *                 statusCode: 400
  *                 message: Bad request
  *
@@ -269,7 +269,7 @@ router.put('/updateUser/:userId', verifyAuthentication, updateUser);
  *               response: Error
  *               error:
  *                 type: NotFoundError
- *                 path: /api/deleteUser
+ *                 path: /api/delete-user
  *                 statusCode: 404
  *                 message: Not found
  *
@@ -280,11 +280,11 @@ router.put('/updateUser/:userId', verifyAuthentication, updateUser);
  *               response: Error
  *               error:
  *                 type: InternalServerError
- *                 path: /api/deleteUser
+ *                 path: /api/delete-user
  *                 statusCode: 500
  *                 message: Internal Server Error
  *
  */
-router.delete('/deleteUser/:userId', verifyAuthentication, deleteUser);
+router.delete('/delete-user/:id', verifyAuthentication, deleteUser);
 
 export default router;

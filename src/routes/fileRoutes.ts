@@ -41,7 +41,7 @@ const router = express.Router();
 
 /**
  * @swagger
- * /api/file/uploadFile:
+ * /api/file/upload-file:
  *   post:
  *     security:
  *       - bearerAuth: []
@@ -80,7 +80,7 @@ const router = express.Router();
  *               response: Error
  *               error:
  *                 type: BadRequestError
- *                 path: /api/fileUpload
+ *                 path: /api/file-upload
  *                 statusCode: 400
  *                 message: Bad request
  *
@@ -91,16 +91,16 @@ const router = express.Router();
  *               response: Error
  *               error:
  *                 type: InternalServerError
- *                 path: /api/fileUpload
+ *                 path: /api/file-upload
  *                 statusCode: 500
  *                 message: Internal Server Error
  *
  */
-router.post('/uploadFile', uploadFile);
+router.post('/upload-file', uploadFile);
 
 /**
  * @swagger
- * /api/file/getAllFiles:
+ * /api/file/get-all-files:
  *   get:
  *     security:
  *       - bearerAuth: []
@@ -122,7 +122,7 @@ router.post('/uploadFile', uploadFile);
  *               response: Error
  *               error:
  *                 type: BadRequestError
- *                 path: /api/getAllFiles
+ *                 path: /api/get-all-files
  *                 statusCode: 400
  *                 message: Bad request
  *
@@ -133,16 +133,16 @@ router.post('/uploadFile', uploadFile);
  *               response: Error
  *               error:
  *                 type: InternalServerError
- *                 path: /api/getAllFiles
+ *                 path: /api/get-all-files
  *                 statusCode: 500
  *                 message: Internal Server Error
  *
  */
-router.get('/getAllFiles', getAllFiles);
+router.get('/get-all-files', getAllFiles);
 
 /**
  * @swagger
- * /api/file/getFileById/{fileId}:
+ * /api/file/get-file-by-id/{id}:
  *   get:
  *     security:
  *       - bearerAuth: []
@@ -173,7 +173,7 @@ router.get('/getAllFiles', getAllFiles);
  *               response: Error
  *               error:
  *                 type: BadRequestError
- *                 path: /api/getFileById
+ *                 path: /api/get-file-by-id
  *                 statusCode: 400
  *                 message: Bad request
  *
@@ -184,7 +184,7 @@ router.get('/getAllFiles', getAllFiles);
  *               response: Error
  *               error:
  *                 type: NotFoundError
- *                 path: /api/getFileById
+ *                 path: /api/get-file-by-id
  *                 statusCode: 404
  *                 message: Not found
  *
@@ -195,16 +195,16 @@ router.get('/getAllFiles', getAllFiles);
  *               response: Error
  *               error:
  *                 type: InternalServerError
- *                 path: /api/getFileById
+ *                 path: /api/get-file-by-id
  *                 statusCode: 500
  *                 message: Internal Server Error
  *
  */
-router.get('/getFileById/:fileId', getFileById);
+router.get('/get-file-by-id/:id', getFileById);
 
 /**
  * @swagger
- * /api/file/deleteFile/{fileId}:
+ * /api/file/delete-file/{id}:
  *   delete:
  *     security:
  *       - bearerAuth: []
@@ -229,7 +229,7 @@ router.get('/getFileById/:fileId', getFileById);
  *               response: Error
  *               error:
  *                 type: BadRequestError
- *                 path: /api/deleteFile
+ *                 path: /api/delete-file
  *                 statusCode: 400
  *                 message: Bad request
  *
@@ -240,7 +240,7 @@ router.get('/getFileById/:fileId', getFileById);
  *               response: Error
  *               error:
  *                 type: NotFoundError
- *                 path: /api/deleteFile
+ *                 path: /api/delete-file
  *                 statusCode: 404
  *                 message: Not found
  *
@@ -251,16 +251,16 @@ router.get('/getFileById/:fileId', getFileById);
  *               response: Error
  *               error:
  *                 type: InternalServerError
- *                 path: /api/deleteFile
+ *                 path: /api/delete-file
  *                 statusCode: 500
  *                 message: Internal Server Error
  *
  */
-router.delete('/deleteFile/:fileId', deleteFile);
+router.delete('/delete-file/:id', deleteFile);
 
 /**
  * @swagger
- * /api/file/updateFile/{fileId}:
+ * /api/file/update-file/{id}:
  *   put:
  *     security:
  *       - bearerAuth: []
@@ -291,7 +291,7 @@ router.delete('/deleteFile/:fileId', deleteFile);
  *               response: Error
  *               error:
  *                 type: BadRequestError
- *                 path: /api/updateFile
+ *                 path: /api/update-file
  *                 statusCode: 400
  *                 message: Bad request
  *
@@ -302,7 +302,7 @@ router.delete('/deleteFile/:fileId', deleteFile);
  *               response: Error
  *               error:
  *                 type: NotFoundError
- *                 path: /api/updateFile
+ *                 path: /api/update-file
  *                 statusCode: 404
  *                 message: Not found
  *
@@ -313,11 +313,11 @@ router.delete('/deleteFile/:fileId', deleteFile);
  *               response: Error
  *               error:
  *                 type: InternalServerError
- *                 path: /api/updateFile
+ *                 path: /api/update-file
  *                 statusCode: 500
  *                 message: Internal Server Error
  *
  */
-router.put('/updateFile/:fileId', updateFile);
+router.put('/update-file/:id', updateFile);
 
 export default router;

@@ -3,10 +3,10 @@ import { createPost, updatePost, getAllPosts, getPost, deletePost } from '../con
 
 const router = express.Router();
 
-router.post('/createPost', createPost);
-router.put('/updatePost/:postId', updatePost);
-router.get('/getAllPosts', getAllPosts);
-router.get('/getPost/:postId', getPost);
-router.delete('/deletePost/:postId', deletePost);
+router.post('/create-post', createPost);
+router.put('/update-post/:id', updatePost);
+router.get('/get-all-posts', getAllPosts);
+router.get('/get-post/:id', getPost);
+router.delete('/delete-post/:id', deletePost);
 
 export default router;

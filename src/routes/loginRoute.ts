@@ -23,7 +23,7 @@ const loginRoutes = Router();
 
 /**
  * @swagger
- * /api/signin:
+ * /api/sign-in:
  *   post:
  *     description: Login to the application
  *     tags: [SignIn]
@@ -53,7 +53,7 @@ const loginRoutes = Router();
  *               response: Error
  *               error:
  *                 type: BadRequestError
- *                 path: /api/signin
+ *                 path: /api/sign-in
  *                 statusCode: 400
  *                 message: Bad request
  *
@@ -64,7 +64,7 @@ const loginRoutes = Router();
  *               response: Error
  *               error:
  *                 type: NotFoundError
- *                 path: /api/signin
+ *                 path: /api/sign-in
  *                 statusCode: 404
  *                 message: Not found user
  *
@@ -75,7 +75,7 @@ const loginRoutes = Router();
  *               response: Error
  *               error:
  *                 type: InternalServerError
- *                 path: /api/signin
+ *                 path: /api/sign-in
  *                 statusCode: 500
  *                 message: Internal Server Error
  *

@@ -3,13 +3,10 @@ import { createComment, deleteComment, getAllComments, getCommentsByUserId, upda
 
 const router = express.Router();
 
-router.get('/getCommentsByUserId/:userId', getCommentsByUserId);
-router.get('/getAllComments', getAllComments);
-router.post('/createComment', createComment);
-router.delete('/deleteComment/:commentId', deleteComment);
-router.put('/updateComment/:commentId', updateComment);
-router.get('/', (_, res) => {
-    res.send('comments running...');
-});
+router.get('/get-comments-by-user-id/:id', getCommentsByUserId);
+router.get('/get-all-comments', getAllComments);
+router.post('/create-comment', createComment);
+router.delete('/delete-comment/:id', deleteComment);
+router.put('/update-comment/:id', updateComment);
 
 export default router;
