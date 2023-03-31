@@ -18,6 +18,7 @@ const uploadFiles = async (files: { title?: string; path?: string }[]) => {
     );
 };
 
+
 /**
  * Create a new post.
  *
@@ -50,7 +51,6 @@ export const createPost = asyncHandler(async (req: Request, res: Response): Prom
 
     const { title, content, authorId, tags = [], files = [] } = createSchema.parse(req.body);
     const cloudinaryFiles = await uploadFiles(files);
-
     const createdPost: Post & { tags: Tag[]; files: File[] } = await prismaClient.post.create({
         data: {
             title,
@@ -178,7 +178,6 @@ export const disconnectTagFromPost = asyncHandler(async (req: Request, res: Resp
     });
 
     const { postId, tagId } = disconnectSchema.parse(req.body);
-
     const updatedPost: Post & { tags: Tag[] } = await prismaClient.post.update({
         where: {
             id: postId,

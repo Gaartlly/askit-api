@@ -33,8 +33,10 @@ model User {
   control UserControl? // User 1:1 UserControl
   comments Comment[] // User 1:N Comment
   posts Post[] // User 1:N Post
-  reactions Reaction[] // User 1:N Reaction
-  reports Report[] // User 1:N Report
+  postReactions PostReaction[] // User 1:N PostReaction
+  postReports PostReport[] // User 1:N PostReport
+  commentReactions CommentReaction[] // User 1:N CommentReaction
+  commentReports CommentReport[] // User 1:N CommentReport
   courseId Int // User N:1 Course
   course Course @relation(fields: [courseId], references: [id])
   
@@ -77,11 +79,11 @@ model Post {
   content String? @db.VarChar(8000)
   
   //Relationship fields
-  tags TagOnPost[] // Post N:N Tag (through TagOnPost)
+  tags Tag[] // Post N:N Tag (implicit)
   files File[] // Post 1:N Files
   comments Comment[] // Post 1:N Comment
-  reactions Reaction[] // Post 1:N Reaction
-  reports Report[] // Post 1:N Report
+  reactions PostReaction[] // Post 1:N Reaction
+  reports PostReport[] // Post 1:N Report
   authorId Int // Post N:1 User
   author  User  @relation(fields: [authorId], references: [id])
 
@@ -116,8 +118,8 @@ model Comment {
   //Relationship fields
   files File[] // Comment 1:N File
   replies Comment[] @relation("Replies") //Comment 1:N Comment
-  reactions Reaction[] // Comment 1:N Reaction
-  reports Report[] // Comment 1:N Report
+  reactions CommentReaction[] // Comment 1:N CommentReaction
+  reports CommentReport[] // Comment 1:N CommentReport
   authorId Int // Comment N:1 User
   author User @relation(fields: [authorId], references: [id])
   postId Int? // Comment N:1 Post
@@ -136,11 +138,13 @@ model Tag {
   key String @db.VarChar(255)
 
   //Relationship fields
-  posts TagOnPost[] // Tag N:N Post (through TagOnPost)
-  reports TagOnReport[] // Tag N:N Report (through TagOnReport)
+  posts Post[] // Tag N:N Post (implicit)
+  postReports PostReport[] // Tag N:N PostReport (implicit)
+  commentReports CommentReport[] // Tag N:N CommentReport (implicit)
   categoryId Int // Tag N:1 TagCategory
   category TagCategory @relation(fields: [categoryId], references: [id])
-
+  
+  @@unique([key, categoryId])
   @@map("tag")
 }
 
@@ -149,7 +153,7 @@ model TagCategory{
   createdAt DateTime @default(now())
   updateAt DateTime @updatedAt
 
-  title String @db.VarChar(255)
+  title String @db.VarChar(255) @unique
 
   //Relationship fields
   tags Tag[] // TagCategory 1:N Tag
@@ -157,21 +161,7 @@ model TagCategory{
   @@map("tagcategory")
 }
 
-model TagOnPost{
-  @@id([postId, tagId])
-  createdAt DateTime @default(now())
-  updateAt DateTime @updatedAt
-
-  //Relationship fields
-  tagId Int // TagOnPost N:1 Tag
-  tag Tag @relation(fields: [tagId], references: [id])
-  postId Int // TagOnPost N:1 Post
-  post Post @relation(fields: [postId], references: [id])
-
-  @@map("tagonpost")
-}
-
-model Reaction{
+model PostReaction{
   id Int @id @default(autoincrement())
   createdAt DateTime @default(now())
   updateAt DateTime @updatedAt
@@ -183,13 +173,29 @@ model Reaction{
   author User @relation(fields: [authorId], references: [id])
   postId Int // Reaction N:1 Post
   post Post @relation(fields: [postId], references: [id])
-  commentId Int? // Reaction N:1 Post
-  comment Comment? @relation(fields: [commentId], references: [id])
 
-  @@map("reaction")
+  @@unique([authorId, postId])
+  @@map("postreaction")
 }
 
-model Report{
+model CommentReaction{
+  id Int @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updateAt DateTime @updatedAt
+
+  type ReactionType
+
+  //Relationship fields
+  authorId Int // Reaction N:1 User
+  author User @relation(fields: [authorId], references: [id])
+  commentId Int // Reaction N:1 Post
+  comment Comment @relation(fields: [commentId], references: [id])
+
+  @@unique([authorId, commentId])
+  @@map("commentreaction")
+}
+
+model PostReport{
   id Int @id @default(autoincrement())
   createdAt DateTime @default(now())
   updateAt DateTime @updatedAt
@@ -197,27 +203,28 @@ model Report{
   reason String @db.VarChar(1000)
 
   //Relationship fields
-  tags TagOnReport[] // Report N:N Tag (through TagOnReport)
+  tags Tag[] // Report N:N Tag (implicit)
   authorId Int // Report N:1 User
   author User @relation(fields: [authorId], references: [id])
   postId Int // Report N:1 Post
   post Post @relation(fields: [postId], references: [id])
-  commentId Int? // Report N:1 Post
-  comment Comment? @relation(fields: [commentId], references: [id])
-
-  @@map("report")
+  @@unique([authorId, postId])
+  @@map("postreport")
 }
 
-model TagOnReport{
-  @@id([reportId, tagId])
+model CommentReport{
+  id Int @id @default(autoincrement())
   createdAt DateTime @default(now())
   updateAt DateTime @updatedAt
 
-  //Relationship fields
-  tagId Int // TagOnPost N:1 Tag
-  tag Tag @relation(fields: [tagId], references: [id])
-  reportId Int // TagOnPost N:1 Post
-  report Report @relation(fields: [reportId], references: [id])
+  reason String @db.VarChar(1000)
 
-  @@map("tagonreport")
+  //Relationship fields
+  tags Tag[] // Report N:N Tag (implicit)
+  authorId Int // Report N:1 User
+  author User @relation(fields: [authorId], references: [id])
+  commentId Int // Report N:1 Post
+  comment Comment @relation(fields: [commentId], references: [id])
+  @@unique([authorId, commentId])
+  @@map("commentreport")
 }
