@@ -1,6 +1,6 @@
 import { Response, Request } from 'express';
 import { Post, PostReaction, ReactionType, User } from '@prisma/client';
-import { asyncHandler, formatSuccessResponse } from '../utils/responseHandler';
+import { asyncHandler, formatSuccessResponse, UnauthorizedError } from '../utils/responseHandler';
 import prismaClient from '../services/prisma/prismaClient';
 import validateUserIdentity from '../services/tokenJwtService/validateUserIdentity';
 import { z } from 'zod';
@@ -33,7 +33,7 @@ export const createOrUpdatePostReaction = asyncHandler(async (req: Request, res:
 
     const { authorId, postId, type } = createSchema.parse(req.body);
 
-    if (!validateUserIdentity(authorId, req.headers.authorization)) throw new Error('Unauthorized user');
+    if (!validateUserIdentity(authorId, req.headers.authorization)) throw new UnauthorizedError('Unauthorized user');
 
     const createdPostReaction: PostReaction & { author: User; post: Post } = await prismaClient.postReaction.upsert({
         where: {
@@ -94,7 +94,7 @@ export const getPostReaction = asyncHandler(async (req: Request, res: Response):
         },
     });
 
-    if (!validateUserIdentity(postReaction.authorId, req.headers.authorization)) throw new Error('Unauthorized user');
+    if (!validateUserIdentity(postReaction.authorId, req.headers.authorization)) throw new UnauthorizedError('Unauthorized user');
 
     res.status(200).json(formatSuccessResponse(postReaction));
 });
@@ -113,7 +113,7 @@ export const getPostReactionsByAuthor = asyncHandler(async (req: Request, res: R
 
     const { authorId } = getSchema.parse(req.body);
 
-    if (!validateUserIdentity(authorId, req.headers.authorization)) throw new Error('Unauthorized user');
+    if (!validateUserIdentity(authorId, req.headers.authorization)) throw new UnauthorizedError('Unauthorized user');
 
     const postReactions: (PostReaction & { author: User; post: Post })[] = await prismaClient.postReaction.findMany({
         where: {
@@ -144,7 +144,7 @@ export const deletePostReaction = asyncHandler(async (req: Request, res: Respons
         },
     });
 
-    if (!validateUserIdentity(postReaction.authorId, req.headers.authorization)) throw new Error('Unauthorized user');
+    if (!validateUserIdentity(postReaction.authorId, req.headers.authorization)) throw new UnauthorizedError('Unauthorized user');
 
     const deletedPostReaction: PostReaction = await prismaClient.postReaction.delete({
         where: {

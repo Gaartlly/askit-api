@@ -1,6 +1,6 @@
 import { Response, Request } from 'express';
 import { z } from 'zod';
-import { asyncHandler, formatSuccessResponse } from '../utils/responseHandler';
+import { asyncHandler, formatSuccessResponse, UnauthorizedError } from '../utils/responseHandler';
 import prismaClient from '../services/prisma/prismaClient';
 import integerValidator from '../utils/integerValidator';
 import validateUserIdentity from '../services/tokenJwtService/validateUserIdentity';
@@ -28,7 +28,7 @@ export const createPost = asyncHandler(async (req: Request, res: Response): Prom
 
     const { title, content, authorId, tags } = createSchema.parse(req.body);
 
-    if (!validateUserIdentity(authorId, req.headers.authorization)) throw new Error('Unauthorized user');
+    if (!validateUserIdentity(authorId, req.headers.authorization)) throw new UnauthorizedError('Unauthorized user');
 
     const createdPost: Post & { tags: Tag[]; files: File[] } = await prismaClient.post.create({
         data: {
@@ -88,7 +88,7 @@ export const updatePost = asyncHandler(async (req: Request, res: Response): Prom
 
     const { title, content, authorId, tags } = updateSchema.parse(req.body);
 
-    if (!validateUserIdentity(authorId, req.headers.authorization)) throw new Error('Unauthorized user');
+    if (!validateUserIdentity(authorId, req.headers.authorization)) throw new UnauthorizedError('Unauthorized user');
 
     const updatedPost: Post & { tags: Tag[]; files: File[] } = await prismaClient.post.update({
         where: { id },
@@ -141,7 +141,7 @@ export const disconnectTagFromPost = asyncHandler(async (req: Request, res: Resp
         },
     });
 
-    if (!validateUserIdentity(post.authorId, req.headers.authorization)) throw new Error('Unauthorized user');
+    if (!validateUserIdentity(post.authorId, req.headers.authorization)) throw new UnauthorizedError('Unauthorized user');
 
     const updatedPost: Post & { tags: Tag[] } = await prismaClient.post.update({
         where: {
@@ -217,7 +217,7 @@ export const getPostsByAuthor = asyncHandler(async (req: Request, res: Response)
 
     const { authorId } = getSchema.parse(req.body);
 
-    if (!validateUserIdentity(authorId, req.headers.authorization)) throw new Error('Unauthorized user');
+    if (!validateUserIdentity(authorId, req.headers.authorization)) throw new UnauthorizedError('Unauthorized user');
 
     const posts: (Post & { tags: Tag[]; files: File[] })[] = await prismaClient.post.findMany({
         where: {
@@ -248,7 +248,7 @@ export const deletePost = asyncHandler(async (req: Request, res: Response): Prom
         },
     });
 
-    if (!validateUserIdentity(post.authorId, req.headers.authorization)) throw new Error('Unauthorized user');
+    if (!validateUserIdentity(post.authorId, req.headers.authorization)) throw new UnauthorizedError('Unauthorized user');
 
     const deletedPost = await prismaClient.post.delete({
         where: {
