@@ -19,7 +19,7 @@ const integerValidator = z
     .transform((value) => parseInt(value));
 
 /**
- * Create a new comment reaction.
+ * Create a new or update an existing comment reaction.
  *
  * @param {Request} req - Express Request object.
  * @param {Response} res - Express Response object.
@@ -36,7 +36,7 @@ export const createOrUpdateCommentReaction = asyncHandler(async (req: Request, r
 
     if (!validateUserIdentity(authorId, req.headers.authorization)) throw new UnauthorizedError('Unauthorized user');
 
-    const createdCommentReaction: CommentReaction & { author: UserWithoutPassword; comment: Comment } =
+    const createdOrUpdatedCommentReaction: CommentReaction & { author: UserWithoutPassword; comment: Comment } =
         await prismaClient.commentReaction.upsert({
             where: {
                 authorId_commentId: {
@@ -68,7 +68,115 @@ export const createOrUpdateCommentReaction = asyncHandler(async (req: Request, r
             },
         });
 
+    res.status(200).json(formatSuccessResponse(createdOrUpdatedCommentReaction));
+});
+
+/**
+ * Create a new comment reaction.
+ *
+ * @param {Request} req - Express Request object.
+ * @param {Response} res - Express Response object.
+ * @returns {Promise<void>}
+ */
+export const createCommentReaction = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    const createSchema = z.object({
+        authorId: z.number(),
+        commentId: z.number(),
+        type: z.enum([ReactionType.DOWNVOTE, ReactionType.UPVOTE]),
+    });
+
+    const { authorId, commentId, type } = createSchema.parse(req.body);
+
+    if (!validateUserIdentity(authorId, req.headers.authorization)) throw new UnauthorizedError('Unauthorized user');
+
+    const existingCommentReaction = await prismaClient.commentReaction.findFirst({
+        where: {
+            AND: {
+                authorId,
+                commentId,
+            },
+        },
+    });
+
+    if (existingCommentReaction) throw new Error('A commentReaction already exists with the same authorId and commentId.');
+
+    const createdCommentReaction: CommentReaction & { author: UserWithoutPassword; comment: Comment } =
+        await prismaClient.commentReaction.create({
+            data: {
+                type,
+                authorId,
+                commentId,
+            },
+            include: {
+                author: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true,
+                        course: true,
+                        password: false,
+                        role: false,
+                        status: false,
+                    },
+                },
+                comment: true,
+            },
+        });
+
     res.status(201).json(formatSuccessResponse(createdCommentReaction));
+});
+
+/**
+ * Update an existing comment reaction.
+ *
+ * @param {Request} req - Express Request object.
+ * @param {Response} res - Express Response object.
+ * @returns {Promise<void>}
+ */
+export const updateCommentReaction = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    const createSchema = z.object({
+        authorId: z.number().optional(),
+        commentId: z.number().optional(),
+        type: z.enum([ReactionType.DOWNVOTE, ReactionType.UPVOTE]).optional(),
+    });
+
+    const id = await integerValidator.parseAsync(req.params.commentReactionId);
+    const { authorId, commentId, type } = createSchema.parse(req.body);
+    const commentReaction = await prismaClient.commentReaction.findUniqueOrThrow({
+        where: {
+            id,
+        },
+    });
+
+    if (!validateUserIdentity(commentReaction.authorId, req.headers.authorization)) throw new UnauthorizedError('Unauthorized user');
+
+    const updatedCommentReaction: CommentReaction & { author: UserWithoutPassword; comment: Comment } =
+        await prismaClient.commentReaction.update({
+            where: {
+                id,
+            },
+            data: {
+                type,
+                authorId,
+                commentId,
+            },
+            include: {
+                author: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true,
+                        course: true,
+                        password: false,
+                        role: false,
+                        status: false,
+                    },
+                },
+                comment: true,
+            },
+        });
+
+    res.status(201).json(formatSuccessResponse(updatedCommentReaction));
 });
 
 /**

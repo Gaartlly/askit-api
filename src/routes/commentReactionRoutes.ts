@@ -6,6 +6,8 @@ import {
     getCommentReaction,
     deleteCommentReaction,
     getCommentReactionsByAuthor,
+    createCommentReaction,
+    updateCommentReaction,
 } from '../controllers/commentReactionController';
 
 const router = express.Router();
@@ -100,6 +102,122 @@ const router = express.Router();
  *
  */
 router.post('/createOrUpdateCommentReaction', createOrUpdateCommentReaction);
+
+/**
+ * @swagger
+ * /api/commentReaction/createCommentReaction:
+ *   post:
+ *     security:
+ *       - bearerAuth: []
+ *     description: Create a new comment reaction.
+ *     tags: [CommentReaction]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/CommentReaction'
+ *             example:
+ *               authorId: 2
+ *               commentId: 3
+ *               type: UPVOTE
+ *     responses:
+ *       200:
+ *         content:
+ *           application/json:
+ *             example:
+ *               response: Successful
+ *               reaction:
+ *                 id: 1
+ *                 authorId: 2
+ *                 commentId: 3
+ *                 type: UPVOTE
+ *
+ *       400:
+ *         content:
+ *           application/json:
+ *             example:
+ *               response: Error
+ *               error:
+ *                 type: BadRequestError
+ *                 path: /api/commentReaction/createCommentReaction
+ *                 statusCode: 400
+ *                 message: Bad request
+ *
+ *       500:
+ *         content:
+ *           application/json:
+ *             example:
+ *               response: Error
+ *               error:
+ *                 type: InternalServerError
+ *                 path: /api/commentReaction/createCommentReaction
+ *                 statusCode: 500
+ *                 message: Internal Server Error
+ *
+ */
+router.post('/createCommentReaction', createCommentReaction);
+
+/**
+ * @swagger
+ * /api/commentReaction/updateCommentReaction/{commentReactionId}:
+ *   put:
+ *     security:
+ *       - bearerAuth: []
+ *     description: Update an existing comment reaction.
+ *     tags: [CommentReaction]
+ *     parameters:
+ *       - name: commentReactionId
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/CommentReaction'
+ *             example:
+ *               authorId: 2
+ *               commentId: 3
+ *               type: UPVOTE
+ *     responses:
+ *       200:
+ *         content:
+ *           application/json:
+ *             example:
+ *               response: Successful
+ *               reaction:
+ *                 id: 1
+ *                 authorId: 2
+ *                 commentId: 3
+ *                 type: UPVOTE
+ *
+ *       400:
+ *         content:
+ *           application/json:
+ *             example:
+ *               response: Error
+ *               error:
+ *                 type: BadRequestError
+ *                 path: /api/commentReaction/updateCommentReaction
+ *                 statusCode: 400
+ *                 message: Bad request
+ *
+ *       500:
+ *         content:
+ *           application/json:
+ *             example:
+ *               response: Error
+ *               error:
+ *                 type: InternalServerError
+ *                 path: /api/commentReaction/updateCommentReaction
+ *                 statusCode: 500
+ *                 message: Internal Server Error
+ *
+ */
+router.put('/updateCommentReaction/:commentReactionId', updateCommentReaction);
 
 /**
  * @swagger
