@@ -4,8 +4,10 @@ import { z } from 'zod';
 import { asyncHandler, formatSuccessResponse } from '../utils/responseHandler';
 import prismaClient from '../services/prisma/prismaClient';
 import integerValidator from '../utils/integerValidator';
+import { UploadApiResponse } from 'cloudinary';
+import { File } from '@prisma/client';
 
-/** 
+/**
  * Upload a file.
  *
  * @param {Request} req - Express Request object.
@@ -22,18 +24,18 @@ export const uploadFile = asyncHandler(async (req: Request, res: Response): Prom
     const postId = await integerValidator.parseAsync(req.params.postId);
     const { title, path, commentId } = uploadFileSchema.parse(req.body);
 
-    const result = await cloudinary.uploader.upload(path, {
+    const result: UploadApiResponse = await cloudinary.uploader.upload(path, {
         resource_type: 'image',
     });
 
-        const fileUploaded = await prismaClient.file.create({
-            data: {
-                title: title,
-                path: result.secure_url || result.url,
-                postId: postId,
-                commentId: commentId,
-            },
-        });
+    const fileUploaded: File = await prismaClient.file.create({
+        data: {
+            title: title,
+            path: result.secure_url || result.url,
+            postId: postId,
+            commentId: commentId,
+        },
+    });
 
     res.status(200).json(formatSuccessResponse(fileUploaded));
 });
@@ -45,7 +47,7 @@ export const uploadFile = asyncHandler(async (req: Request, res: Response): Prom
  * @returns {Promise<void>}
  */
 export const getAllFiles = asyncHandler(async (_: Request, res: Response): Promise<void> => {
-    const files = await prismaClient.file.findMany();
+    const files: File[] = await prismaClient.file.findMany();
     res.status(200).json(formatSuccessResponse(files));
 });
 
@@ -59,7 +61,7 @@ export const getAllFiles = asyncHandler(async (_: Request, res: Response): Promi
 export const getFileById = async (req: Request, res: Response): Promise<void> => {
     const id = await integerValidator.parseAsync(req.params.fileId);
 
-    const file = await prismaClient.file.findFirst({
+    const file: File = await prismaClient.file.findFirst({
         where: {
             id,
         },
@@ -78,11 +80,11 @@ export const getFileById = async (req: Request, res: Response): Promise<void> =>
 export const deleteFile = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const id = await integerValidator.parseAsync(req.params.fileId);
 
-        const deletedFile = await prismaClient.file.delete({
-            where: {
-                id,
-            },
-        });
+    const deletedFile: File = await prismaClient.file.delete({
+        where: {
+            id,
+        },
+    });
 
     res.status(200).json(formatSuccessResponse(deletedFile));
 });
@@ -103,11 +105,11 @@ export const updateFile = asyncHandler(async (req: Request, res: Response): Prom
 
     const { newTitle, newPath } = updateFileSchema.parse(req.body);
 
-    const result = await cloudinary.uploader.upload(newPath, {
+    const result: UploadApiResponse = await cloudinary.uploader.upload(newPath, {
         resource_type: 'image',
     });
 
-    const fileUpdated = await prismaClient.file.update({
+    const fileUpdated: File = await prismaClient.file.update({
         where: {
             id,
         },

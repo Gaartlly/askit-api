@@ -2,16 +2,15 @@ import { TokenJwtPayload } from './adminMiddleware';
 import { NextFunction, Request, Response } from 'express';
 import jwt_decode from 'jwt-decode';
 import extractBearerToken from '../services/tokenJwtService/extractBearerToken';
+import { UnauthorizedError, asyncHandler } from '../utils/responseHandler';
 
-export default function moderatorMiddleware(req: Request, res: Response, next: NextFunction) {
-    const token = req.headers.authorization;
-    if (!token) return res.status(401).json({ message: 'Token is missing!' });
+const moderatorMiddleware = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    const token: string = req.headers.authorization;
+    if (!token) throw new UnauthorizedError('Token is missing!');
 
-    try {
-        const { role } = jwt_decode<TokenJwtPayload>(extractBearerToken(req.headers.authorization));
-        if (role === 'USER') throw new Error();
-        return next();
-    } catch (error) {
-        return res.status(401).json({ name: 'ModOrAdminOnly', message: 'Only Mod or Admin allowed!' });
-    }
-}
+    const { role } = jwt_decode<TokenJwtPayload>(extractBearerToken(req.headers.authorization));
+    if (role === 'USER') throw new UnauthorizedError('Unauthorized user.');
+    return next();
+});
+
+export default moderatorMiddleware;

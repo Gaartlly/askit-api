@@ -1,9 +1,10 @@
 import { Response, Request } from 'express';
-import { Comment, CommentReaction, ReactionType, User } from '@prisma/client';
+import { Comment, CommentReaction, ReactionType } from '@prisma/client';
 import { asyncHandler, formatSuccessResponse, UnauthorizedError } from '../utils/responseHandler';
 import prismaClient from '../services/prisma/prismaClient';
 import validateUserIdentity from '../services/tokenJwtService/validateUserIdentity';
 import { z } from 'zod';
+import { UserWithoutPassword } from '../utils/interfaces';
 
 const integerValidator = z
     .string()
@@ -35,26 +36,37 @@ export const createOrUpdateCommentReaction = asyncHandler(async (req: Request, r
 
     if (!validateUserIdentity(authorId, req.headers.authorization)) throw new UnauthorizedError('Unauthorized user');
 
-    const createdCommentReaction: CommentReaction & { author: User; comment: Comment } = await prismaClient.commentReaction.upsert({
-        where: {
-            authorId_commentId: {
+    const createdCommentReaction: CommentReaction & { author: UserWithoutPassword; comment: Comment } =
+        await prismaClient.commentReaction.upsert({
+            where: {
+                authorId_commentId: {
+                    authorId,
+                    commentId,
+                },
+            },
+            update: {
+                type: type,
+            },
+            create: {
+                type,
                 authorId,
                 commentId,
             },
-        },
-        update: {
-            type: type,
-        },
-        create: {
-            type,
-            authorId,
-            commentId,
-        },
-        include: {
-            author: true,
-            comment: true,
-        },
-    });
+            include: {
+                author: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true,
+                        course: true,
+                        password: false,
+                        role: false,
+                        status: false,
+                    },
+                },
+                comment: true,
+            },
+        });
 
     res.status(201).json(formatSuccessResponse(createdCommentReaction));
 });
@@ -67,12 +79,23 @@ export const createOrUpdateCommentReaction = asyncHandler(async (req: Request, r
  * @returns {Promise<void>}
  */
 export const getAllCommentReactions = asyncHandler(async (req: Request, res: Response): Promise<void> => {
-    const commentReactions: (CommentReaction & { author: User; comment: Comment })[] = await prismaClient.commentReaction.findMany({
-        include: {
-            author: true,
-            comment: true,
-        },
-    });
+    const commentReactions: (CommentReaction & { author: UserWithoutPassword; comment: Comment })[] =
+        await prismaClient.commentReaction.findMany({
+            include: {
+                author: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true,
+                        course: true,
+                        password: false,
+                        role: false,
+                        status: false,
+                    },
+                },
+                comment: true,
+            },
+        });
 
     res.status(200).json(formatSuccessResponse(commentReactions));
 });
@@ -87,15 +110,26 @@ export const getAllCommentReactions = asyncHandler(async (req: Request, res: Res
 export const getCommentReaction = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const id = await integerValidator.parseAsync(req.params.commentReactionId);
 
-    const commentReaction: CommentReaction & { author: User; comment: Comment } = await prismaClient.commentReaction.findUniqueOrThrow({
-        where: {
-            id,
-        },
-        include: {
-            author: true,
-            comment: true,
-        },
-    });
+    const commentReaction: CommentReaction & { author: UserWithoutPassword; comment: Comment } =
+        await prismaClient.commentReaction.findUnique({
+            where: {
+                id,
+            },
+            include: {
+                author: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true,
+                        course: true,
+                        password: false,
+                        role: false,
+                        status: false,
+                    },
+                },
+                comment: true,
+            },
+        });
 
     if (!validateUserIdentity(commentReaction.authorId, req.headers.authorization)) throw new UnauthorizedError('Unauthorized user');
 
@@ -118,15 +152,26 @@ export const getCommentReactionsByAuthor = asyncHandler(async (req: Request, res
 
     if (!validateUserIdentity(authorId, req.headers.authorization)) throw new UnauthorizedError('Unauthorized user');
 
-    const commentReactions: (CommentReaction & { author: User; comment: Comment })[] = await prismaClient.commentReaction.findMany({
-        where: {
-            authorId,
-        },
-        include: {
-            author: true,
-            comment: true,
-        },
-    });
+    const commentReactions: (CommentReaction & { author: UserWithoutPassword; comment: Comment })[] =
+        await prismaClient.commentReaction.findMany({
+            where: {
+                authorId,
+            },
+            include: {
+                author: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true,
+                        course: true,
+                        password: false,
+                        role: false,
+                        status: false,
+                    },
+                },
+                comment: true,
+            },
+        });
 
     res.status(200).json(formatSuccessResponse(commentReactions));
 });

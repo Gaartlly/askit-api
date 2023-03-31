@@ -5,6 +5,20 @@ import prismaClient from '../services/prisma/prismaClient';
 import integerValidator from '../utils/integerValidator';
 import validateUserIdentity from '../services/tokenJwtService/validateUserIdentity';
 import { File, Post, Tag } from '@prisma/client';
+import cloudinary from '../config/cloudinaryConfig';
+
+const uploadFiles = async (files: { title?: string; path?: string }[]) => {
+    return Promise.all(
+        files.map(async (file) => {
+            const { title, path } = file;
+            const { secure_url, url } = await cloudinary.uploader.upload(path, {
+                resource_type: 'image',
+            });
+            return { title, path: secure_url || url };
+        })
+    );
+};
+
 
 /**
  * Create a new post.
@@ -16,20 +30,30 @@ import { File, Post, Tag } from '@prisma/client';
 export const createPost = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const createSchema = z.object({
         title: z.string().min(1).max(255),
-        content: z.string().min(1).max(255),
+        content: z.string().min(1).max(255).optional(),
         authorId: z.number().int(),
-        tags: z.array(
-            z.object({
-                key: z.string().min(1).max(255),
-                categoryId: z.number(),
-            })
-        ),
+        tags: z
+            .array(
+                z.object({
+                    key: z.string().min(1).max(255),
+                    categoryId: z.number(),
+                })
+            )
+            .optional(),
+        files: z
+            .array(
+                z.object({
+                    title: z.string().min(1).max(255),
+                    path: z.string().min(1).max(1000),
+                })
+            )
+            .optional(),
     });
 
-    const { title, content, authorId, tags } = createSchema.parse(req.body);
 
+    const { title, content, authorId, tags = [], files = [] } = createSchema.parse(req.body);
     if (!validateUserIdentity(authorId, req.headers.authorization)) throw new UnauthorizedError('Unauthorized user');
-
+    const cloudinaryFiles = await uploadFiles(files);
     const createdPost: Post & { tags: Tag[]; files: File[] } = await prismaClient.post.create({
         data: {
             title,
@@ -49,6 +73,15 @@ export const createPost = asyncHandler(async (req: Request, res: Response): Prom
                             key,
                             categoryId,
                         },
+                    };
+                }),
+            },
+            files: {
+                create: cloudinaryFiles.map((file) => {
+                    const { title, path } = file;
+                    return {
+                        title,
+                        path,
                     };
                 }),
             },
@@ -82,11 +115,19 @@ export const updatePost = asyncHandler(async (req: Request, res: Response): Prom
                 })
             )
             .optional(),
+        files: z
+            .array(
+                z.object({
+                    title: z.string().min(1).max(255),
+                    path: z.string().min(1).max(1000),
+                })
+            )
+            .optional(),
     });
 
     const id = await integerValidator.parseAsync(req.params.postId);
-
-    const { title, content, authorId, tags } = updateSchema.parse(req.body);
+    const { title, content, authorId, tags = [], files = [] } = updateSchema.parse(req.body);
+    const cloudinaryFiles = await uploadFiles(files);
 
     if (!validateUserIdentity(authorId, req.headers.authorization)) throw new UnauthorizedError('Unauthorized user');
 
@@ -107,6 +148,15 @@ export const updatePost = asyncHandler(async (req: Request, res: Response): Prom
                             key,
                             categoryId,
                         },
+                    };
+                }),
+            },
+            files: {
+                create: cloudinaryFiles.map((file) => {
+                    const { title, path } = file;
+                    return {
+                        title,
+                        path,
                     };
                 }),
             },
@@ -142,7 +192,7 @@ export const disconnectTagFromPost = asyncHandler(async (req: Request, res: Resp
     });
 
     if (!validateUserIdentity(post.authorId, req.headers.authorization)) throw new UnauthorizedError('Unauthorized user');
-
+    
     const updatedPost: Post & { tags: Tag[] } = await prismaClient.post.update({
         where: {
             id: postId,

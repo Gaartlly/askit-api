@@ -1,9 +1,10 @@
 import { Response, Request } from 'express';
-import { Post, PostReaction, ReactionType, User } from '@prisma/client';
+import { Post, PostReaction, ReactionType } from '@prisma/client';
 import { asyncHandler, formatSuccessResponse, UnauthorizedError } from '../utils/responseHandler';
 import prismaClient from '../services/prisma/prismaClient';
 import validateUserIdentity from '../services/tokenJwtService/validateUserIdentity';
 import { z } from 'zod';
+import { UserWithoutPassword } from '../utils/interfaces';
 
 const integerValidator = z
     .string()
@@ -34,8 +35,8 @@ export const createOrUpdatePostReaction = asyncHandler(async (req: Request, res:
     const { authorId, postId, type } = createSchema.parse(req.body);
 
     if (!validateUserIdentity(authorId, req.headers.authorization)) throw new UnauthorizedError('Unauthorized user');
-
-    const createdPostReaction: PostReaction & { author: User; post: Post } = await prismaClient.postReaction.upsert({
+    
+    const createdPostReaction: PostReaction & { author: UserWithoutPassword; post: Post } = await prismaClient.postReaction.upsert({
         where: {
             authorId_postId: { authorId, postId },
         },
@@ -48,7 +49,17 @@ export const createOrUpdatePostReaction = asyncHandler(async (req: Request, res:
             postId,
         },
         include: {
-            author: true,
+            author: {
+                select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                    course: true,
+                    password: false,
+                    role: false,
+                    status: false,
+                },
+            },
             post: true,
         },
     });
@@ -64,9 +75,19 @@ export const createOrUpdatePostReaction = asyncHandler(async (req: Request, res:
  * @returns {Promise<void>}
  */
 export const getAllPostReactions = asyncHandler(async (req: Request, res: Response): Promise<void> => {
-    const postReactions: (PostReaction & { author: User; post: Post })[] = await prismaClient.postReaction.findMany({
+    const postReactions: (PostReaction & { author: UserWithoutPassword; post: Post })[] = await prismaClient.postReaction.findMany({
         include: {
-            author: true,
+            author: {
+                select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                    course: true,
+                    password: false,
+                    role: false,
+                    status: false,
+                },
+            },
             post: true,
         },
     });
@@ -83,13 +104,23 @@ export const getAllPostReactions = asyncHandler(async (req: Request, res: Respon
  */
 export const getPostReaction = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const id = await integerValidator.parseAsync(req.params.postReactionId);
-
-    const postReaction: PostReaction & { author: User; post: Post } = await prismaClient.postReaction.findUniqueOrThrow({
+    
+    const postReaction: PostReaction & { author: UserWithoutPassword; post: Post } = await prismaClient.postReaction.findUniqueOrThrow({
         where: {
             id,
         },
         include: {
-            author: true,
+            author: {
+                select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                    course: true,
+                    password: false,
+                    role: false,
+                    status: false,
+                },
+            },
             post: true,
         },
     });
@@ -115,12 +146,22 @@ export const getPostReactionsByAuthor = asyncHandler(async (req: Request, res: R
 
     if (!validateUserIdentity(authorId, req.headers.authorization)) throw new UnauthorizedError('Unauthorized user');
 
-    const postReactions: (PostReaction & { author: User; post: Post })[] = await prismaClient.postReaction.findMany({
+    const postReactions: (PostReaction & { author: UserWithoutPassword; post: Post })[] = await prismaClient.postReaction.findMany({
         where: {
             authorId,
         },
         include: {
-            author: true,
+            author: {
+                select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                    course: true,
+                    password: false,
+                    role: false,
+                    status: false,
+                },
+            },
             post: true,
         },
     });

@@ -1,9 +1,10 @@
 import { Response, Request } from 'express';
-import { PostReport, Tag, Post, User } from '@prisma/client';
+import { PostReport, Tag, Post } from '@prisma/client';
 import { asyncHandler, formatSuccessResponse, UnauthorizedError } from '../utils/responseHandler';
 import prismaClient from '../services/prisma/prismaClient';
 import validateUserIdentity from '../services/tokenJwtService/validateUserIdentity';
 import { z } from 'zod';
+import { UserWithoutPassword } from '../utils/interfaces';
 
 const integerValidator = z
     .string()
@@ -29,19 +30,21 @@ export const createOrUpdatePostReport = asyncHandler(async (req: Request, res: R
         authorId: z.number(),
         postId: z.number(),
         reason: z.string().min(1).max(255),
-        tags: z.array(
-            z.object({
-                key: z.string().min(1).max(255),
-                categoryId: z.number(),
-            })
-        ),
+        tags: z
+            .array(
+                z.object({
+                    key: z.string().min(1).max(255),
+                    categoryId: z.number(),
+                })
+            )
+            .optional(),
     });
 
-    const { authorId, postId, reason, tags } = createSchema.parse(req.body);
+    const { authorId, postId, reason, tags = [] } = createSchema.parse(req.body);
 
     if (!validateUserIdentity(authorId, req.headers.authorization)) throw new UnauthorizedError('Unauthorized user');
 
-    const createdPostReport: PostReport & { post: Post; author: User; tags: Tag[] } = await prismaClient.postReport.upsert({
+    const createdPostReport: PostReport & { post: Post; author: UserWithoutPassword; tags: Tag[] } = await prismaClient.postReport.upsert({
         where: {
             authorId_postId: { authorId, postId },
         },
@@ -84,7 +87,17 @@ export const createOrUpdatePostReport = asyncHandler(async (req: Request, res: R
         },
         include: {
             tags: true,
-            author: true,
+            author: {
+                select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                    course: true,
+                    password: false,
+                    role: false,
+                    status: false,
+                },
+            },
             post: true,
         },
     });
@@ -140,9 +153,19 @@ export const disconnectTagFromPostReport = asyncHandler(async (req: Request, res
  * @returns {Promise<void>}
  */
 export const getAllPostReports = asyncHandler(async (req: Request, res: Response): Promise<void> => {
-    const postReports: (PostReport & { post: Post; author: User; tags: Tag[] })[] = await prismaClient.postReport.findMany({
+    const postReports: (PostReport & { post: Post; author: UserWithoutPassword; tags: Tag[] })[] = await prismaClient.postReport.findMany({
         include: {
-            author: true,
+            author: {
+                select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                    course: true,
+                    password: false,
+                    role: false,
+                    status: false,
+                },
+            },
             post: true,
             tags: true,
         },
@@ -161,12 +184,22 @@ export const getAllPostReports = asyncHandler(async (req: Request, res: Response
 export const getPostReport = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const id = await integerValidator.parseAsync(req.params.postReportId);
 
-    const postReport: PostReport & { post: Post; author: User; tags: Tag[] } = await prismaClient.postReport.findUniqueOrThrow({
+    const postReport: PostReport & { post: Post; author: UserWithoutPassword; tags: Tag[] } = await prismaClient.postReport.findUniqueOrThrow({
         where: {
             id,
         },
         include: {
-            author: true,
+            author: {
+                select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                    course: true,
+                    password: false,
+                    role: false,
+                    status: false,
+                },
+            },
             post: true,
             tags: true,
         },

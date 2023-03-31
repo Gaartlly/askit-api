@@ -4,6 +4,7 @@ import { z } from 'zod';
 import generateJwtToken from '../services/tokenJwtService/generateTokenJwt';
 import { asyncHandler, formatSuccessResponse, UnauthorizedError } from '../utils/responseHandler';
 import prismaClient from '../services/prisma/prismaClient';
+import { User } from '@prisma/client';
 
 export const login = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     const errorMessage = 'Email or password incorrect!';
@@ -15,15 +16,15 @@ export const login = asyncHandler(async (req: Request, res: Response, next: Next
 
     const { email, password } = userLoginSchema.parse(req.body);
 
-    const user = await prismaClient.user.findFirst({
+    const user: User = await prismaClient.user.findFirst({
         where: {
             email: email,
         },
     });
 
     if (!user || !(await verifyPassword(password, user.password))) throw new UnauthorizedError(errorMessage);
-
-    const tokenJwt = await generateJwtToken(user.id, user.role);
+    
+    const tokenJwt: string = await generateJwtToken(user.id, user.role);
 
     res.status(200).json(formatSuccessResponse({ access_token: tokenJwt }));
 });

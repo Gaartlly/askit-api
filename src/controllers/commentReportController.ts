@@ -1,8 +1,9 @@
 import { Response, Request } from 'express';
-import { CommentReport, Comment, Tag, User } from '@prisma/client';
+import { CommentReport, Comment, Tag } from '@prisma/client';
 import { asyncHandler, formatSuccessResponse, UnauthorizedError } from '../utils/responseHandler';
 import validateUserIdentity from '../services/tokenJwtService/validateUserIdentity';
 import prismaClient from '../services/prisma/prismaClient';
+import { UserWithoutPassword } from '../utils/interfaces';
 import { z } from 'zod';
 
 const integerValidator = z
@@ -29,74 +30,87 @@ export const createOrUpdateCommentReport = asyncHandler(async (req: Request, res
         authorId: z.number(),
         commentId: z.number(),
         reason: z.string().min(1).max(255),
-        tags: z.array(
-            z.object({
-                key: z.string().min(1).max(255),
-                categoryId: z.number(),
-            })
-        ),
+        tags: z
+            .array(
+                z.object({
+                    key: z.string().min(1).max(255),
+                    categoryId: z.number(),
+                })
+            )
+            .optional(),
     });
 
-    const { authorId, commentId, reason, tags } = createSchema.parse(req.body);
+    const { authorId, commentId, reason, tags = [] } = createSchema.parse(req.body);
 
     if (!validateUserIdentity(authorId, req.headers.authorization)) throw new UnauthorizedError('Unauthorized user');
 
-    const createdCommentReport: CommentReport & { comment: Comment; tags: Tag[]; author: User } = await prismaClient.commentReport.upsert({
-        where: {
-            authorId_commentId: {
-                authorId,
+    const createdCommentReport: CommentReport & { comment: Comment; tags: Tag[]; author: UserWithoutPassword } =
+        await prismaClient.commentReport.upsert({
+            where: {
+                authorId_commentId: {
+                    authorId,
+                    commentId,
+                },
+            },
+            update: {
+                reason: reason,
+                tags: {
+                    set: [],
+                    connectOrCreate: tags.map((tag) => {
+                        const { key, categoryId } = tag;
+                        return {
+                            where: {
+                                key_categoryId: {
+                                    key,
+                                    categoryId,
+                                },
+                            },
+                            create: {
+                                key,
+                                categoryId,
+                            },
+                        };
+                    }),
+                },
+            },
+            create: {
+                reason,
                 commentId,
-            },
-        },
-        update: {
-            reason: reason,
-            tags: {
-                set: [],
-                connectOrCreate: tags.map((tag) => {
-                    const { key, categoryId } = tag;
-                    return {
-                        where: {
-                            key_categoryId: {
+                authorId,
+                tags: {
+                    connectOrCreate: tags.map((tag) => {
+                        const { key, categoryId } = tag;
+                        return {
+                            where: {
+                                key_categoryId: {
+                                    key,
+                                    categoryId,
+                                },
+                            },
+                            create: {
                                 key,
                                 categoryId,
                             },
-                        },
-                        create: {
-                            key,
-                            categoryId,
-                        },
-                    };
-                }),
+                        };
+                    }),
+                },
             },
-        },
-        create: {
-            reason,
-            commentId,
-            authorId,
-            tags: {
-                connectOrCreate: tags.map((tag) => {
-                    const { key, categoryId } = tag;
-                    return {
-                        where: {
-                            key_categoryId: {
-                                key,
-                                categoryId,
-                            },
-                        },
-                        create: {
-                            key,
-                            categoryId,
-                        },
-                    };
-                }),
+            include: {
+                tags: true,
+                author: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true,
+                        course: true,
+                        password: false,
+                        role: false,
+                        status: false,
+                    },
+                },
+                comment: true,
             },
-        },
-        include: {
-            tags: true,
-            author: true,
-            comment: true,
-        },
-    });
+        });
 
     res.status(201).json(formatSuccessResponse(createdCommentReport));
 });
@@ -149,13 +163,24 @@ export const disconnectTagFromCommentReport = asyncHandler(async (req: Request, 
  * @returns {Promise<void>}
  */
 export const getAllCommentReports = asyncHandler(async (req: Request, res: Response): Promise<void> => {
-    const commentReports: (CommentReport & { comment: Comment; tags: Tag[]; author: User })[] = await prismaClient.commentReport.findMany({
-        include: {
-            author: true,
-            comment: true,
-            tags: true,
-        },
-    });
+    const commentReports: (CommentReport & { comment: Comment; tags: Tag[]; author: UserWithoutPassword })[] =
+        await prismaClient.commentReport.findMany({
+            include: {
+                author: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true,
+                        course: true,
+                        password: false,
+                        role: false,
+                        status: false,
+                    },
+                },
+                comment: true,
+                tags: true,
+            },
+        });
 
     res.status(200).json(formatSuccessResponse(commentReports));
 });
@@ -170,13 +195,23 @@ export const getAllCommentReports = asyncHandler(async (req: Request, res: Respo
 export const getCommentReport = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const id = await integerValidator.parseAsync(req.params.commentReportId);
 
-    const commentReport: CommentReport & { comment: Comment; tags: Tag[]; author: User } =
+    const commentReport: CommentReport & { comment: Comment; tags: Tag[]; author: UserWithoutPassword } =
         await prismaClient.commentReport.findUniqueOrThrow({
             where: {
                 id,
             },
             include: {
-                author: true,
+                author: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true,
+                        course: true,
+                        password: false,
+                        role: false,
+                        status: false,
+                    },
+                },
                 comment: true,
                 tags: true,
             },
