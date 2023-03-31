@@ -1,5 +1,5 @@
 import { Response, Request } from 'express';
-import { Tag } from '@prisma/client';
+import { Prisma, Tag } from '@prisma/client';
 import prismaClient from '../services/prisma/prismaClient';
 import { z } from 'zod';
 import { asyncHandler, formatSuccessResponse } from '../utils/responseHandler';
@@ -20,7 +20,7 @@ export const createTag = asyncHandler(async (req: Request, res: Response): Promi
 
     const { key, categoryId } = createSchema.parse(req.body);
 
-    const createdTag = await prismaClient.tag.create({
+    const createdTag: Tag = await prismaClient.tag.create({
         data: {
             key,
             categoryId,
@@ -66,7 +66,7 @@ export const updateTag = asyncHandler(async (req: Request, res: Response): Promi
  * @returns {Promise<void>}
  */
 export const getAllTags = asyncHandler(async (req: Request, res: Response): Promise<void> => {
-    const tags = await prismaClient.tag.findMany();
+    const tags: Tag[] = await prismaClient.tag.findMany();
     res.status(200).json(formatSuccessResponse(tags));
 });
 
@@ -80,7 +80,7 @@ export const getAllTags = asyncHandler(async (req: Request, res: Response): Prom
 export const getTag = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const id = await integerValidator.parseAsync(req.params.tagId);
 
-    const tag = await prismaClient.tag.findUniqueOrThrow({
+    const tag: Tag = await prismaClient.tag.findUniqueOrThrow({
         where: {
             id,
         },
@@ -99,7 +99,7 @@ export const getTag = asyncHandler(async (req: Request, res: Response): Promise<
 export const deleteTag = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const id = await integerValidator.parseAsync(req.params.tagId);
 
-    const deletedTag = await prismaClient.tag.delete({
+    const deletedTag: Tag = await prismaClient.tag.delete({
         where: {
             id,
         },
