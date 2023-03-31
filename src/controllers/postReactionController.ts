@@ -2,6 +2,7 @@ import { Response, Request } from 'express';
 import { Post, PostReaction, ReactionType, User } from '@prisma/client';
 import { asyncHandler, formatSuccessResponse } from '../utils/responseHandler';
 import prismaClient from '../services/prisma/prismaClient';
+import validateUserIdentity from '../services/tokenJwtService/validateUserIdentity';
 import { z } from 'zod';
 
 const integerValidator = z
@@ -31,6 +32,8 @@ export const createOrUpdatePostReaction = asyncHandler(async (req: Request, res:
     });
 
     const { authorId, postId, type } = createSchema.parse(req.body);
+
+    if (!validateUserIdentity(authorId, req.headers.authorization)) throw new Error('Unauthorized user');
 
     const createdPostReaction: PostReaction & { author: User; post: Post } = await prismaClient.postReaction.upsert({
         where: {
@@ -80,7 +83,8 @@ export const getAllPostReactions = asyncHandler(async (req: Request, res: Respon
  */
 export const getPostReaction = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const id = await integerValidator.parseAsync(req.params.postReactionId);
-    const postReaction: PostReaction & { author: User; post: Post } = await prismaClient.postReaction.findUnique({
+
+    const postReaction: PostReaction & { author: User; post: Post } = await prismaClient.postReaction.findUniqueOrThrow({
         where: {
             id,
         },
@@ -89,6 +93,8 @@ export const getPostReaction = asyncHandler(async (req: Request, res: Response):
             post: true,
         },
     });
+
+    if (!validateUserIdentity(postReaction.authorId, req.headers.authorization)) throw new Error('Unauthorized user');
 
     res.status(200).json(formatSuccessResponse(postReaction));
 });
@@ -106,6 +112,9 @@ export const getPostReactionsByAuthor = asyncHandler(async (req: Request, res: R
     });
 
     const { authorId } = getSchema.parse(req.body);
+
+    if (!validateUserIdentity(authorId, req.headers.authorization)) throw new Error('Unauthorized user');
+
     const postReactions: (PostReaction & { author: User; post: Post })[] = await prismaClient.postReaction.findMany({
         where: {
             authorId,
@@ -128,11 +137,20 @@ export const getPostReactionsByAuthor = asyncHandler(async (req: Request, res: R
  */
 export const deletePostReaction = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const id = await integerValidator.parseAsync(req.params.postReactionId);
-    const postReaction: PostReaction = await prismaClient.postReaction.delete({
+
+    const postReaction = await prismaClient.postReaction.findUniqueOrThrow({
         where: {
             id,
         },
     });
 
-    res.status(200).json(formatSuccessResponse(postReaction));
+    if (!validateUserIdentity(postReaction.authorId, req.headers.authorization)) throw new Error('Unauthorized user');
+
+    const deletedPostReaction: PostReaction = await prismaClient.postReaction.delete({
+        where: {
+            id,
+        },
+    });
+
+    res.status(200).json(formatSuccessResponse(deletedPostReaction));
 });

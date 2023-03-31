@@ -2,6 +2,7 @@ import { Response, Request } from 'express';
 import { Comment, CommentReaction, ReactionType, User } from '@prisma/client';
 import { asyncHandler, formatSuccessResponse } from '../utils/responseHandler';
 import prismaClient from '../services/prisma/prismaClient';
+import validateUserIdentity from '../services/tokenJwtService/validateUserIdentity';
 import { z } from 'zod';
 
 const integerValidator = z
@@ -31,6 +32,8 @@ export const createOrUpdateCommentReaction = asyncHandler(async (req: Request, r
     });
 
     const { authorId, commentId, type } = createSchema.parse(req.body);
+
+    if (!validateUserIdentity(authorId, req.headers.authorization)) throw new Error('Unauthorized user');
 
     const createdCommentReaction: CommentReaction & { author: User; comment: Comment } = await prismaClient.commentReaction.upsert({
         where: {
@@ -83,7 +86,8 @@ export const getAllCommentReactions = asyncHandler(async (req: Request, res: Res
  */
 export const getCommentReaction = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const id = await integerValidator.parseAsync(req.params.commentReactionId);
-    const commentReaction: CommentReaction & { author: User; comment: Comment } = await prismaClient.commentReaction.findUnique({
+
+    const commentReaction: CommentReaction & { author: User; comment: Comment } = await prismaClient.commentReaction.findUniqueOrThrow({
         where: {
             id,
         },
@@ -92,6 +96,8 @@ export const getCommentReaction = asyncHandler(async (req: Request, res: Respons
             comment: true,
         },
     });
+
+    if (!validateUserIdentity(commentReaction.authorId, req.headers.authorization)) throw new Error('Unauthorized user');
 
     res.status(200).json(formatSuccessResponse(commentReaction));
 });
@@ -109,6 +115,9 @@ export const getCommentReactionsByAuthor = asyncHandler(async (req: Request, res
     });
 
     const { authorId } = getSchema.parse(req.body);
+
+    if (!validateUserIdentity(authorId, req.headers.authorization)) throw new Error('Unauthorized user');
+
     const commentReactions: (CommentReaction & { author: User; comment: Comment })[] = await prismaClient.commentReaction.findMany({
         where: {
             authorId,
@@ -131,11 +140,20 @@ export const getCommentReactionsByAuthor = asyncHandler(async (req: Request, res
  */
 export const deleteCommentReaction = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const id = await integerValidator.parseAsync(req.params.commentReactionId);
-    const commentReaction: CommentReaction = await prismaClient.commentReaction.delete({
+
+    const commentReaction: CommentReaction = await prismaClient.commentReaction.findUniqueOrThrow({
         where: {
             id,
         },
     });
 
-    res.status(200).json(formatSuccessResponse(commentReaction));
+    if (!validateUserIdentity(commentReaction.authorId, req.headers.authorization)) throw new Error('Unauthorized user');
+
+    const deletedCommentReaction: CommentReaction = await prismaClient.commentReaction.delete({
+        where: {
+            id,
+        },
+    });
+
+    res.status(200).json(formatSuccessResponse(deletedCommentReaction));
 });
