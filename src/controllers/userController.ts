@@ -100,7 +100,7 @@ export const createUser = asyncHandler(async (req: Request, res: Response): Prom
  * @param {Response} res - Express Response object.
  * @returns {Promise<void>}
  */
-export const updateUser = async (req: Request, res: Response): Promise<void> => {
+export const updateUser = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const updateUserSchema = z
         .object({
             newName: z.string().min(1).max(255).optional(),
@@ -171,7 +171,8 @@ export const updateUser = async (req: Request, res: Response): Promise<void> => 
             },
         })
     );
-};
+});
+
 
 /**
  * Delete a user.
