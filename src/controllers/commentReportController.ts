@@ -44,7 +44,7 @@ export const createOrUpdateCommentReport = asyncHandler(async (req: Request, res
 
     if (!validateUserIdentity(authorId, req.headers.authorization)) throw new UnauthorizedError('Unauthorized user');
 
-    const createdCommentReport: CommentReport & { comment: Comment; tags: Tag[]; author: UserWithoutPassword } =
+    const createdOrUpdatedCommentReport: CommentReport & { comment: Comment; tags: Tag[]; author: UserWithoutPassword } =
         await prismaClient.commentReport.upsert({
             where: {
                 authorId_commentId: {
@@ -112,7 +112,7 @@ export const createOrUpdateCommentReport = asyncHandler(async (req: Request, res
             },
         });
 
-    res.status(200).json(formatSuccessResponse(createdCommentReport));
+    res.status(200).json(formatSuccessResponse(createdOrUpdatedCommentReport));
 });
 
 /**
@@ -205,9 +205,9 @@ export const createCommentReport = asyncHandler(async (req: Request, res: Respon
  */
 export const updateCommentReport = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const createSchema = z.object({
-        authorId: z.number(),
-        commentId: z.number(),
-        reason: z.string().min(1).max(255),
+        authorId: z.number().optional(),
+        commentId: z.number().optional(),
+        reason: z.string().min(1).max(255).optional(),
         tags: z
             .array(
                 z.object({

@@ -19,7 +19,7 @@ const integerValidator = z
     .transform((value) => parseInt(value));
 
 /**
- * Create a new post report.
+ * Create a new or update an existing post report.
  *
  * @param {Request} req - Express Request object.
  * @param {Response} res - Express Response object.
@@ -44,29 +44,116 @@ export const createOrUpdatePostReport = asyncHandler(async (req: Request, res: R
 
     if (!validateUserIdentity(authorId, req.headers.authorization)) throw new UnauthorizedError('Unauthorized user');
 
-    const createdPostReport: PostReport & { post: Post; author: UserWithoutPassword; tags: Tag[] } = await prismaClient.postReport.upsert({
+    const createdOrUpdatedPostReport: PostReport & { post: Post; tags: Tag[]; author: UserWithoutPassword } =
+        await prismaClient.postReport.upsert({
+            where: {
+                authorId_postId: {
+                    authorId,
+                    postId,
+                },
+            },
+            update: {
+                reason: reason,
+                tags: {
+                    set: [],
+                    connectOrCreate: tags.map((tag) => {
+                        const { key, categoryId } = tag;
+                        return {
+                            where: {
+                                key_categoryId: {
+                                    key,
+                                    categoryId,
+                                },
+                            },
+                            create: {
+                                key,
+                                categoryId,
+                            },
+                        };
+                    }),
+                },
+            },
+            create: {
+                reason,
+                postId,
+                authorId,
+                tags: {
+                    connectOrCreate: tags.map((tag) => {
+                        const { key, categoryId } = tag;
+                        return {
+                            where: {
+                                key_categoryId: {
+                                    key,
+                                    categoryId,
+                                },
+                            },
+                            create: {
+                                key,
+                                categoryId,
+                            },
+                        };
+                    }),
+                },
+            },
+            include: {
+                tags: true,
+                author: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true,
+                        course: true,
+                        password: false,
+                        role: false,
+                        status: false,
+                    },
+                },
+                post: true,
+            },
+        });
+
+    res.status(200).json(formatSuccessResponse(createdOrUpdatedPostReport));
+});
+
+/**
+ * Create a new post report.
+ *
+ * @param {Request} req - Express Request object.
+ * @param {Response} res - Express Response object.
+ * @returns {Promise<void>}
+ */
+export const createPostReport = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    const createSchema = z.object({
+        authorId: z.number(),
+        postId: z.number(),
+        reason: z.string().min(1).max(255),
+        tags: z
+            .array(
+                z.object({
+                    key: z.string().min(1).max(255),
+                    categoryId: z.number(),
+                })
+            )
+            .optional(),
+    });
+
+    const { authorId, postId, reason, tags = [] } = createSchema.parse(req.body);
+
+    if (!validateUserIdentity(authorId, req.headers.authorization)) throw new UnauthorizedError('Unauthorized user');
+
+    const existingPostReport = await prismaClient.postReport.findFirst({
         where: {
-            authorId_postId: { authorId, postId },
-        },
-        update: {
-            reason: reason,
-            tags: {
-                set: [],
-                connectOrCreate: tags.map((tag) => {
-                    const { key, categoryId } = tag;
-                    return {
-                        where: {
-                            key_categoryId: { key, categoryId },
-                        },
-                        create: {
-                            key,
-                            categoryId,
-                        },
-                    };
-                }),
+            AND: {
+                authorId,
+                postId,
             },
         },
-        create: {
+    });
+
+    if (existingPostReport) throw new Error('A report already exists with the same authorId and postId.');
+
+    const createdPostReport: PostReport & { post: Post; tags: Tag[]; author: UserWithoutPassword } = await prismaClient.postReport.create({
+        data: {
             reason,
             postId,
             authorId,
@@ -75,7 +162,10 @@ export const createOrUpdatePostReport = asyncHandler(async (req: Request, res: R
                     const { key, categoryId } = tag;
                     return {
                         where: {
-                            key_categoryId: { key, categoryId },
+                            key_categoryId: {
+                                key,
+                                categoryId,
+                            },
                         },
                         create: {
                             key,
@@ -103,6 +193,85 @@ export const createOrUpdatePostReport = asyncHandler(async (req: Request, res: R
     });
 
     res.status(201).json(formatSuccessResponse(createdPostReport));
+});
+
+/**
+ * Update an existing post report.
+ *
+ * @param {Request} req - Express Request object.
+ * @param {Response} res - Express Response object.
+ * @returns {Promise<void>}
+ */
+export const updatePostReport = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    const createSchema = z.object({
+        authorId: z.number().optional(),
+        postId: z.number().optional(),
+        reason: z.string().min(1).max(255).optional(),
+        tags: z
+            .array(
+                z.object({
+                    key: z.string().min(1).max(255),
+                    categoryId: z.number(),
+                })
+            )
+            .optional(),
+    });
+
+    const id = await integerValidator.parseAsync(req.params.postReportId);
+    const { authorId, postId, reason, tags = [] } = createSchema.parse(req.body);
+
+    const postReport = await prismaClient.postReport.findUniqueOrThrow({
+        where: {
+            id,
+        },
+    });
+
+    if (!validateUserIdentity(postReport.authorId, req.headers.authorization)) throw new UnauthorizedError('Unauthorized user');
+
+    const updatedPostReport: PostReport & { post: Post; tags: Tag[]; author: UserWithoutPassword } = await prismaClient.postReport.update({
+        where: {
+            id,
+        },
+        data: {
+            reason,
+            postId,
+            authorId,
+            tags: {
+                connectOrCreate: tags.map((tag) => {
+                    const { key, categoryId } = tag;
+                    return {
+                        where: {
+                            key_categoryId: {
+                                key,
+                                categoryId,
+                            },
+                        },
+                        create: {
+                            key,
+                            categoryId,
+                        },
+                    };
+                }),
+            },
+        },
+        include: {
+            tags: true,
+            author: {
+                select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                    course: true,
+                    password: false,
+                    role: false,
+                    status: false,
+                },
+            },
+            post: true,
+        },
+    });
+
+    res.status(200).json(formatSuccessResponse(updatedPostReport));
 });
 
 /**
@@ -184,26 +353,27 @@ export const getAllPostReports = asyncHandler(async (req: Request, res: Response
 export const getPostReport = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const id = await integerValidator.parseAsync(req.params.postReportId);
 
-    const postReport: PostReport & { post: Post; author: UserWithoutPassword; tags: Tag[] } = await prismaClient.postReport.findUniqueOrThrow({
-        where: {
-            id,
-        },
-        include: {
-            author: {
-                select: {
-                    id: true,
-                    name: true,
-                    email: true,
-                    course: true,
-                    password: false,
-                    role: false,
-                    status: false,
-                },
+    const postReport: PostReport & { post: Post; author: UserWithoutPassword; tags: Tag[] } =
+        await prismaClient.postReport.findUniqueOrThrow({
+            where: {
+                id,
             },
-            post: true,
-            tags: true,
-        },
-    });
+            include: {
+                author: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true,
+                        course: true,
+                        password: false,
+                        role: false,
+                        status: false,
+                    },
+                },
+                post: true,
+                tags: true,
+            },
+        });
 
     if (!validateUserIdentity(postReport.authorId, req.headers.authorization)) throw new UnauthorizedError('Unauthorized user');
 

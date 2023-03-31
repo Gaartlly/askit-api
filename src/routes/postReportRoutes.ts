@@ -7,6 +7,8 @@ import {
     deletePostReport,
     disconnectTagFromPostReport,
     getPostReportsByAuthor,
+    updatePostReport,
+    createPostReport,
 } from '../controllers/postReportController';
 
 const router = express.Router();
@@ -97,6 +99,122 @@ const router = express.Router();
  *
  */
 router.post('/createOrUpdatePostReport', createOrUpdatePostReport);
+
+/**
+ * @swagger
+ * /api/postReport/createPostReport:
+ *   post:
+ *     security:
+ *       - bearerAuth: []
+ *     description: Create a new post report.
+ *     tags: [PostReport]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/PostReport'
+ *             example:
+ *               authorId: 2
+ *               postId: 3
+ *               type: "Violação dos termos de uso"
+ *     responses:
+ *       200:
+ *         content:
+ *           application/json:
+ *             example:
+ *               response: Successful
+ *               report:
+ *                 id: 1
+ *                 authorId: 2
+ *                 postId: 3
+ *                 type: "Violação dos termos de uso"
+ *
+ *       400:
+ *         content:
+ *           application/json:
+ *             example:
+ *               response: Error
+ *               error:
+ *                 type: BadRequestError
+ *                 path: /api/postReport/createPostReport
+ *                 statusCode: 400
+ *                 message: Bad request
+ *
+ *       500:
+ *         content:
+ *           application/json:
+ *             example:
+ *               response: Error
+ *               error:
+ *                 type: InternalServerError
+ *                 path: /api/postReport/createPostReport
+ *                 statusCode: 500
+ *                 message: Internal Server Error
+ *
+ */
+router.post('/createPostReport', createPostReport);
+
+/**
+ * @swagger
+ * /api/postReport/updatePostReport/{postReportId}:
+ *   put:
+ *     security:
+ *       - bearerAuth: []
+ *     description: Create a new post report.
+ *     tags: [PostReport]
+ *     parameters:
+ *       - name: postReportId
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/PostReport'
+ *             example:
+ *               authorId: 2
+ *               postId: 3
+ *               type: "Violação dos termos de uso"
+ *     responses:
+ *       200:
+ *         content:
+ *           application/json:
+ *             example:
+ *               response: Successful
+ *               report:
+ *                 id: 1
+ *                 authorId: 2
+ *                 postId: 3
+ *                 type: "Violação dos termos de uso"
+ *
+ *       400:
+ *         content:
+ *           application/json:
+ *             example:
+ *               response: Error
+ *               error:
+ *                 type: BadRequestError
+ *                 path: /api/postReport/updatePostReport
+ *                 statusCode: 400
+ *                 message: Bad request
+ *
+ *       500:
+ *         content:
+ *           application/json:
+ *             example:
+ *               response: Error
+ *               error:
+ *                 type: InternalServerError
+ *                 path: /api/postReport/updatePostReport
+ *                 statusCode: 500
+ *                 message: Internal Server Error
+ *
+ */
+router.put('/updatePostReport/:postReportId', updatePostReport);
 
 /**
  * @swagger
