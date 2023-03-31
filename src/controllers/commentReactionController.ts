@@ -1,5 +1,5 @@
 import { Response, Request } from 'express';
-import { Comment, CommentReaction, ReactionType, User } from '@prisma/client';
+import { Comment, CommentReaction, ReactionType } from '@prisma/client';
 import { asyncHandler, formatSuccessResponse } from '../utils/responseHandler';
 import prismaClient from '../services/prisma/prismaClient';
 import { z } from 'zod';

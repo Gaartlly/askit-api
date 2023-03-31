@@ -1,5 +1,5 @@
 import { Response, Request } from 'express';
-import { CommentReport, Comment, Tag, User } from '@prisma/client';
+import { CommentReport, Comment, Tag } from '@prisma/client';
 import { asyncHandler, formatSuccessResponse } from '../utils/responseHandler';
 import prismaClient from '../services/prisma/prismaClient';
 import { UserWithoutPassword } from '../utils/interfaces';
