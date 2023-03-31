@@ -28,23 +28,27 @@ const uploadFiles = async (files: { title?: string; path?: string }[]) => {
 export const createPost = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const createSchema = z.object({
         title: z.string().min(1).max(255),
-        content: z.string().min(1).max(255),
+        content: z.string().min(1).max(255).optional(),
         authorId: z.number().int(),
-        tags: z.array(
-            z.object({
-                key: z.string().min(1).max(255),
-                categoryId: z.number(),
-            })
-        ),
-        files: z.array(
-            z.object({
-                title: z.string().min(1).max(255),
-                path: z.string().min(1).max(1000),
-            })
-        ),
+        tags: z
+            .array(
+                z.object({
+                    key: z.string().min(1).max(255),
+                    categoryId: z.number(),
+                })
+            )
+            .optional(),
+        files: z
+            .array(
+                z.object({
+                    title: z.string().min(1).max(255),
+                    path: z.string().min(1).max(1000),
+                })
+            )
+            .optional(),
     });
 
-    const { title, content, authorId, tags, files } = createSchema.parse(req.body);
+    const { title, content, authorId, tags = [], files = [] } = createSchema.parse(req.body);
     const cloudinaryFiles = await uploadFiles(files);
 
     const createdPost: Post & { tags: Tag[]; files: File[] } = await prismaClient.post.create({
@@ -118,7 +122,7 @@ export const updatePost = asyncHandler(async (req: Request, res: Response): Prom
     });
 
     const id = await integerValidator.parseAsync(req.params.postId);
-    const { title, content, authorId, tags, files } = updateSchema.parse(req.body);
+    const { title, content, authorId, tags = [], files = [] } = updateSchema.parse(req.body);
     const cloudinaryFiles = await uploadFiles(files);
 
     const updatedPost: Post & { tags: Tag[]; files: File[] } = await prismaClient.post.update({
