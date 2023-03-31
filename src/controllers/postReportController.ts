@@ -3,6 +3,7 @@ import { PostReport, Tag, Post, User } from '@prisma/client';
 import { asyncHandler, formatSuccessResponse } from '../utils/responseHandler';
 import prismaClient from '../services/prisma/prismaClient';
 import { z } from 'zod';
+import { UserWithoutPassword } from '../utils/interfaces';
 
 const integerValidator = z
     .string()
@@ -40,7 +41,7 @@ export const createOrUpdatePostReport = asyncHandler(async (req: Request, res: R
 
     const { authorId, postId, reason, tags = [] } = createSchema.parse(req.body);
 
-    const createdPostReport: PostReport & { post: Post; author: User; tags: Tag[] } = await prismaClient.postReport.upsert({
+    const createdPostReport: PostReport & { post: Post; author: UserWithoutPassword; tags: Tag[] } = await prismaClient.postReport.upsert({
         where: {
             authorId_postId: { authorId, postId },
         },
@@ -83,7 +84,17 @@ export const createOrUpdatePostReport = asyncHandler(async (req: Request, res: R
         },
         include: {
             tags: true,
-            author: true,
+            author: {
+                select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                    course: true,
+                    password: false,
+                    role: false,
+                    status: false,
+                },
+            },
             post: true,
         },
     });
@@ -131,9 +142,19 @@ export const disconnectTagFromPostReport = asyncHandler(async (req: Request, res
  * @returns {Promise<void>}
  */
 export const getAllPostReports = asyncHandler(async (req: Request, res: Response): Promise<void> => {
-    const postReports: (PostReport & { post: Post; author: User; tags: Tag[] })[] = await prismaClient.postReport.findMany({
+    const postReports: (PostReport & { post: Post; author: UserWithoutPassword; tags: Tag[] })[] = await prismaClient.postReport.findMany({
         include: {
-            author: true,
+            author: {
+                select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                    course: true,
+                    password: false,
+                    role: false,
+                    status: false,
+                },
+            },
             post: true,
             tags: true,
         },
@@ -151,12 +172,22 @@ export const getAllPostReports = asyncHandler(async (req: Request, res: Response
  */
 export const getPostReport = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const id = await integerValidator.parseAsync(req.params.postReportId);
-    const postReport: PostReport & { post: Post; author: User; tags: Tag[] } = await prismaClient.postReport.findUnique({
+    const postReport: PostReport & { post: Post; author: UserWithoutPassword; tags: Tag[] } = await prismaClient.postReport.findUnique({
         where: {
             id,
         },
         include: {
-            author: true,
+            author: {
+                select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                    course: true,
+                    password: false,
+                    role: false,
+                    status: false,
+                },
+            },
             post: true,
             tags: true,
         },
