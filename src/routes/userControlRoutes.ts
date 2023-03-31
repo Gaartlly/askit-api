@@ -1,5 +1,11 @@
 import express from 'express';
-import { createTag, updateTag, getAllTags, getTag, deleteTag } from '../controllers/tagController';
+import {
+    createUserControl,
+    updateUserControl,
+    getAllUserControls,
+    getUserControl,
+    deleteUserControl,
+} from '../controllers/userControlController';
 
 const router = express.Router();
 
@@ -13,53 +19,53 @@ const router = express.Router();
  *       bearerFormat: JWT
  *
  *   schemas:
- *     Tag:
+ *     UserControl:
  *       type: object
  *       properties:
  *         id:
  *           type: integer
  *           example: 1
- *         key:
+ *         reason:
  *           type: string
- *           example: "Matemática Discreta"
- *         categoryId:
+ *           example: "Violação dos termos de uso."
+ *         userId:
  *           type: integer
  *           example: 1
  *       required:
- *         - key
- *         - categoryId
+ *         - reason
+ *         - userId
  *
  */
 
 /**
  * @swagger
- * /api/tag/createTag:
+ * /api/userControl/createUserControl:
  *   post:
  *     security:
  *       - bearerAuth: []
- *     description: Create a new tag.
- *     tags: [Tag]
+ *     description: Create a new userControl.
+ *     tags: [UserControl]
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
- *             $ref: '#/components/schemas/Tag'
+ *             $ref: '#/components/schemas/UserControl'
  *
  *           example:
- *             key: Matemática Discreta
- *             categoryId: 1
+ *             reason: "Violação dos termos de uso."
+ *             userId: 1
  *     responses:
  *       200:
  *         content:
  *           application/json:
  *             example:
  *               response: Successful
- *               tag:
+ *               userControl:
  *                 id: 1
- *                 key: Matemática Discreta
- *                 categoryId: 1
+ *                 reason: "Violação dos termos de uso."
+ *                 userId: 1
  *
  *       400:
  *         content:
@@ -68,7 +74,7 @@ const router = express.Router();
  *               response: Error
  *               error:
  *                 type: BadRequestError
- *                 path: /api/tag/createTag
+ *                 path: /api/userControl/createUserControl
  *                 statusCode: 400
  *                 message: Bad request
  *
@@ -79,23 +85,23 @@ const router = express.Router();
  *               response: Error
  *               error:
  *                 type: InternalServerError
- *                 path: /api/tag/createTag
+ *                 path: /api/userControl/createUserControl
  *                 statusCode: 500
  *                 message: Internal Server Error
  *
  */
-router.post('/createTag', createTag);
+router.post('/createUserControl', createUserControl);
 
 /**
  * @swagger
- * /api/tag/updateTag/{tagId}:
+ * /api/userControl/updateUserControl/{userControlId}:
  *   put:
  *     security:
  *       - bearerAuth: []
- *     description: Update an tag by id.
- *     tags: [Tag]
+ *     description: Update an userControl by id.
+ *     tags: [UserControl]
  *     parameters:
- *       - name: tagId
+ *       - name: userControlId
  *         in: path
  *         required: true
  *         schema:
@@ -106,21 +112,21 @@ router.post('/createTag', createTag);
  *         application/json:
  *           schema:
  *             type: object
- *             $ref: '#/components/schemas/Tag'
+ *             $ref: '#/components/schemas/UserControl'
  *
  *           example:
- *             key: Matemática Discreta
- *             categoryId: 1
+ *             reason: "Violação dos termos de uso."
+ *             userId: 1
  *     responses:
  *       200:
  *         content:
  *           application/json:
  *             example:
  *               response: Successful
- *               tag:
+ *               userControl:
  *                 id: 1
- *                 key: Matemática Discreta
- *                 categoryId: 1
+ *                 reason: "Violação dos termos de uso."
+ *                 userId: 1
  *
  *       400:
  *         content:
@@ -129,7 +135,7 @@ router.post('/createTag', createTag);
  *               response: Error
  *               error:
  *                 type: BadRequestError
- *                 path: /api/tag/updateTag
+ *                 path: /api/userControl/updateUserControl
  *                 statusCode: 400
  *                 message: Bad request
  *
@@ -140,7 +146,7 @@ router.post('/createTag', createTag);
  *               response: Error
  *               error:
  *                 type: NotFoundError
- *                 path: /api/tag/updateTag
+ *                 path: /api/userControl/updateUserControl
  *                 statusCode: 404
  *                 message: Not found
  *
@@ -151,21 +157,21 @@ router.post('/createTag', createTag);
  *               response: Error
  *               error:
  *                 type: InternalServerError
- *                 path: /api/tag/updateTag
+ *                 path: /api/userControl/updateUserControl
  *                 statusCode: 500
  *                 message: Internal Server Error
  *
  */
-router.put('/updateTag/:tagId', updateTag);
+router.put('/updateUserControl/:userControlId', updateUserControl);
 
 /**
  * @swagger
- * /api/tag/getAllTags:
+ * /api/userControl/getAllUserControls:
  *   get:
  *     security:
  *       - bearerAuth: []
- *     description: Retrieve all tags.
- *     tags: [Tag]
+ *     description: Retrieve all userControls.
+ *     tags: [UserControl]
  *
  *     responses:
  *       200:
@@ -173,7 +179,7 @@ router.put('/updateTag/:tagId', updateTag);
  *           application/json:
  *             example:
  *               response: Successful
- *               tags: []
+ *               userControls: []
  *
  *       400:
  *         content:
@@ -182,7 +188,7 @@ router.put('/updateTag/:tagId', updateTag);
  *               response: Error
  *               error:
  *                 type: BadRequestError
- *                 path: /api/tag/getAllTags
+ *                 path: /api/userControl/getAllUserControls
  *                 statusCode: 400
  *                 message: Bad request
  *
@@ -193,23 +199,23 @@ router.put('/updateTag/:tagId', updateTag);
  *               response: Error
  *               error:
  *                 type: InternalServerError
- *                 path: /api/tag/getAllTags
+ *                 path: /api/userControl/getAllUserControls
  *                 statusCode: 500
  *                 message: Internal Server Error
  *
  */
-router.get('/getAllTags', getAllTags);
+router.get('/getAllUserControls', getAllUserControls);
 
 /**
  * @swagger
- * /api/tag/getTag/{tagId}:
+ * /api/userControl/getUserControl/{userControlId}:
  *   get:
  *     security:
  *       - bearerAuth: []
- *     description: Retrieve a tag by id.
- *     tags: [Tag]
+ *     description: Retrieve a userControl by id.
+ *     tags: [UserControl]
  *     parameters:
- *       - name: tagId
+ *       - name: userControlId
  *         in: path
  *         required: true
  *         schema:
@@ -221,10 +227,10 @@ router.get('/getAllTags', getAllTags);
  *           application/json:
  *             example:
  *               response: Successful
- *               tag:
+ *               userControl:
  *                 id: 1
- *                 key: Matemática Discreta
- *                 categoryId: 1
+ *                 reason: "Violação dos termos de uso."
+ *                 userId: 1
  *
  *       400:
  *         content:
@@ -233,7 +239,7 @@ router.get('/getAllTags', getAllTags);
  *               response: Error
  *               error:
  *                 type: BadRequestError
- *                 path: /api/tag/getTag
+ *                 path: /api/userControl/getUserControl
  *                 statusCode: 400
  *                 message: Bad request
  *
@@ -244,7 +250,7 @@ router.get('/getAllTags', getAllTags);
  *               response: Error
  *               error:
  *                 type: NotFoundError
- *                 path: /api/tag/getTag
+ *                 path: /api/userControl/getUserControl
  *                 statusCode: 404
  *                 message: Not found
  *
@@ -255,23 +261,23 @@ router.get('/getAllTags', getAllTags);
  *               response: Error
  *               error:
  *                 type: InternalServerError
- *                 path: /api/tag/getTag
+ *                 path: /api/userControl/getUserControl
  *                 statusCode: 500
  *                 message: Internal Server Error
  *
  */
-router.get('/getTag/:tagId', getTag);
+router.get('/getUserControl/:userControlId', getUserControl);
 
 /**
  * @swagger
- * /api/tag/deleteTag/{tagId}:
+ * /api/userControl/deleteUserControl/{userControlId}:
  *   delete:
  *     security:
  *       - bearerAuth: []
- *     description: Delete an tag by id.
- *     tags: [Tag]
+ *     description: Delete an userControl by id.
+ *     tags: [UserControl]
  *     parameters:
- *       - name: tagId
+ *       - name: userControlId
  *         in: path
  *         required: true
  *         schema:
@@ -291,7 +297,7 @@ router.get('/getTag/:tagId', getTag);
  *               response: Error
  *               error:
  *                 type: BadRequestError
- *                 path: /api/tag/deleteTag
+ *                 path: /api/userControl/deleteUserControl
  *                 statusCode: 400
  *                 message: Bad request
  *
@@ -302,7 +308,7 @@ router.get('/getTag/:tagId', getTag);
  *               response: Error
  *               error:
  *                 type: NotFoundError
- *                 path: /api/tag/deleteTag
+ *                 path: /api/userControl/deleteUserControl
  *                 statusCode: 404
  *                 message: Not found
  *
@@ -313,11 +319,11 @@ router.get('/getTag/:tagId', getTag);
  *               response: Error
  *               error:
  *                 type: InternalServerError
- *                 path: /api/tag/deleteTag
+ *                 path: /api/userControl/deleteUserControl
  *                 statusCode: 500
  *                 message: Internal Server Error
  *
  */
-router.delete('/deleteTag/:tagId', deleteTag);
+router.delete('/deleteUserControl/:userControlId', deleteUserControl);
 
 export default router;
