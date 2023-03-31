@@ -2,7 +2,7 @@ import { secretKey } from '../../utils/tokenJwtUtil';
 import { sign } from 'jsonwebtoken';
 import { InternalServerError } from '../../utils/responseHandler';
 
-const generateJwtToken = async (userEmail: string, userRole: string): Promise<string> => {
+const generateJwtToken = async (userId: number, userRole: string): Promise<string> => {
     const expiresIn = 20 * 60;
 
     const tokenJwt = sign(
@@ -11,7 +11,7 @@ const generateJwtToken = async (userEmail: string, userRole: string): Promise<st
         },
         secretKey,
         {
-            subject: `${userEmail}`,
+            subject: `${userId}`,
             expiresIn: expiresIn,
             algorithm: 'HS256',
         }

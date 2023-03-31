@@ -23,8 +23,8 @@ export const login = asyncHandler(async (req: Request, res: Response, next: Next
     });
 
     if (!user || !(await verifyPassword(password, user.password))) throw new UnauthorizedError(errorMessage);
-
-    const tokenJwt: string = await generateJwtToken(user.email, user.role);
+    
+    const tokenJwt: string = await generateJwtToken(user.id, user.role);
 
     res.status(200).json(formatSuccessResponse({ access_token: tokenJwt }));
 });
