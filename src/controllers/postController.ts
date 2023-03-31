@@ -1,9 +1,22 @@
 import { Response, Request } from 'express';
 import { z } from 'zod';
-import { asyncHandler, formatSuccessResponse  } from '../utils/responseHandler';
+import { asyncHandler, formatSuccessResponse } from '../utils/responseHandler';
 import prismaClient from '../services/prisma/prismaClient';
 import integerValidator from '../utils/integerValidator';
-import { Post } from '@prisma/client';
+import { File, Post, Tag } from '@prisma/client';
+import cloudinary from '../config/cloudinaryConfig';
+
+const uploadFiles = async (files: { title?: string; path?: string }[]) => {
+    return Promise.all(
+        files.map(async (file) => {
+            const { title, path } = file;
+            const { secure_url, url } = await cloudinary.uploader.upload(file.path, {
+                resource_type: 'image',
+            });
+            return { title, path: secure_url || url };
+        })
+    );
+};
 
 /**
  * Create a new post.
@@ -15,31 +28,59 @@ import { Post } from '@prisma/client';
 export const createPost = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const createSchema = z.object({
         title: z.string().min(1).max(255),
-        description: z.string().min(1).max(255),
-        upvotes: z.number().int().default(0),
-        downvotes: z.number().int().default(0),
+        content: z.string().min(1).max(255),
         authorId: z.number().int(),
-        files: z
-            .array(
-                z.object({
-                    title: z.string().min(1).max(255),
-                    path: z.string().min(1).max(255),
-                })
-            )
-            .optional(),
+        tags: z.array(
+            z.object({
+                key: z.string().min(1).max(255),
+                categoryId: z.number(),
+            })
+        ),
+        files: z.array(
+            z.object({
+                title: z.string().min(1).max(255),
+                path: z.string().min(1).max(1000),
+            })
+        ),
     });
 
-    const post = createSchema.parse(req.body);
-    const createdPost = await prismaClient.post.create({
+    const { title, content, authorId, tags, files } = createSchema.parse(req.body);
+    const cloudinaryFiles = await uploadFiles(files);
+
+    const createdPost: Post & { tags: Tag[]; files: File[] } = await prismaClient.post.create({
         data: {
-            title: post.title,
-            content: post.description,
-            authorId: post.authorId,
-            //files: {
-            //    create: post.files,
-            //},
+            title,
+            content,
+            authorId,
+            tags: {
+                connectOrCreate: tags.map((tag) => {
+                    const { key, categoryId } = tag;
+                    return {
+                        where: {
+                            key_categoryId: {
+                                key,
+                                categoryId,
+                            },
+                        },
+                        create: {
+                            key,
+                            categoryId,
+                        },
+                    };
+                }),
+            },
+            files: {
+                create: cloudinaryFiles.map((file) => {
+                    const { title, path } = file;
+                    return {
+                        title,
+                        path,
+                    };
+                }),
+            },
         },
         include: {
+            tags: true,
             files: true,
         },
     });
@@ -56,55 +97,97 @@ export const createPost = asyncHandler(async (req: Request, res: Response): Prom
 export const updatePost = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const updateSchema = z.object({
         title: z.string().min(1).max(255).optional(),
-        description: z.string().min(1).max(255).optional(),
-        upvotes: z.number().int().optional(),
-        downvotes: z.number().int().optional(),
+        content: z.string().min(1).max(255).optional(),
         authorId: z.number().int().optional(),
+        tags: z
+            .array(
+                z.object({
+                    key: z.string().min(1).max(255),
+                    categoryId: z.number(),
+                })
+            )
+            .optional(),
         files: z
             .array(
                 z.object({
-                    id: z.number().int().optional(),
                     title: z.string().min(1).max(255),
-                    path: z.string().min(1).max(255),
+                    path: z.string().min(1).max(1000),
                 })
             )
             .optional(),
     });
 
     const id = await integerValidator.parseAsync(req.params.postId);
+    const { title, content, authorId, tags, files } = updateSchema.parse(req.body);
+    const cloudinaryFiles = await uploadFiles(files);
 
-    const currentPost = await prismaClient.post.findUniqueOrThrow({
-        where: { 
-            id 
-        },
-        include: {
-            files: true
-        }
-    });
-
-    const currentFilesIds = currentPost.files.map((file) => file.id);
-    const newPost = updateSchema.parse(req.body);
-    const createdFiles = newPost.files.filter((obj) => obj.id == undefined); // Arquivos que chegam sem id
-    const updatedFiles = newPost.files.filter((obj) => obj.id !== undefined); //Arquivos que chegam com id
-    const deletedFilesIds = currentFilesIds.filter((id) => !updatedFiles.map((obj) => obj.id).includes(id)); //Arquivos que não estão entre os novos
-
-    await prismaClient.file.deleteMany({ where: { id: { in: deletedFilesIds } } });
-    for (const file of updatedFiles) {
-        await prismaClient.file.update({ where: { id: file.id }, data: file });
-    }
-
-    const updatedPost: Post = await prismaClient.post.update({
+    const updatedPost: Post & { tags: Tag[]; files: File[] } = await prismaClient.post.update({
         where: { id },
         data: {
-            title: newPost.title,
-            content: newPost.description,
-            authorId: newPost.authorId,
-            //files: {
-            //    createMany: { data: createdFiles },
-            //},
+            title,
+            content,
+            authorId,
+            tags: {
+                connectOrCreate: tags.map((tag) => {
+                    const { key, categoryId } = tag;
+                    return {
+                        where: {
+                            key_categoryId: { key, categoryId },
+                        },
+                        create: {
+                            key,
+                            categoryId,
+                        },
+                    };
+                }),
+            },
+            files: {
+                create: cloudinaryFiles.map((file) => {
+                    const { title, path } = file;
+                    return {
+                        title,
+                        path,
+                    };
+                }),
+            },
         },
         include: {
+            tags: true,
             files: true,
+        },
+    });
+
+    res.status(200).json(formatSuccessResponse(updatedPost));
+});
+
+/**
+ * Update a post, disconnecting a tag from it.
+ *
+ * @param {Request} req - Express Request object.
+ * @param {Response} res - Express Response object.
+ * @returns {Promise<void>}
+ */
+export const disconnectTagFromPost = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    const disconnectSchema = z.object({
+        postId: z.number().int(),
+        tagId: z.number().int(),
+    });
+
+    const { postId, tagId } = disconnectSchema.parse(req.body);
+
+    const updatedPost: Post & { tags: Tag[] } = await prismaClient.post.update({
+        where: {
+            id: postId,
+        },
+        data: {
+            tags: {
+                disconnect: {
+                    id: tagId,
+                },
+            },
+        },
+        include: {
+            tags: true,
         },
     });
 
@@ -119,8 +202,9 @@ export const updatePost = asyncHandler(async (req: Request, res: Response): Prom
  * @returns {Promise<void>}
  */
 export const getAllPosts = asyncHandler(async (req: Request, res: Response): Promise<void> => {
-    const posts = await prismaClient.post.findMany({
+    const posts: (Post & { tags: Tag[]; files: File[] })[] = await prismaClient.post.findMany({
         include: {
+            tags: true,
             files: true,
         },
     });
@@ -138,16 +222,44 @@ export const getAllPosts = asyncHandler(async (req: Request, res: Response): Pro
 export const getPost = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const id = await integerValidator.parseAsync(req.params.postId);
 
-    const post = await prismaClient.post.findUniqueOrThrow({
+    const post: Post & { tags: Tag[]; files: File[] } = await prismaClient.post.findUniqueOrThrow({
         where: {
-            id
+            id,
         },
         include: {
+            tags: true,
             files: true,
         },
     });
 
     res.status(200).json(formatSuccessResponse(post));
+});
+
+/**
+ * Get all posts from an author.
+ *
+ * @param {Request} req - Express Request object.
+ * @param {Response} res - Express Response object.
+ * @returns {Promise<void>}
+ */
+export const getPostsByAuthor = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    const getSchema = z.object({
+        authorId: z.number().int(),
+    });
+
+    const { authorId } = getSchema.parse(req.body);
+
+    const posts: (Post & { tags: Tag[]; files: File[] })[] = await prismaClient.post.findMany({
+        where: {
+            authorId,
+        },
+        include: {
+            tags: true,
+            files: true,
+        },
+    });
+
+    res.status(200).json(formatSuccessResponse(posts));
 });
 
 /**
@@ -159,8 +271,11 @@ export const getPost = asyncHandler(async (req: Request, res: Response): Promise
  */
 export const deletePost = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const id = await integerValidator.parseAsync(req.params.postId);
-
-    const post = await prismaClient.post.findUniqueOrThrow({ where: { id } });
+    const post = await prismaClient.post.delete({
+        where: {
+            id,
+        },
+    });
 
     res.status(200).json(formatSuccessResponse(post));
 });
