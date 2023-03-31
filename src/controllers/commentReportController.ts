@@ -28,15 +28,17 @@ export const createOrUpdateCommentReport = asyncHandler(async (req: Request, res
         authorId: z.number(),
         commentId: z.number(),
         reason: z.string().min(1).max(255),
-        tags: z.array(
-            z.object({
-                key: z.string().min(1).max(255),
-                categoryId: z.number(),
-            })
-        ),
+        tags: z
+            .array(
+                z.object({
+                    key: z.string().min(1).max(255),
+                    categoryId: z.number(),
+                })
+            )
+            .optional(),
     });
 
-    const { authorId, commentId, reason, tags } = createSchema.parse(req.body);
+    const { authorId, commentId, reason, tags = [] } = createSchema.parse(req.body);
 
     const createdCommentReport: CommentReport & { comment: Comment; tags: Tag[]; author: User } = await prismaClient.commentReport.upsert({
         where: {
