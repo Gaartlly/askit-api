@@ -1,5 +1,5 @@
 import { Response, Request } from 'express';
-import { Prisma, Tag } from '@prisma/client';
+import { Tag } from '@prisma/client';
 import prismaClient from '../services/prisma/prismaClient';
 import { z } from 'zod';
 import { asyncHandler, formatSuccessResponse } from '../utils/responseHandler';
@@ -40,9 +40,10 @@ export const createTag = asyncHandler(async (req: Request, res: Response): Promi
 export const updateTag = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const updateSchema = z.object({
         key: z.string().min(1).max(255).optional(),
+        categoryId: z.number().int().optional(),
     });
     const id = await integerValidator.parseAsync(req.params.tagId);
-    const { key } = updateSchema.parse(req.body);
+    const { key, categoryId } = updateSchema.parse(req.body);
 
     const updatedTag: Tag = await prismaClient.tag.update({
         where: {
@@ -50,6 +51,7 @@ export const updateTag = asyncHandler(async (req: Request, res: Response): Promi
         },
         data: {
             key,
+            categoryId,
         },
     });
 
@@ -97,7 +99,7 @@ export const getTag = asyncHandler(async (req: Request, res: Response): Promise<
 export const deleteTag = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const id = await integerValidator.parseAsync(req.params.tagId);
 
-    const deletedTag: Prisma.BatchPayload = await prismaClient.tag.deleteMany({
+    const deletedTag: Tag = await prismaClient.tag.delete({
         where: {
             id,
         },
