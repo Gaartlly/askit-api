@@ -1,9 +1,9 @@
 import { Response, Request } from 'express';
 import { z } from 'zod';
-import { asyncHandler, formatSuccessResponse  } from '../utils/responseHandler';
+import { asyncHandler, formatSuccessResponse } from '../utils/responseHandler';
 import prismaClient from '../services/prisma/prismaClient';
 import integerValidator from '../utils/integerValidator';
-import { Post } from '@prisma/client';
+import { File, Post } from '@prisma/client';
 
 /**
  * Create a new post.
@@ -30,7 +30,7 @@ export const createPost = asyncHandler(async (req: Request, res: Response): Prom
     });
 
     const post = createSchema.parse(req.body);
-    const createdPost = await prismaClient.post.create({
+    const createdPost: Post & { files: File[] } = await prismaClient.post.create({
         data: {
             title: post.title,
             content: post.description,
@@ -73,13 +73,13 @@ export const updatePost = asyncHandler(async (req: Request, res: Response): Prom
 
     const id = await integerValidator.parseAsync(req.params.postId);
 
-    const currentPost = await prismaClient.post.findUniqueOrThrow({
-        where: { 
-            id 
+    const currentPost: Post & { files: File[] } = await prismaClient.post.findUniqueOrThrow({
+        where: {
+            id,
         },
         include: {
-            files: true
-        }
+            files: true,
+        },
     });
 
     const currentFilesIds = currentPost.files.map((file) => file.id);
@@ -119,7 +119,7 @@ export const updatePost = asyncHandler(async (req: Request, res: Response): Prom
  * @returns {Promise<void>}
  */
 export const getAllPosts = asyncHandler(async (req: Request, res: Response): Promise<void> => {
-    const posts = await prismaClient.post.findMany({
+    const posts: (Post & { files: File[] })[] = await prismaClient.post.findMany({
         include: {
             files: true,
         },
@@ -138,9 +138,9 @@ export const getAllPosts = asyncHandler(async (req: Request, res: Response): Pro
 export const getPost = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const id = await integerValidator.parseAsync(req.params.postId);
 
-    const post = await prismaClient.post.findUniqueOrThrow({
+    const post: Post & { files: File[] } = await prismaClient.post.findUniqueOrThrow({
         where: {
-            id
+            id,
         },
         include: {
             files: true,
@@ -160,7 +160,7 @@ export const getPost = asyncHandler(async (req: Request, res: Response): Promise
 export const deletePost = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const id = await integerValidator.parseAsync(req.params.postId);
 
-    const post = await prismaClient.post.findUniqueOrThrow({ where: { id } });
+    const post: Post = await prismaClient.post.findUniqueOrThrow({ where: { id } });
 
     res.status(200).json(formatSuccessResponse(post));
 });
