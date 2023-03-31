@@ -10,7 +10,7 @@ const uploadFiles = async (files: { title?: string; path?: string }[]) => {
     return Promise.all(
         files.map(async (file) => {
             const { title, path } = file;
-            const { secure_url, url } = await cloudinary.uploader.upload(file.path, {
+            const { secure_url, url } = await cloudinary.uploader.upload(path, {
                 resource_type: 'image',
             });
             return { title, path: secure_url || url };
