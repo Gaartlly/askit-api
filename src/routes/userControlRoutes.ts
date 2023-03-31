@@ -1,4 +1,5 @@
 import express from 'express';
+import moderatorMiddleware from '../middleware/moderatorMiddleware';
 import {
     createUserControl,
     updateUserControl,
@@ -90,7 +91,7 @@ const router = express.Router();
  *                 message: Internal Server Error
  *
  */
-router.post('/createUserControl', createUserControl);
+router.post('/createUserControl', moderatorMiddleware, createUserControl);
 
 /**
  * @swagger
@@ -162,7 +163,7 @@ router.post('/createUserControl', createUserControl);
  *                 message: Internal Server Error
  *
  */
-router.put('/updateUserControl/:userControlId', updateUserControl);
+router.put('/updateUserControl/:userControlId', moderatorMiddleware, updateUserControl);
 
 /**
  * @swagger
@@ -204,7 +205,7 @@ router.put('/updateUserControl/:userControlId', updateUserControl);
  *                 message: Internal Server Error
  *
  */
-router.get('/getAllUserControls', getAllUserControls);
+router.get('/getAllUserControls', moderatorMiddleware, getAllUserControls);
 
 /**
  * @swagger
@@ -266,7 +267,7 @@ router.get('/getAllUserControls', getAllUserControls);
  *                 message: Internal Server Error
  *
  */
-router.get('/getUserControl/:userControlId', getUserControl);
+router.get('/getUserControl/:userControlId', moderatorMiddleware, getUserControl);
 
 /**
  * @swagger
@@ -324,6 +325,6 @@ router.get('/getUserControl/:userControlId', getUserControl);
  *                 message: Internal Server Error
  *
  */
-router.delete('/deleteUserControl/:userControlId', deleteUserControl);
+router.delete('/deleteUserControl/:userControlId', moderatorMiddleware, deleteUserControl);
 
 export default router;

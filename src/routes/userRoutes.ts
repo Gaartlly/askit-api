@@ -168,7 +168,7 @@ router.post('/createUser', createUser);
  *                 message: Internal Server Error
  *
  */
-router.get('/getUsers', verifyAuthentication, getUsers);
+router.get('/getUsers', moderatorMiddleware, getUsers);
 
 /**
  * @swagger
@@ -232,7 +232,7 @@ router.get('/getUsers', verifyAuthentication, getUsers);
  *                 message: Internal Server Error
  *
  */
-router.put('/updateUser/:userId', verifyAuthentication, updateUser);
+router.put('/updateUser/:userId', updateUser);
 
 /**
  * @swagger
@@ -291,6 +291,6 @@ router.put('/updateUser/:userId', verifyAuthentication, updateUser);
  *                 message: Internal Server Error
  *
  */
-router.delete('/deleteUser/:userId', verifyAuthentication, deleteUser);
+router.delete('/deleteUser/:userId', moderatorMiddleware, deleteUser);
 
 export default router;

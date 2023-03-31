@@ -1,4 +1,5 @@
 import express from 'express';
+import moderatorMiddleware from '../middleware/moderatorMiddleware';
 import {
     createOrUpdateCommentReport,
     getAllCommentReports,
@@ -198,7 +199,7 @@ router.put('/disconnectTagFromCommentReport/', disconnectTagFromCommentReport);
  *                 message: Internal Server Error
  *
  */
-router.get('/getAllCommentReports', getAllCommentReports);
+router.get('/getAllCommentReports', moderatorMiddleware, getAllCommentReports);
 
 /**
  * @swagger
