@@ -179,9 +179,12 @@ router.get('/getUsers', verifyAuthentication, getUsers);
  *     description: Update user.
  *     tags: [User]
  *     parameters:
- *       - in: path param
+ *       - in: path
  *         name: userId
  *         required: true
+ *         schema:
+ *           type: integer
+ *           minimum: 1
  *
  *     responses:
  *       200:
@@ -240,9 +243,12 @@ router.put('/updateUser/:userId', verifyAuthentication, updateUser);
  *     description: Delete user.
  *     tags: [User]
  *     parameters:
- *       - in: path param
+ *       - in: path
  *         name: userId
  *         required: true
+ *         schema:
+ *           type: integer
+ *           minimum: 1
  *
  *     responses:
  *       200:
