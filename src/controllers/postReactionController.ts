@@ -5,18 +5,7 @@ import prismaClient from '../services/prisma/prismaClient';
 import validateUserIdentity from '../services/tokenJwtService/validateUserIdentity';
 import { z } from 'zod';
 import { UserWithoutPassword } from '../utils/interfaces';
-
-const integerValidator = z
-    .string()
-    .refine(
-        (value) => {
-            return /^\d+$/.test(value);
-        },
-        {
-            message: 'Value must be a valid integer',
-        }
-    )
-    .transform((value) => parseInt(value));
+import integerValidator from '../utils/integerValidator';
 
 /**
  * Create a new post reaction.
@@ -35,7 +24,7 @@ export const createOrUpdatePostReaction = asyncHandler(async (req: Request, res:
     const { authorId, postId, type } = createSchema.parse(req.body);
 
     if (!validateUserIdentity(authorId, req.headers.authorization)) throw new UnauthorizedError('Unauthorized user');
-    
+
     const createdPostReaction: PostReaction & { author: UserWithoutPassword; post: Post } = await prismaClient.postReaction.upsert({
         where: {
             authorId_postId: { authorId, postId },
@@ -104,7 +93,7 @@ export const getAllPostReactions = asyncHandler(async (req: Request, res: Respon
  */
 export const getPostReaction = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const id = await integerValidator.parseAsync(req.params.postReactionId);
-    
+
     const postReaction: PostReaction & { author: UserWithoutPassword; post: Post } = await prismaClient.postReaction.findUniqueOrThrow({
         where: {
             id,

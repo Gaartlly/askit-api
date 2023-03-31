@@ -5,18 +5,7 @@ import prismaClient from '../services/prisma/prismaClient';
 import validateUserIdentity from '../services/tokenJwtService/validateUserIdentity';
 import { z } from 'zod';
 import { UserWithoutPassword } from '../utils/interfaces';
-
-const integerValidator = z
-    .string()
-    .refine(
-        (value) => {
-            return /^\d+$/.test(value);
-        },
-        {
-            message: 'Value must be a valid integer',
-        }
-    )
-    .transform((value) => parseInt(value));
+import integerValidator from '../utils/integerValidator';
 
 /**
  * Create a new post report.
@@ -184,26 +173,27 @@ export const getAllPostReports = asyncHandler(async (req: Request, res: Response
 export const getPostReport = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const id = await integerValidator.parseAsync(req.params.postReportId);
 
-    const postReport: PostReport & { post: Post; author: UserWithoutPassword; tags: Tag[] } = await prismaClient.postReport.findUniqueOrThrow({
-        where: {
-            id,
-        },
-        include: {
-            author: {
-                select: {
-                    id: true,
-                    name: true,
-                    email: true,
-                    course: true,
-                    password: false,
-                    role: false,
-                    status: false,
-                },
+    const postReport: PostReport & { post: Post; author: UserWithoutPassword; tags: Tag[] } =
+        await prismaClient.postReport.findUniqueOrThrow({
+            where: {
+                id,
             },
-            post: true,
-            tags: true,
-        },
-    });
+            include: {
+                author: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true,
+                        course: true,
+                        password: false,
+                        role: false,
+                        status: false,
+                    },
+                },
+                post: true,
+                tags: true,
+            },
+        });
 
     if (!validateUserIdentity(postReport.authorId, req.headers.authorization)) throw new UnauthorizedError('Unauthorized user');
 
