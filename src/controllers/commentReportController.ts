@@ -1,6 +1,7 @@
 import { Response, Request } from 'express';
 import { CommentReport, Comment, Tag } from '@prisma/client';
-import { asyncHandler, formatSuccessResponse } from '../utils/responseHandler';
+import { asyncHandler, formatSuccessResponse, UnauthorizedError } from '../utils/responseHandler';
+import validateUserIdentity from '../services/tokenJwtService/validateUserIdentity';
 import prismaClient from '../services/prisma/prismaClient';
 import { UserWithoutPassword } from '../utils/interfaces';
 import { z } from 'zod';
@@ -40,6 +41,8 @@ export const createOrUpdateCommentReport = asyncHandler(async (req: Request, res
     });
 
     const { authorId, commentId, reason, tags = [] } = createSchema.parse(req.body);
+
+    if (!validateUserIdentity(authorId, req.headers.authorization)) throw new UnauthorizedError('Unauthorized user');
 
     const createdCommentReport: CommentReport & { comment: Comment; tags: Tag[]; author: UserWithoutPassword } =
         await prismaClient.commentReport.upsert({
@@ -127,6 +130,14 @@ export const disconnectTagFromCommentReport = asyncHandler(async (req: Request, 
 
     const { commentReportId, tagId } = updateSchema.parse(req.body);
 
+    const commentReport: CommentReport = await prismaClient.commentReport.findUniqueOrThrow({
+        where: {
+            id: commentReportId,
+        },
+    });
+
+    if (!validateUserIdentity(commentReport.authorId, req.headers.authorization)) throw new UnauthorizedError('Unauthorized user');
+
     const updatedCommentReport: CommentReport & { tags: Tag[] } = await prismaClient.commentReport.update({
         where: { id: commentReportId },
         data: {
@@ -183,8 +194,9 @@ export const getAllCommentReports = asyncHandler(async (req: Request, res: Respo
  */
 export const getCommentReport = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const id = await integerValidator.parseAsync(req.params.commentReportId);
+
     const commentReport: CommentReport & { comment: Comment; tags: Tag[]; author: UserWithoutPassword } =
-        await prismaClient.commentReport.findUnique({
+        await prismaClient.commentReport.findUniqueOrThrow({
             where: {
                 id,
             },
@@ -205,6 +217,8 @@ export const getCommentReport = asyncHandler(async (req: Request, res: Response)
             },
         });
 
+    if (!validateUserIdentity(commentReport.authorId, req.headers.authorization)) throw new UnauthorizedError('Unauthorized user');
+
     res.status(200).json(formatSuccessResponse(commentReport));
 });
 
@@ -221,6 +235,9 @@ export const getCommentReportsByAuthor = asyncHandler(async (req: Request, res: 
     });
 
     const { authorId } = getSchema.parse(req.body);
+
+    if (!validateUserIdentity(authorId, req.headers.authorization)) throw new UnauthorizedError('Unauthorized user');
+
     const commentReports: (CommentReport & { comment: Comment; tags: Tag[] })[] = await prismaClient.commentReport.findMany({
         where: {
             authorId,
@@ -243,11 +260,20 @@ export const getCommentReportsByAuthor = asyncHandler(async (req: Request, res: 
  */
 export const deleteCommentReport = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const id = await integerValidator.parseAsync(req.params.commentReportId);
-    const commentReport: CommentReport = await prismaClient.commentReport.delete({
+
+    const commentReport: CommentReport = await prismaClient.commentReport.findUniqueOrThrow({
         where: {
             id,
         },
     });
 
-    res.status(200).json(formatSuccessResponse(commentReport));
+    if (!validateUserIdentity(commentReport.authorId, req.headers.authorization)) throw new UnauthorizedError('Unauthorized user');
+
+    const deletedCommentReport: CommentReport = await prismaClient.commentReport.delete({
+        where: {
+            id,
+        },
+    });
+
+    res.status(200).json(formatSuccessResponse(deletedCommentReport));
 });

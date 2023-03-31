@@ -137,7 +137,7 @@ export const updateUser = asyncHandler(async (req: Request, res: Response): Prom
     });
 
     // validating if the target user of the update is the same as the token
-    if (!validateUserIdentity(user.email, req.headers.authorization)) throw new Error('Unauthorized user');
+    if (!validateUserIdentity(user.id, req.headers.authorization)) throw new UnauthorizedError('Unauthorized user');
 
     if (email && email !== user.email) throw new UnauthorizedError('Current email or password is wrong.');
 
@@ -173,7 +173,6 @@ export const updateUser = asyncHandler(async (req: Request, res: Response): Prom
     );
 });
 
-
 /**
  * Delete a user.
  *
@@ -191,7 +190,7 @@ export const deleteUser = asyncHandler(async (req: Request, res: Response): Prom
     });
 
     // validating if the target user of the delete is the same as the token
-    if (!validateUserIdentity(user.email, req.headers.authorization)) throw new UnauthorizedError('Unauthorized user');
+    if (!validateUserIdentity(user.id, req.headers.authorization)) throw new UnauthorizedError('Unauthorized user');
 
     const deletedUser: User = await prismaClient.user.delete({
         where: {

@@ -1,7 +1,8 @@
 import { Response, Request } from 'express';
 import { PostReport, Tag, Post } from '@prisma/client';
-import { asyncHandler, formatSuccessResponse } from '../utils/responseHandler';
+import { asyncHandler, formatSuccessResponse, UnauthorizedError } from '../utils/responseHandler';
 import prismaClient from '../services/prisma/prismaClient';
+import validateUserIdentity from '../services/tokenJwtService/validateUserIdentity';
 import { z } from 'zod';
 import { UserWithoutPassword } from '../utils/interfaces';
 
@@ -40,6 +41,8 @@ export const createOrUpdatePostReport = asyncHandler(async (req: Request, res: R
     });
 
     const { authorId, postId, reason, tags = [] } = createSchema.parse(req.body);
+
+    if (!validateUserIdentity(authorId, req.headers.authorization)) throw new UnauthorizedError('Unauthorized user');
 
     const createdPostReport: PostReport & { post: Post; author: UserWithoutPassword; tags: Tag[] } = await prismaClient.postReport.upsert({
         where: {
@@ -117,6 +120,14 @@ export const disconnectTagFromPostReport = asyncHandler(async (req: Request, res
 
     const { postReportId, tagId } = updateSchema.parse(req.body);
 
+    const postReport = await prismaClient.postReport.findUniqueOrThrow({
+        where: {
+            id: postReportId,
+        },
+    });
+
+    if (!validateUserIdentity(postReport.authorId, req.headers.authorization)) throw new UnauthorizedError('Unauthorized user');
+
     const updatedPostReport: PostReport & { tags: Tag[] } = await prismaClient.postReport.update({
         where: { id: postReportId },
         data: {
@@ -172,7 +183,8 @@ export const getAllPostReports = asyncHandler(async (req: Request, res: Response
  */
 export const getPostReport = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const id = await integerValidator.parseAsync(req.params.postReportId);
-    const postReport: PostReport & { post: Post; author: UserWithoutPassword; tags: Tag[] } = await prismaClient.postReport.findUnique({
+
+    const postReport: PostReport & { post: Post; author: UserWithoutPassword; tags: Tag[] } = await prismaClient.postReport.findUniqueOrThrow({
         where: {
             id,
         },
@@ -193,6 +205,8 @@ export const getPostReport = asyncHandler(async (req: Request, res: Response): P
         },
     });
 
+    if (!validateUserIdentity(postReport.authorId, req.headers.authorization)) throw new UnauthorizedError('Unauthorized user');
+
     res.status(200).json(formatSuccessResponse(postReport));
 });
 
@@ -209,6 +223,9 @@ export const getPostReportsByAuthor = asyncHandler(async (req: Request, res: Res
     });
 
     const { authorId } = getSchema.parse(req.body);
+
+    if (!validateUserIdentity(authorId, req.headers.authorization)) throw new UnauthorizedError('Unauthorized user');
+
     const postReport: (PostReport & { post: Post })[] = await prismaClient.postReport.findMany({
         where: {
             authorId,
@@ -230,7 +247,16 @@ export const getPostReportsByAuthor = asyncHandler(async (req: Request, res: Res
  */
 export const deletePostReport = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const id = await integerValidator.parseAsync(req.params.postReportId);
-    const postReport: PostReport = await prismaClient.postReport.delete({ where: { id } });
 
-    res.status(200).json(formatSuccessResponse(postReport));
+    const postReport = await prismaClient.postReport.findUniqueOrThrow({
+        where: {
+            id,
+        },
+    });
+
+    if (!validateUserIdentity(postReport.authorId, req.headers.authorization)) throw new UnauthorizedError('Unauthorized user');
+
+    const deletedPostReport: PostReport = await prismaClient.postReport.delete({ where: { id } });
+
+    res.status(200).json(formatSuccessResponse(deletedPostReport));
 });
