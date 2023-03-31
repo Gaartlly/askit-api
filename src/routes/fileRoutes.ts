@@ -149,9 +149,12 @@ router.get('/getAllFiles', getAllFiles);
  *     description: Retrieve file by id.
  *     tags: [File]
  *     parameters:
- *       - in: path param
+ *       - in: path
  *         name: fileId
  *         required: true
+ *         schema:
+ *           type: integer
+ *           minimum: 1
  *
  *     responses:
  *       200:
@@ -211,9 +214,12 @@ router.get('/getFileById/:fileId', getFileById);
  *     description: Delete file.
  *     tags: [File]
  *     parameters:
- *       - in: path param
+ *       - in: path
  *         name: fileId
  *         required: true
+ *         schema:
+ *           type: integer
+ *           minimum: 1
  *
  *     responses:
  *       200:
@@ -267,9 +273,12 @@ router.delete('/deleteFile/:fileId', deleteFile);
  *     description: Update file.
  *     tags: [File]
  *     parameters:
- *       - in: path param
+ *       - in: path
  *         name: fileId
  *         required: true
+ *         schema:
+ *           type: integer
+ *           minimum: 1
  *
  *     responses:
  *       200:
