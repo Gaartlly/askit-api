@@ -19,7 +19,7 @@ const integerValidator = z
     .transform((value) => parseInt(value));
 
 /**
- * Create a new comment report.
+ * Create a new or update an existing comment report.
  *
  * @param {Request} req - Express Request object.
  * @param {Response} res - Express Response object.
@@ -112,7 +112,168 @@ export const createOrUpdateCommentReport = asyncHandler(async (req: Request, res
             },
         });
 
+    res.status(200).json(formatSuccessResponse(createdCommentReport));
+});
+
+/**
+ * Create a new comment report.
+ *
+ * @param {Request} req - Express Request object.
+ * @param {Response} res - Express Response object.
+ * @returns {Promise<void>}
+ */
+export const createCommentReport = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    const createSchema = z.object({
+        authorId: z.number(),
+        commentId: z.number(),
+        reason: z.string().min(1).max(255),
+        tags: z
+            .array(
+                z.object({
+                    key: z.string().min(1).max(255),
+                    categoryId: z.number(),
+                })
+            )
+            .optional(),
+    });
+
+    const { authorId, commentId, reason, tags = [] } = createSchema.parse(req.body);
+
+    if (!validateUserIdentity(authorId, req.headers.authorization)) throw new UnauthorizedError('Unauthorized user');
+
+    const existingCommentReport = await prismaClient.commentReport.findFirst({
+        where: {
+            AND: {
+                authorId,
+                commentId,
+            },
+        },
+    });
+
+    if (existingCommentReport) throw new Error('A report already exists with the same authorId and commentId.');
+
+    const createdCommentReport: CommentReport & { comment: Comment; tags: Tag[]; author: UserWithoutPassword } =
+        await prismaClient.commentReport.create({
+            data: {
+                reason,
+                commentId,
+                authorId,
+                tags: {
+                    connectOrCreate: tags.map((tag) => {
+                        const { key, categoryId } = tag;
+                        return {
+                            where: {
+                                key_categoryId: {
+                                    key,
+                                    categoryId,
+                                },
+                            },
+                            create: {
+                                key,
+                                categoryId,
+                            },
+                        };
+                    }),
+                },
+            },
+            include: {
+                tags: true,
+                author: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true,
+                        course: true,
+                        password: false,
+                        role: false,
+                        status: false,
+                    },
+                },
+                comment: true,
+            },
+        });
+
     res.status(201).json(formatSuccessResponse(createdCommentReport));
+});
+
+/**
+ * Update an existing comment report.
+ *
+ * @param {Request} req - Express Request object.
+ * @param {Response} res - Express Response object.
+ * @returns {Promise<void>}
+ */
+export const updateCommentReport = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    const createSchema = z.object({
+        authorId: z.number(),
+        commentId: z.number(),
+        reason: z.string().min(1).max(255),
+        tags: z
+            .array(
+                z.object({
+                    key: z.string().min(1).max(255),
+                    categoryId: z.number(),
+                })
+            )
+            .optional(),
+    });
+
+    const id = await integerValidator.parseAsync(req.params.commentReportId);
+    const { authorId, commentId, reason, tags = [] } = createSchema.parse(req.body);
+
+    const commentReport = await prismaClient.commentReport.findUniqueOrThrow({
+        where: {
+            id,
+        },
+    });
+
+    if (!validateUserIdentity(commentReport.authorId, req.headers.authorization)) throw new UnauthorizedError('Unauthorized user');
+
+    const updatedCommentReport: CommentReport & { comment: Comment; tags: Tag[]; author: UserWithoutPassword } =
+        await prismaClient.commentReport.update({
+            where: {
+                id,
+            },
+            data: {
+                reason,
+                commentId,
+                authorId,
+                tags: {
+                    connectOrCreate: tags.map((tag) => {
+                        const { key, categoryId } = tag;
+                        return {
+                            where: {
+                                key_categoryId: {
+                                    key,
+                                    categoryId,
+                                },
+                            },
+                            create: {
+                                key,
+                                categoryId,
+                            },
+                        };
+                    }),
+                },
+            },
+            include: {
+                tags: true,
+                author: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true,
+                        course: true,
+                        password: false,
+                        role: false,
+                        status: false,
+                    },
+                },
+                comment: true,
+            },
+        });
+
+    res.status(200).json(formatSuccessResponse(updatedCommentReport));
 });
 
 /**

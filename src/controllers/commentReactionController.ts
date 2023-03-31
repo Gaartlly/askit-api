@@ -98,7 +98,7 @@ export const createCommentReaction = asyncHandler(async (req: Request, res: Resp
         },
     });
 
-    if (existingCommentReaction) throw new Error('A commentReaction already exists with the same authorId and commentId.');
+    if (existingCommentReaction) throw new Error('A reaction already exists with the same authorId and commentId.');
 
     const createdCommentReaction: CommentReaction & { author: UserWithoutPassword; comment: Comment } =
         await prismaClient.commentReaction.create({
@@ -176,7 +176,7 @@ export const updateCommentReaction = asyncHandler(async (req: Request, res: Resp
             },
         });
 
-    res.status(201).json(formatSuccessResponse(updatedCommentReaction));
+    res.status(200).json(formatSuccessResponse(updatedCommentReaction));
 });
 
 /**

@@ -7,6 +7,8 @@ import {
     deleteCommentReport,
     disconnectTagFromCommentReport,
     getCommentReportsByAuthor,
+    createCommentReport,
+    updateCommentReport,
 } from '../controllers/commentReportController';
 
 const router = express.Router();
@@ -97,6 +99,122 @@ const router = express.Router();
  *
  */
 router.post('/createOrUpdateCommentReport', createOrUpdateCommentReport);
+
+/**
+ * @swagger
+ * /api/commentReport/createCommentReport:
+ *   post:
+ *     security:
+ *       - bearerAuth: []
+ *     description: Create a new comment report.
+ *     tags: [CommentReport]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/CommentReport'
+ *             example:
+ *               authorId: 2
+ *               commentId: 3
+ *               type: "Violação dos termos de uso"
+ *     responses:
+ *       200:
+ *         content:
+ *           application/json:
+ *             example:
+ *               response: Successful
+ *               report:
+ *                 id: 1
+ *                 authorId: 2
+ *                 commentId: 3
+ *                 type: "Violação dos termos de uso"
+ *
+ *       400:
+ *         content:
+ *           application/json:
+ *             example:
+ *               response: Error
+ *               error:
+ *                 type: BadRequestError
+ *                 path: /api/commentReport/createCommentReport
+ *                 statusCode: 400
+ *                 message: Bad request
+ *
+ *       500:
+ *         content:
+ *           application/json:
+ *             example:
+ *               response: Error
+ *               error:
+ *                 type: InternalServerError
+ *                 path: /api/commentReport/createCommentReport
+ *                 statusCode: 500
+ *                 message: Internal Server Error
+ *
+ */
+router.post('/createCommentReport', createCommentReport);
+
+/**
+ * @swagger
+ * /api/commentReport/updateCommentReport/{commentReportId}:
+ *   put:
+ *     security:
+ *       - bearerAuth: []
+ *     description: Create a new comment report.
+ *     tags: [CommentReport]
+ *     parameters:
+ *       - name: commentReportId
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/CommentReport'
+ *             example:
+ *               authorId: 2
+ *               commentId: 3
+ *               type: "Violação dos termos de uso"
+ *     responses:
+ *       200:
+ *         content:
+ *           application/json:
+ *             example:
+ *               response: Successful
+ *               report:
+ *                 id: 1
+ *                 authorId: 2
+ *                 commentId: 3
+ *                 type: "Violação dos termos de uso"
+ *
+ *       400:
+ *         content:
+ *           application/json:
+ *             example:
+ *               response: Error
+ *               error:
+ *                 type: BadRequestError
+ *                 path: /api/commentReport/updateCommentReport
+ *                 statusCode: 400
+ *                 message: Bad request
+ *
+ *       500:
+ *         content:
+ *           application/json:
+ *             example:
+ *               response: Error
+ *               error:
+ *                 type: InternalServerError
+ *                 path: /api/commentReport/updateCommentReport
+ *                 statusCode: 500
+ *                 message: Internal Server Error
+ *
+ */
+router.put('/updateCommentReport/:commentReportId', updateCommentReport);
 
 /**
  * @swagger
