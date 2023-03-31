@@ -1,4 +1,5 @@
 import express from 'express';
+import moderatorMiddleware from '../middleware/moderatorMiddleware';
 import {
     createPost,
     updatePost,
@@ -271,7 +272,7 @@ router.put('/disconnectTagFromPost/', disconnectTagFromPost);
  *                 message: Internal Server Error
  *
  */
-router.get('/getAllPosts', getAllPosts);
+router.get('/getAllPosts', moderatorMiddleware, getAllPosts);
 
 /**
  * @swagger

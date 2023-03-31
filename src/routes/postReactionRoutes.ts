@@ -1,4 +1,5 @@
 import express from 'express';
+import moderatorMiddleware from '../middleware/moderatorMiddleware';
 import {
     createOrUpdatePostReaction,
     getAllPostReactions,
@@ -140,7 +141,7 @@ router.post('/createOrUpdatePostReaction', createOrUpdatePostReaction);
  *                 message: Internal Server Error
  *
  */
-router.get('/getAllPostReactions', getAllPostReactions);
+router.get('/getAllPostReactions', moderatorMiddleware, getAllPostReactions);
 
 /**
  * @swagger

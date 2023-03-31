@@ -1,4 +1,5 @@
 import express from 'express';
+import moderatorMiddleware from '../middleware/moderatorMiddleware';
 import { createTag, updateTag, getAllTags, getTag, deleteTag } from '../controllers/tagController';
 
 const router = express.Router();
@@ -84,7 +85,7 @@ const router = express.Router();
  *                 message: Internal Server Error
  *
  */
-router.post('/createTag', createTag);
+router.post('/createTag', moderatorMiddleware, createTag);
 
 /**
  * @swagger
@@ -156,7 +157,7 @@ router.post('/createTag', createTag);
  *                 message: Internal Server Error
  *
  */
-router.put('/updateTag/:tagId', updateTag);
+router.put('/updateTag/:tagId', moderatorMiddleware, updateTag);
 
 /**
  * @swagger
@@ -198,7 +199,7 @@ router.put('/updateTag/:tagId', updateTag);
  *                 message: Internal Server Error
  *
  */
-router.get('/getAllTags', getAllTags);
+router.get('/getAllTags', moderatorMiddleware, getAllTags);
 
 /**
  * @swagger
@@ -260,7 +261,7 @@ router.get('/getAllTags', getAllTags);
  *                 message: Internal Server Error
  *
  */
-router.get('/getTag/:tagId', getTag);
+router.get('/getTag/:tagId', moderatorMiddleware, getTag);
 
 /**
  * @swagger
@@ -318,6 +319,6 @@ router.get('/getTag/:tagId', getTag);
  *                 message: Internal Server Error
  *
  */
-router.delete('/deleteTag/:tagId', deleteTag);
+router.delete('/deleteTag/:tagId', moderatorMiddleware, deleteTag);
 
 export default router;

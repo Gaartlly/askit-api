@@ -1,4 +1,5 @@
 import express from 'express';
+import moderatorMiddleware from '../middleware/moderatorMiddleware';
 import { updateFile, getFileById, getAllFiles, uploadFile, deleteFile } from '../controllers/fileController';
 
 const router = express.Router();
@@ -138,7 +139,7 @@ router.post('/uploadFile', uploadFile);
  *                 message: Internal Server Error
  *
  */
-router.get('/getAllFiles', getAllFiles);
+router.get('/getAllFiles', moderatorMiddleware, getAllFiles);
 
 /**
  * @swagger
