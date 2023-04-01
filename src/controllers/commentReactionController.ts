@@ -18,6 +18,18 @@ const integerValidator = z
     )
     .transform((value) => parseInt(value));
 
+const includeFields = {
+    author: {
+        select: {
+            id: true,
+            name: true,
+            email: true,
+            course: true,
+        },
+    },
+    comment: true,
+};
+
 /**
  * Create a new or update an existing comment reaction.
  *
@@ -26,13 +38,13 @@ const integerValidator = z
  * @returns {Promise<void>}
  */
 export const createOrUpdateCommentReaction = asyncHandler(async (req: Request, res: Response): Promise<void> => {
-    const createSchema = z.object({
+    const createOrUpdateSchema = z.object({
         authorId: z.number(),
         commentId: z.number(),
         type: z.enum([ReactionType.DOWNVOTE, ReactionType.UPVOTE]),
     });
 
-    const { authorId, commentId, type } = createSchema.parse(req.body);
+    const { authorId, commentId, type } = createOrUpdateSchema.parse(req.body);
 
     if (!validateUserIdentity(authorId, req.headers.authorization)) throw new UnauthorizedError('Unauthorized user');
 
@@ -52,20 +64,7 @@ export const createOrUpdateCommentReaction = asyncHandler(async (req: Request, r
                 authorId,
                 commentId,
             },
-            include: {
-                author: {
-                    select: {
-                        id: true,
-                        name: true,
-                        email: true,
-                        course: true,
-                        password: false,
-                        role: false,
-                        status: false,
-                    },
-                },
-                comment: true,
-            },
+            include: includeFields,
         });
 
     res.status(200).json(formatSuccessResponse(createdOrUpdatedCommentReaction));
@@ -107,20 +106,7 @@ export const createCommentReaction = asyncHandler(async (req: Request, res: Resp
                 authorId,
                 commentId,
             },
-            include: {
-                author: {
-                    select: {
-                        id: true,
-                        name: true,
-                        email: true,
-                        course: true,
-                        password: false,
-                        role: false,
-                        status: false,
-                    },
-                },
-                comment: true,
-            },
+            include: includeFields,
         });
 
     res.status(201).json(formatSuccessResponse(createdCommentReaction));
@@ -134,12 +120,12 @@ export const createCommentReaction = asyncHandler(async (req: Request, res: Resp
  * @returns {Promise<void>}
  */
 export const updateCommentReaction = asyncHandler(async (req: Request, res: Response): Promise<void> => {
-    const createSchema = z.object({
+    const updateSchema = z.object({
         type: z.enum([ReactionType.DOWNVOTE, ReactionType.UPVOTE]).optional(),
     });
 
     const id = await integerValidator.parseAsync(req.params.commentReactionId);
-    const { type } = createSchema.parse(req.body);
+    const { type } = updateSchema.parse(req.body);
     const commentReaction = await prismaClient.commentReaction.findUniqueOrThrow({
         where: {
             id,
@@ -156,20 +142,7 @@ export const updateCommentReaction = asyncHandler(async (req: Request, res: Resp
             data: {
                 type,
             },
-            include: {
-                author: {
-                    select: {
-                        id: true,
-                        name: true,
-                        email: true,
-                        course: true,
-                        password: false,
-                        role: false,
-                        status: false,
-                    },
-                },
-                comment: true,
-            },
+            include: includeFields,
         });
 
     res.status(200).json(formatSuccessResponse(updatedCommentReaction));
@@ -185,20 +158,7 @@ export const updateCommentReaction = asyncHandler(async (req: Request, res: Resp
 export const getAllCommentReactions = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const commentReactions: (CommentReaction & { author: UserWithoutPassword; comment: Comment })[] =
         await prismaClient.commentReaction.findMany({
-            include: {
-                author: {
-                    select: {
-                        id: true,
-                        name: true,
-                        email: true,
-                        course: true,
-                        password: false,
-                        role: false,
-                        status: false,
-                    },
-                },
-                comment: true,
-            },
+            include: includeFields,
         });
 
     res.status(200).json(formatSuccessResponse(commentReactions));
@@ -219,20 +179,7 @@ export const getCommentReaction = asyncHandler(async (req: Request, res: Respons
             where: {
                 id,
             },
-            include: {
-                author: {
-                    select: {
-                        id: true,
-                        name: true,
-                        email: true,
-                        course: true,
-                        password: false,
-                        role: false,
-                        status: false,
-                    },
-                },
-                comment: true,
-            },
+            include: includeFields,
         });
 
     if (!validateUserIdentity(commentReaction.authorId, req.headers.authorization)) throw new UnauthorizedError('Unauthorized user');
@@ -256,26 +203,14 @@ export const getCommentReactionsByAuthor = asyncHandler(async (req: Request, res
 
     if (!validateUserIdentity(authorId, req.headers.authorization)) throw new UnauthorizedError('Unauthorized user');
 
-    const commentReactions: (CommentReaction & { author: UserWithoutPassword; comment: Comment })[] =
-        await prismaClient.commentReaction.findMany({
-            where: {
-                authorId,
-            },
-            include: {
-                author: {
-                    select: {
-                        id: true,
-                        name: true,
-                        email: true,
-                        course: true,
-                        password: false,
-                        role: false,
-                        status: false,
-                    },
-                },
-                comment: true,
-            },
-        });
+    const commentReactions: (CommentReaction & { comment: Comment })[] = await prismaClient.commentReaction.findMany({
+        where: {
+            authorId,
+        },
+        include: {
+            comment: true,
+        },
+    });
 
     res.status(200).json(formatSuccessResponse(commentReactions));
 });

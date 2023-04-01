@@ -18,6 +18,18 @@ const integerValidator = z
     )
     .transform((value) => parseInt(value));
 
+const includeFields = {
+    author: {
+        select: {
+            id: true,
+            name: true,
+            email: true,
+            course: true,
+        },
+    },
+    post: true,
+};
+
 /**
  * Create a new or update an existing post reaction.
  *
@@ -26,13 +38,13 @@ const integerValidator = z
  * @returns {Promise<void>}
  */
 export const createOrUpdatePostReaction = asyncHandler(async (req: Request, res: Response): Promise<void> => {
-    const createSchema = z.object({
+    const createOrUpdateSchema = z.object({
         authorId: z.number(),
         postId: z.number(),
         type: z.enum([ReactionType.DOWNVOTE, ReactionType.UPVOTE]),
     });
 
-    const { authorId, postId, type } = createSchema.parse(req.body);
+    const { authorId, postId, type } = createOrUpdateSchema.parse(req.body);
 
     if (!validateUserIdentity(authorId, req.headers.authorization)) throw new UnauthorizedError('Unauthorized user');
 
@@ -52,20 +64,7 @@ export const createOrUpdatePostReaction = asyncHandler(async (req: Request, res:
                 authorId,
                 postId,
             },
-            include: {
-                author: {
-                    select: {
-                        id: true,
-                        name: true,
-                        email: true,
-                        course: true,
-                        password: false,
-                        role: false,
-                        status: false,
-                    },
-                },
-                post: true,
-            },
+            include: includeFields,
         }
     );
 
@@ -107,20 +106,7 @@ export const createPostReaction = asyncHandler(async (req: Request, res: Respons
             authorId,
             postId,
         },
-        include: {
-            author: {
-                select: {
-                    id: true,
-                    name: true,
-                    email: true,
-                    course: true,
-                    password: false,
-                    role: false,
-                    status: false,
-                },
-            },
-            post: true,
-        },
+        include: includeFields,
     });
 
     res.status(201).json(formatSuccessResponse(createdPostReaction));
@@ -134,12 +120,12 @@ export const createPostReaction = asyncHandler(async (req: Request, res: Respons
  * @returns {Promise<void>}
  */
 export const updatePostReaction = asyncHandler(async (req: Request, res: Response): Promise<void> => {
-    const createSchema = z.object({
+    const updateSchema = z.object({
         type: z.enum([ReactionType.DOWNVOTE, ReactionType.UPVOTE]).optional(),
     });
 
     const id = await integerValidator.parseAsync(req.params.postReactionId);
-    const { type } = createSchema.parse(req.body);
+    const { type } = updateSchema.parse(req.body);
     const postReaction = await prismaClient.postReaction.findUniqueOrThrow({
         where: {
             id,
@@ -155,20 +141,7 @@ export const updatePostReaction = asyncHandler(async (req: Request, res: Respons
         data: {
             type,
         },
-        include: {
-            author: {
-                select: {
-                    id: true,
-                    name: true,
-                    email: true,
-                    course: true,
-                    password: false,
-                    role: false,
-                    status: false,
-                },
-            },
-            post: true,
-        },
+        include: includeFields,
     });
 
     res.status(200).json(formatSuccessResponse(updatedPostReaction));
@@ -183,20 +156,7 @@ export const updatePostReaction = asyncHandler(async (req: Request, res: Respons
  */
 export const getAllPostReactions = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const postReactions: (PostReaction & { author: UserWithoutPassword; post: Post })[] = await prismaClient.postReaction.findMany({
-        include: {
-            author: {
-                select: {
-                    id: true,
-                    name: true,
-                    email: true,
-                    course: true,
-                    password: false,
-                    role: false,
-                    status: false,
-                },
-            },
-            post: true,
-        },
+        include: includeFields,
     });
 
     res.status(200).json(formatSuccessResponse(postReactions));
@@ -216,20 +176,7 @@ export const getPostReaction = asyncHandler(async (req: Request, res: Response):
         where: {
             id,
         },
-        include: {
-            author: {
-                select: {
-                    id: true,
-                    name: true,
-                    email: true,
-                    course: true,
-                    password: false,
-                    role: false,
-                    status: false,
-                },
-            },
-            post: true,
-        },
+        include: includeFields,
     });
 
     if (!validateUserIdentity(postReaction.authorId, req.headers.authorization)) throw new UnauthorizedError('Unauthorized user');
@@ -253,22 +200,11 @@ export const getPostReactionsByAuthor = asyncHandler(async (req: Request, res: R
 
     if (!validateUserIdentity(authorId, req.headers.authorization)) throw new UnauthorizedError('Unauthorized user');
 
-    const postReactions: (PostReaction & { author: UserWithoutPassword; post: Post })[] = await prismaClient.postReaction.findMany({
+    const postReactions: (PostReaction & { post: Post })[] = await prismaClient.postReaction.findMany({
         where: {
             authorId,
         },
         include: {
-            author: {
-                select: {
-                    id: true,
-                    name: true,
-                    email: true,
-                    course: true,
-                    password: false,
-                    role: false,
-                    status: false,
-                },
-            },
             post: true,
         },
     });

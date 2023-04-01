@@ -18,6 +18,24 @@ const integerValidator = z
     )
     .transform((value) => parseInt(value));
 
+const tagSchema = z.object({
+    key: z.string().min(1).max(255),
+    categoryId: z.number(),
+});
+
+const includeFields = {
+    tags: true,
+    author: {
+        select: {
+            id: true,
+            name: true,
+            email: true,
+            course: true,
+        },
+    },
+    post: true,
+};
+
 /**
  * Create a new or update an existing post report.
  *
@@ -26,21 +44,14 @@ const integerValidator = z
  * @returns {Promise<void>}
  */
 export const createOrUpdatePostReport = asyncHandler(async (req: Request, res: Response): Promise<void> => {
-    const createSchema = z.object({
+    const createOrUpdateSchema = z.object({
         authorId: z.number(),
         postId: z.number(),
         reason: z.string().min(1).max(255),
-        tags: z
-            .array(
-                z.object({
-                    key: z.string().min(1).max(255),
-                    categoryId: z.number(),
-                })
-            )
-            .optional(),
+        tags: z.array(tagSchema).optional(),
     });
 
-    const { authorId, postId, reason, tags = [] } = createSchema.parse(req.body);
+    const { authorId, postId, reason, tags = [] } = createOrUpdateSchema.parse(req.body);
 
     if (!validateUserIdentity(authorId, req.headers.authorization)) throw new UnauthorizedError('Unauthorized user');
 
@@ -95,21 +106,7 @@ export const createOrUpdatePostReport = asyncHandler(async (req: Request, res: R
                     }),
                 },
             },
-            include: {
-                tags: true,
-                author: {
-                    select: {
-                        id: true,
-                        name: true,
-                        email: true,
-                        course: true,
-                        password: false,
-                        role: false,
-                        status: false,
-                    },
-                },
-                post: true,
-            },
+            include: includeFields,
         });
 
     res.status(200).json(formatSuccessResponse(createdOrUpdatedPostReport));
@@ -127,14 +124,7 @@ export const createPostReport = asyncHandler(async (req: Request, res: Response)
         authorId: z.number(),
         postId: z.number(),
         reason: z.string().min(1).max(255),
-        tags: z
-            .array(
-                z.object({
-                    key: z.string().min(1).max(255),
-                    categoryId: z.number(),
-                })
-            )
-            .optional(),
+        tags: z.array(tagSchema).optional(),
     });
 
     const { authorId, postId, reason, tags = [] } = createSchema.parse(req.body);
@@ -175,21 +165,7 @@ export const createPostReport = asyncHandler(async (req: Request, res: Response)
                 }),
             },
         },
-        include: {
-            tags: true,
-            author: {
-                select: {
-                    id: true,
-                    name: true,
-                    email: true,
-                    course: true,
-                    password: false,
-                    role: false,
-                    status: false,
-                },
-            },
-            post: true,
-        },
+        include: includeFields,
     });
 
     res.status(201).json(formatSuccessResponse(createdPostReport));
@@ -205,14 +181,7 @@ export const createPostReport = asyncHandler(async (req: Request, res: Response)
 export const updatePostReport = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const createSchema = z.object({
         reason: z.string().min(1).max(255).optional(),
-        tags: z
-            .array(
-                z.object({
-                    key: z.string().min(1).max(255),
-                    categoryId: z.number(),
-                })
-            )
-            .optional(),
+        tags: z.array(tagSchema).optional(),
     });
 
     const id = await integerValidator.parseAsync(req.params.postReportId);
@@ -250,21 +219,7 @@ export const updatePostReport = asyncHandler(async (req: Request, res: Response)
                 }),
             },
         },
-        include: {
-            tags: true,
-            author: {
-                select: {
-                    id: true,
-                    name: true,
-                    email: true,
-                    course: true,
-                    password: false,
-                    role: false,
-                    status: false,
-                },
-            },
-            post: true,
-        },
+        include: includeFields,
     });
 
     res.status(200).json(formatSuccessResponse(updatedPostReport));
@@ -319,21 +274,7 @@ export const disconnectTagFromPostReport = asyncHandler(async (req: Request, res
  */
 export const getAllPostReports = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const postReports: (PostReport & { post: Post; author: UserWithoutPassword; tags: Tag[] })[] = await prismaClient.postReport.findMany({
-        include: {
-            author: {
-                select: {
-                    id: true,
-                    name: true,
-                    email: true,
-                    course: true,
-                    password: false,
-                    role: false,
-                    status: false,
-                },
-            },
-            post: true,
-            tags: true,
-        },
+        include: includeFields,
     });
 
     res.status(200).json(formatSuccessResponse(postReports));
@@ -354,21 +295,7 @@ export const getPostReport = asyncHandler(async (req: Request, res: Response): P
             where: {
                 id,
             },
-            include: {
-                author: {
-                    select: {
-                        id: true,
-                        name: true,
-                        email: true,
-                        course: true,
-                        password: false,
-                        role: false,
-                        status: false,
-                    },
-                },
-                post: true,
-                tags: true,
-            },
+            include: includeFields,
         });
 
     if (!validateUserIdentity(postReport.authorId, req.headers.authorization)) throw new UnauthorizedError('Unauthorized user');
@@ -398,6 +325,7 @@ export const getPostReportsByAuthor = asyncHandler(async (req: Request, res: Res
         },
         include: {
             post: true,
+            tags: true,
         },
     });
 

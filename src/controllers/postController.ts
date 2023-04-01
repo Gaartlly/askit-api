@@ -6,6 +6,7 @@ import integerValidator from '../utils/integerValidator';
 import validateUserIdentity from '../services/tokenJwtService/validateUserIdentity';
 import { File, Post, Tag } from '@prisma/client';
 import cloudinary from '../config/cloudinaryConfig';
+import { UserWithoutPassword } from '../utils/interfaces';
 
 const uploadFiles = async (files: { title?: string; path?: string }[]) => {
     return Promise.all(
@@ -19,6 +20,28 @@ const uploadFiles = async (files: { title?: string; path?: string }[]) => {
     );
 };
 
+const tagSchema = z.object({
+    key: z.string().min(1).max(255),
+    categoryId: z.number(),
+});
+
+const fileSchema = z.object({
+    title: z.string().min(1).max(255),
+    path: z.string().min(1).max(1000),
+});
+
+const includeFields = {
+    author: {
+        select: {
+            id: true,
+            name: true,
+            email: true,
+            course: true,
+        },
+    },
+    tags: true,
+    files: true,
+};
 
 /**
  * Create a new post.
@@ -32,29 +55,14 @@ export const createPost = asyncHandler(async (req: Request, res: Response): Prom
         title: z.string().min(1).max(255),
         content: z.string().min(1).max(255).optional(),
         authorId: z.number().int(),
-        tags: z
-            .array(
-                z.object({
-                    key: z.string().min(1).max(255),
-                    categoryId: z.number(),
-                })
-            )
-            .optional(),
-        files: z
-            .array(
-                z.object({
-                    title: z.string().min(1).max(255),
-                    path: z.string().min(1).max(1000),
-                })
-            )
-            .optional(),
+        tags: z.array(tagSchema).optional(),
+        files: z.array(fileSchema).optional(),
     });
-
 
     const { title, content, authorId, tags = [], files = [] } = createSchema.parse(req.body);
     if (!validateUserIdentity(authorId, req.headers.authorization)) throw new UnauthorizedError('Unauthorized user');
     const cloudinaryFiles = await uploadFiles(files);
-    const createdPost: Post & { tags: Tag[]; files: File[] } = await prismaClient.post.create({
+    const createdPost: Post & { tags: Tag[]; files: File[]; author: UserWithoutPassword } = await prismaClient.post.create({
         data: {
             title,
             content,
@@ -86,10 +94,7 @@ export const createPost = asyncHandler(async (req: Request, res: Response): Prom
                 }),
             },
         },
-        include: {
-            tags: true,
-            files: true,
-        },
+        include: includeFields,
     });
 
     res.status(201).json(formatSuccessResponse(createdPost));
@@ -107,22 +112,8 @@ export const updatePost = asyncHandler(async (req: Request, res: Response): Prom
         title: z.string().min(1).max(255).optional(),
         content: z.string().min(1).max(255).optional(),
         authorId: z.number().int().optional(),
-        tags: z
-            .array(
-                z.object({
-                    key: z.string().min(1).max(255),
-                    categoryId: z.number(),
-                })
-            )
-            .optional(),
-        files: z
-            .array(
-                z.object({
-                    title: z.string().min(1).max(255),
-                    path: z.string().min(1).max(1000),
-                })
-            )
-            .optional(),
+        tags: z.array(tagSchema).optional(),
+        files: z.array(fileSchema).optional(),
     });
 
     const id = await integerValidator.parseAsync(req.params.postId);
@@ -131,7 +122,7 @@ export const updatePost = asyncHandler(async (req: Request, res: Response): Prom
 
     if (!validateUserIdentity(authorId, req.headers.authorization)) throw new UnauthorizedError('Unauthorized user');
 
-    const updatedPost: Post & { tags: Tag[]; files: File[] } = await prismaClient.post.update({
+    const updatedPost: Post & { tags: Tag[]; files: File[]; author: UserWithoutPassword } = await prismaClient.post.update({
         where: { id },
         data: {
             title,
@@ -161,10 +152,7 @@ export const updatePost = asyncHandler(async (req: Request, res: Response): Prom
                 }),
             },
         },
-        include: {
-            tags: true,
-            files: true,
-        },
+        include: includeFields,
     });
 
     res.status(200).json(formatSuccessResponse(updatedPost));
@@ -192,7 +180,7 @@ export const disconnectTagFromPost = asyncHandler(async (req: Request, res: Resp
     });
 
     if (!validateUserIdentity(post.authorId, req.headers.authorization)) throw new UnauthorizedError('Unauthorized user');
-    
+
     const updatedPost: Post & { tags: Tag[] } = await prismaClient.post.update({
         where: {
             id: postId,
@@ -220,11 +208,8 @@ export const disconnectTagFromPost = asyncHandler(async (req: Request, res: Resp
  * @returns {Promise<void>}
  */
 export const getAllPosts = asyncHandler(async (req: Request, res: Response): Promise<void> => {
-    const posts: (Post & { tags: Tag[]; files: File[] })[] = await prismaClient.post.findMany({
-        include: {
-            tags: true,
-            files: true,
-        },
+    const posts: (Post & { tags: Tag[]; files: File[]; author: UserWithoutPassword })[] = await prismaClient.post.findMany({
+        include: includeFields,
     });
 
     res.status(200).json(formatSuccessResponse(posts));
@@ -240,14 +225,11 @@ export const getAllPosts = asyncHandler(async (req: Request, res: Response): Pro
 export const getPost = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const id = await integerValidator.parseAsync(req.params.postId);
 
-    const post: Post & { tags: Tag[]; files: File[] } = await prismaClient.post.findUniqueOrThrow({
+    const post: Post & { tags: Tag[]; files: File[]; author: UserWithoutPassword } = await prismaClient.post.findUniqueOrThrow({
         where: {
             id,
         },
-        include: {
-            tags: true,
-            files: true,
-        },
+        include: includeFields,
     });
 
     res.status(200).json(formatSuccessResponse(post));

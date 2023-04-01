@@ -18,6 +18,24 @@ const integerValidator = z
     )
     .transform((value) => parseInt(value));
 
+const tagSchema = z.object({
+    key: z.string().min(1).max(255),
+    categoryId: z.number(),
+});
+
+const includeFields = {
+    author: {
+        select: {
+            id: true,
+            name: true,
+            email: true,
+            course: true,
+        },
+    },
+    comment: true,
+    tags: true,
+};
+
 /**
  * Create a new or update an existing comment report.
  *
@@ -26,21 +44,14 @@ const integerValidator = z
  * @returns {Promise<void>}
  */
 export const createOrUpdateCommentReport = asyncHandler(async (req: Request, res: Response): Promise<void> => {
-    const createSchema = z.object({
+    const createOrUpdateSchema = z.object({
         authorId: z.number(),
         commentId: z.number(),
         reason: z.string().min(1).max(255),
-        tags: z
-            .array(
-                z.object({
-                    key: z.string().min(1).max(255),
-                    categoryId: z.number(),
-                })
-            )
-            .optional(),
+        tags: z.array(tagSchema).optional(),
     });
 
-    const { authorId, commentId, reason, tags = [] } = createSchema.parse(req.body);
+    const { authorId, commentId, reason, tags = [] } = createOrUpdateSchema.parse(req.body);
 
     if (!validateUserIdentity(authorId, req.headers.authorization)) throw new UnauthorizedError('Unauthorized user');
 
@@ -95,21 +106,7 @@ export const createOrUpdateCommentReport = asyncHandler(async (req: Request, res
                     }),
                 },
             },
-            include: {
-                tags: true,
-                author: {
-                    select: {
-                        id: true,
-                        name: true,
-                        email: true,
-                        course: true,
-                        password: false,
-                        role: false,
-                        status: false,
-                    },
-                },
-                comment: true,
-            },
+            include: includeFields,
         });
 
     res.status(200).json(formatSuccessResponse(createdOrUpdatedCommentReport));
@@ -127,14 +124,7 @@ export const createCommentReport = asyncHandler(async (req: Request, res: Respon
         authorId: z.number(),
         commentId: z.number(),
         reason: z.string().min(1).max(255),
-        tags: z
-            .array(
-                z.object({
-                    key: z.string().min(1).max(255),
-                    categoryId: z.number(),
-                })
-            )
-            .optional(),
+        tags: z.array(tagSchema).optional(),
     });
 
     const { authorId, commentId, reason, tags = [] } = createSchema.parse(req.body);
@@ -176,21 +166,7 @@ export const createCommentReport = asyncHandler(async (req: Request, res: Respon
                     }),
                 },
             },
-            include: {
-                tags: true,
-                author: {
-                    select: {
-                        id: true,
-                        name: true,
-                        email: true,
-                        course: true,
-                        password: false,
-                        role: false,
-                        status: false,
-                    },
-                },
-                comment: true,
-            },
+            include: includeFields,
         });
 
     res.status(201).json(formatSuccessResponse(createdCommentReport));
@@ -204,20 +180,13 @@ export const createCommentReport = asyncHandler(async (req: Request, res: Respon
  * @returns {Promise<void>}
  */
 export const updateCommentReport = asyncHandler(async (req: Request, res: Response): Promise<void> => {
-    const createSchema = z.object({
+    const updateSchema = z.object({
         reason: z.string().min(1).max(255).optional(),
-        tags: z
-            .array(
-                z.object({
-                    key: z.string().min(1).max(255),
-                    categoryId: z.number(),
-                })
-            )
-            .optional(),
+        tags: z.array(tagSchema).optional(),
     });
 
     const id = await integerValidator.parseAsync(req.params.commentReportId);
-    const { reason, tags = [] } = createSchema.parse(req.body);
+    const { reason, tags = [] } = updateSchema.parse(req.body);
 
     const commentReport = await prismaClient.commentReport.findUniqueOrThrow({
         where: {
@@ -252,21 +221,7 @@ export const updateCommentReport = asyncHandler(async (req: Request, res: Respon
                     }),
                 },
             },
-            include: {
-                tags: true,
-                author: {
-                    select: {
-                        id: true,
-                        name: true,
-                        email: true,
-                        course: true,
-                        password: false,
-                        role: false,
-                        status: false,
-                    },
-                },
-                comment: true,
-            },
+            include: includeFields,
         });
 
     res.status(200).json(formatSuccessResponse(updatedCommentReport));
@@ -322,21 +277,7 @@ export const disconnectTagFromCommentReport = asyncHandler(async (req: Request, 
 export const getAllCommentReports = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const commentReports: (CommentReport & { comment: Comment; tags: Tag[]; author: UserWithoutPassword })[] =
         await prismaClient.commentReport.findMany({
-            include: {
-                author: {
-                    select: {
-                        id: true,
-                        name: true,
-                        email: true,
-                        course: true,
-                        password: false,
-                        role: false,
-                        status: false,
-                    },
-                },
-                comment: true,
-                tags: true,
-            },
+            include: includeFields,
         });
 
     res.status(200).json(formatSuccessResponse(commentReports));
@@ -357,21 +298,7 @@ export const getCommentReport = asyncHandler(async (req: Request, res: Response)
             where: {
                 id,
             },
-            include: {
-                author: {
-                    select: {
-                        id: true,
-                        name: true,
-                        email: true,
-                        course: true,
-                        password: false,
-                        role: false,
-                        status: false,
-                    },
-                },
-                comment: true,
-                tags: true,
-            },
+            include: includeFields,
         });
 
     if (!validateUserIdentity(commentReport.authorId, req.headers.authorization)) throw new UnauthorizedError('Unauthorized user');
