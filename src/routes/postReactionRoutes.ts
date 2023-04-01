@@ -6,6 +6,8 @@ import {
     getPostReaction,
     deletePostReaction,
     getPostReactionsByAuthor,
+    updatePostReaction,
+    createPostReaction,
 } from '../controllers/postReactionController';
 
 const router = express.Router();
@@ -100,6 +102,122 @@ const router = express.Router();
  *
  */
 router.post('/createOrUpdatePostReaction', createOrUpdatePostReaction);
+
+/**
+ * @swagger
+ * /api/postReaction/createPostReaction:
+ *   post:
+ *     security:
+ *       - bearerAuth: []
+ *     description: Create a new post reaction.
+ *     tags: [PostReaction]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/PostReaction'
+ *             example:
+ *               authorId: 2
+ *               postId: 3
+ *               type: UPVOTE
+ *     responses:
+ *       200:
+ *         content:
+ *           application/json:
+ *             example:
+ *               response: Successful
+ *               reaction:
+ *                 id: 1
+ *                 authorId: 2
+ *                 postId: 3
+ *                 type: UPVOTE
+ *
+ *       400:
+ *         content:
+ *           application/json:
+ *             example:
+ *               response: Error
+ *               error:
+ *                 type: BadRequestError
+ *                 path: /api/postReaction/createPostReaction
+ *                 statusCode: 400
+ *                 message: Bad request
+ *
+ *       500:
+ *         content:
+ *           application/json:
+ *             example:
+ *               response: Error
+ *               error:
+ *                 type: InternalServerError
+ *                 path: /api/postReaction/createPostReaction
+ *                 statusCode: 500
+ *                 message: Internal Server Error
+ *
+ */
+router.post('/createPostReaction', createPostReaction);
+
+/**
+ * @swagger
+ * /api/postReaction/updatePostReaction/{postReactionId}:
+ *   put:
+ *     security:
+ *       - bearerAuth: []
+ *     description: Update an existing post reaction.
+ *     tags: [PostReaction]
+ *     parameters:
+ *       - name: postReactionId
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/PostReaction'
+ *             example:
+ *               authorId: 2
+ *               postId: 3
+ *               type: UPVOTE
+ *     responses:
+ *       200:
+ *         content:
+ *           application/json:
+ *             example:
+ *               response: Successful
+ *               reaction:
+ *                 id: 1
+ *                 authorId: 2
+ *                 postId: 3
+ *                 type: UPVOTE
+ *
+ *       400:
+ *         content:
+ *           application/json:
+ *             example:
+ *               response: Error
+ *               error:
+ *                 type: BadRequestError
+ *                 path: /api/postReaction/updatePostReaction
+ *                 statusCode: 400
+ *                 message: Bad request
+ *
+ *       500:
+ *         content:
+ *           application/json:
+ *             example:
+ *               response: Error
+ *               error:
+ *                 type: InternalServerError
+ *                 path: /api/postReaction/updatePostReaction
+ *                 statusCode: 500
+ *                 message: Internal Server Error
+ *
+ */
+router.put('/updatePostReaction/:postReactionId', updatePostReaction);
 
 /**
  * @swagger

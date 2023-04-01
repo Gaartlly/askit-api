@@ -19,7 +19,7 @@ const integerValidator = z
     .transform((value) => parseInt(value));
 
 /**
- * Create a new post reaction.
+ * Create a new or update an existing post reaction.
  *
  * @param {Request} req - Express Request object.
  * @param {Response} res - Express Response object.
@@ -35,15 +35,74 @@ export const createOrUpdatePostReaction = asyncHandler(async (req: Request, res:
     const { authorId, postId, type } = createSchema.parse(req.body);
 
     if (!validateUserIdentity(authorId, req.headers.authorization)) throw new UnauthorizedError('Unauthorized user');
-    
-    const createdPostReaction: PostReaction & { author: UserWithoutPassword; post: Post } = await prismaClient.postReaction.upsert({
+
+    const createdOrUpdatedPostReaction: PostReaction & { author: UserWithoutPassword; post: Post } = await prismaClient.postReaction.upsert(
+        {
+            where: {
+                authorId_postId: {
+                    authorId,
+                    postId,
+                },
+            },
+            update: {
+                type: type,
+            },
+            create: {
+                type,
+                authorId,
+                postId,
+            },
+            include: {
+                author: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true,
+                        course: true,
+                        password: false,
+                        role: false,
+                        status: false,
+                    },
+                },
+                post: true,
+            },
+        }
+    );
+
+    res.status(200).json(formatSuccessResponse(createdOrUpdatedPostReaction));
+});
+
+/**
+ * Create a new post reaction.
+ *
+ * @param {Request} req - Express Request object.
+ * @param {Response} res - Express Response object.
+ * @returns {Promise<void>}
+ */
+export const createPostReaction = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    const createSchema = z.object({
+        authorId: z.number(),
+        postId: z.number(),
+        type: z.enum([ReactionType.DOWNVOTE, ReactionType.UPVOTE]),
+    });
+
+    const { authorId, postId, type } = createSchema.parse(req.body);
+
+    if (!validateUserIdentity(authorId, req.headers.authorization)) throw new UnauthorizedError('Unauthorized user');
+
+    const existingPostReaction = await prismaClient.postReaction.findFirst({
         where: {
-            authorId_postId: { authorId, postId },
+            AND: {
+                authorId,
+                postId,
+            },
         },
-        update: {
-            type,
-        },
-        create: {
+    });
+
+    if (existingPostReaction) throw new Error('A reaction already exists with the same authorId and postId.');
+
+    const createdPostReaction: PostReaction & { author: UserWithoutPassword; post: Post } = await prismaClient.postReaction.create({
+        data: {
             type,
             authorId,
             postId,
@@ -65,6 +124,58 @@ export const createOrUpdatePostReaction = asyncHandler(async (req: Request, res:
     });
 
     res.status(201).json(formatSuccessResponse(createdPostReaction));
+});
+
+/**
+ * Update an existing post reaction.
+ *
+ * @param {Request} req - Express Request object.
+ * @param {Response} res - Express Response object.
+ * @returns {Promise<void>}
+ */
+export const updatePostReaction = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    const createSchema = z.object({
+        authorId: z.number().optional(),
+        postId: z.number().optional(),
+        type: z.enum([ReactionType.DOWNVOTE, ReactionType.UPVOTE]).optional(),
+    });
+
+    const id = await integerValidator.parseAsync(req.params.postReactionId);
+    const { authorId, postId, type } = createSchema.parse(req.body);
+    const postReaction = await prismaClient.postReaction.findUniqueOrThrow({
+        where: {
+            id,
+        },
+    });
+
+    if (!validateUserIdentity(postReaction.authorId, req.headers.authorization)) throw new UnauthorizedError('Unauthorized user');
+
+    const updatedPostReaction: PostReaction & { author: UserWithoutPassword; post: Post } = await prismaClient.postReaction.update({
+        where: {
+            id,
+        },
+        data: {
+            type,
+            authorId,
+            postId,
+        },
+        include: {
+            author: {
+                select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                    course: true,
+                    password: false,
+                    role: false,
+                    status: false,
+                },
+            },
+            post: true,
+        },
+    });
+
+    res.status(200).json(formatSuccessResponse(updatedPostReaction));
 });
 
 /**
@@ -104,7 +215,7 @@ export const getAllPostReactions = asyncHandler(async (req: Request, res: Respon
  */
 export const getPostReaction = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const id = await integerValidator.parseAsync(req.params.postReactionId);
-    
+
     const postReaction: PostReaction & { author: UserWithoutPassword; post: Post } = await prismaClient.postReaction.findUniqueOrThrow({
         where: {
             id,
