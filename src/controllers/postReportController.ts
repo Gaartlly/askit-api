@@ -204,8 +204,6 @@ export const createPostReport = asyncHandler(async (req: Request, res: Response)
  */
 export const updatePostReport = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const createSchema = z.object({
-        authorId: z.number().optional(),
-        postId: z.number().optional(),
         reason: z.string().min(1).max(255).optional(),
         tags: z
             .array(
@@ -218,7 +216,7 @@ export const updatePostReport = asyncHandler(async (req: Request, res: Response)
     });
 
     const id = await integerValidator.parseAsync(req.params.postReportId);
-    const { authorId, postId, reason, tags = [] } = createSchema.parse(req.body);
+    const { reason, tags = [] } = createSchema.parse(req.body);
 
     const postReport = await prismaClient.postReport.findUniqueOrThrow({
         where: {
@@ -234,8 +232,6 @@ export const updatePostReport = asyncHandler(async (req: Request, res: Response)
         },
         data: {
             reason,
-            postId,
-            authorId,
             tags: {
                 connectOrCreate: tags.map((tag) => {
                     const { key, categoryId } = tag;

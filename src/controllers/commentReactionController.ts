@@ -135,13 +135,11 @@ export const createCommentReaction = asyncHandler(async (req: Request, res: Resp
  */
 export const updateCommentReaction = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const createSchema = z.object({
-        authorId: z.number().optional(),
-        commentId: z.number().optional(),
         type: z.enum([ReactionType.DOWNVOTE, ReactionType.UPVOTE]).optional(),
     });
 
     const id = await integerValidator.parseAsync(req.params.commentReactionId);
-    const { authorId, commentId, type } = createSchema.parse(req.body);
+    const { type } = createSchema.parse(req.body);
     const commentReaction = await prismaClient.commentReaction.findUniqueOrThrow({
         where: {
             id,
@@ -157,8 +155,6 @@ export const updateCommentReaction = asyncHandler(async (req: Request, res: Resp
             },
             data: {
                 type,
-                authorId,
-                commentId,
             },
             include: {
                 author: {

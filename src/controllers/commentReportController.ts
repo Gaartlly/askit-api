@@ -205,8 +205,6 @@ export const createCommentReport = asyncHandler(async (req: Request, res: Respon
  */
 export const updateCommentReport = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const createSchema = z.object({
-        authorId: z.number().optional(),
-        commentId: z.number().optional(),
         reason: z.string().min(1).max(255).optional(),
         tags: z
             .array(
@@ -219,7 +217,7 @@ export const updateCommentReport = asyncHandler(async (req: Request, res: Respon
     });
 
     const id = await integerValidator.parseAsync(req.params.commentReportId);
-    const { authorId, commentId, reason, tags = [] } = createSchema.parse(req.body);
+    const { reason, tags = [] } = createSchema.parse(req.body);
 
     const commentReport = await prismaClient.commentReport.findUniqueOrThrow({
         where: {
@@ -236,8 +234,6 @@ export const updateCommentReport = asyncHandler(async (req: Request, res: Respon
             },
             data: {
                 reason,
-                commentId,
-                authorId,
                 tags: {
                     connectOrCreate: tags.map((tag) => {
                         const { key, categoryId } = tag;
