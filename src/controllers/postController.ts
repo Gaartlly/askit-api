@@ -19,7 +19,6 @@ const uploadFiles = async (files: { title?: string; path?: string }[]) => {
     );
 };
 
-
 /**
  * Create a new post.
  *
@@ -49,7 +48,6 @@ export const createPost = asyncHandler(async (req: Request, res: Response): Prom
             )
             .optional(),
     });
-
 
     const { title, content, authorId, tags = [], files = [] } = createSchema.parse(req.body);
     if (!validateUserIdentity(authorId, req.headers.authorization)) throw new UnauthorizedError('Unauthorized user');
@@ -106,7 +104,6 @@ export const updatePost = asyncHandler(async (req: Request, res: Response): Prom
     const updateSchema = z.object({
         title: z.string().min(1).max(255).optional(),
         content: z.string().min(1).max(255).optional(),
-        authorId: z.number().int().optional(),
         tags: z
             .array(
                 z.object({
@@ -126,17 +123,21 @@ export const updatePost = asyncHandler(async (req: Request, res: Response): Prom
     });
 
     const id = await integerValidator.parseAsync(req.params.postId);
-    const { title, content, authorId, tags = [], files = [] } = updateSchema.parse(req.body);
+    const { title, content, tags = [], files = [] } = updateSchema.parse(req.body);
     const cloudinaryFiles = await uploadFiles(files);
+    const post = await prismaClient.post.findUniqueOrThrow({
+        where: {
+            id,
+        },
+    });
 
-    if (!validateUserIdentity(authorId, req.headers.authorization)) throw new UnauthorizedError('Unauthorized user');
+    if (!validateUserIdentity(post.authorId, req.headers.authorization)) throw new UnauthorizedError('Unauthorized user');
 
     const updatedPost: Post & { tags: Tag[]; files: File[] } = await prismaClient.post.update({
         where: { id },
         data: {
             title,
             content,
-            authorId,
             tags: {
                 connectOrCreate: tags.map((tag) => {
                     const { key, categoryId } = tag;
@@ -192,7 +193,7 @@ export const disconnectTagFromPost = asyncHandler(async (req: Request, res: Resp
     });
 
     if (!validateUserIdentity(post.authorId, req.headers.authorization)) throw new UnauthorizedError('Unauthorized user');
-    
+
     const updatedPost: Post & { tags: Tag[] } = await prismaClient.post.update({
         where: {
             id: postId,
