@@ -1,7 +1,7 @@
 import { Response, Request } from 'express';
 import cloudinary from '../config/cloudinaryConfig';
 import { z } from 'zod';
-import { asyncHandler, formatSuccessResponse } from '../utils/responseHandler';
+import { BadRequestError, asyncHandler, formatSuccessResponse } from '../utils/responseHandler';
 import prismaClient from '../services/prisma/prismaClient';
 import integerValidator from '../utils/integerValidator';
 import { UploadApiResponse } from 'cloudinary';
@@ -15,29 +15,22 @@ import { File } from '@prisma/client';
  * @returns {Promise<void>}
  */
 export const uploadFile = asyncHandler(async (req: Request, res: Response): Promise<void> => {
-    const uploadFileSchema = z.object({
-        title: z.string().min(1).max(255),
-        path: z.string().min(1),
-        postId: z.number().int(),
-        commentId: z.number().int(),
-    });
-    const postId = await integerValidator.parseAsync(req.params.postId);
-    const { title, path, commentId } = uploadFileSchema.parse(req.body);
+    if (!req.query.postId) throw new BadRequestError('Query param error. Need to send postId correctly');
+    const postId: number = await integerValidator.parseAsync(req.query.postId);
 
-    const result: UploadApiResponse = await cloudinary.uploader.upload(path, {
-        resource_type: 'image',
-    });
+    let commentId: number;
+    if (req.query.commentId) commentId = await integerValidator.parseAsync(req.query.commentId);
 
     const fileUploaded: File = await prismaClient.file.create({
         data: {
-            title: title,
-            path: result.secure_url || result.url,
+            title: req.file.filename,
+            path: req.file.path,
             postId: postId,
             commentId: commentId,
         },
     });
 
-    res.status(200).json(formatSuccessResponse(fileUploaded));
+    res.status(200).json(formatSuccessResponse({ file: fileUploaded }));
 });
 
 /**
