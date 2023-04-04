@@ -1,6 +1,7 @@
 import express from 'express';
 import moderatorMiddleware from '../middleware/moderatorMiddleware';
 import { updateFile, getFileById, getAllFiles, uploadFile, deleteFile } from '../controllers/fileController';
+import multerUpload from '../config/multerConfig';
 
 const router = express.Router();
 
@@ -97,7 +98,7 @@ const router = express.Router();
  *                 message: Internal Server Error
  *
  */
-router.post('/uploadFile', uploadFile);
+router.post('/uploadFile', multerUpload.single('image'), uploadFile);
 
 /**
  * @swagger
