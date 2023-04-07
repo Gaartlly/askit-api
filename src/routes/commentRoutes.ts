@@ -1,4 +1,5 @@
 import express from 'express';
+import moderatorMiddleware from '../middleware/moderatorMiddleware';
 import { createComment, deleteComment, getAllComments, getCommentsByUserId, updateComment } from '../controllers/commentController';
 
 const router = express.Router();

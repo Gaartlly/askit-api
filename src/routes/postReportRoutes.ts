@@ -1,6 +1,13 @@
 import express from 'express';
 import moderatorMiddleware from '../middleware/moderatorMiddleware';
-import { createTag, updateTag, getAllTags, getTag, deleteTag } from '../controllers/tagController';
+import {
+    createOrUpdatePostReport,
+    getAllPostReports,
+    getPostReport,
+    deletePostReport,
+    disconnectTagFromPostReport,
+    getPostReportsByAuthor,
+} from '../controllers/postReportController';
 
 const router = express.Router();
 
@@ -14,53 +21,118 @@ const router = express.Router();
  *       bearerFormat: JWT
  *
  *   schemas:
- *     Tag:
+ *     PostReport:
  *       type: object
  *       properties:
  *         id:
  *           type: integer
  *           example: 1
- *         key:
- *           type: string
- *           example: "Matemática Discreta"
- *         categoryId:
+ *         authorId:
  *           type: integer
- *           example: 1
+ *           example: 2
+ *         postId:
+ *           type: integer
+ *           example: 3
+ *         reason:
+ *           type: string
+ *           example: "Violação dos termos de uso."
  *       required:
- *         - key
- *         - categoryId
+ *         - authorId
+ *         - postId
+ *         - reason
  *
  */
 
 /**
  * @swagger
- * /api/tag/createTag:
+ * /api/postReport/createOrUpdatePostReport:
  *   post:
  *     security:
  *       - bearerAuth: []
- *     description: Create a new tag.
- *     tags: [Tag]
+ *     description: Create a new post report or update an existing one containing the same foreign keys.
+ *     tags: [PostReport]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/PostReport'
+ *             example:
+ *               authorId: 2
+ *               postId: 3
+ *               type: "Violação dos termos de uso"
+ *     responses:
+ *       200:
+ *         content:
+ *           application/json:
+ *             example:
+ *               response: Successful
+ *               report:
+ *                 id: 1
+ *                 authorId: 2
+ *                 postId: 3
+ *                 type: "Violação dos termos de uso"
+ *
+ *       400:
+ *         content:
+ *           application/json:
+ *             example:
+ *               response: Error
+ *               error:
+ *                 type: BadRequestError
+ *                 path: /api/postReport/createOrUpdatePostReport
+ *                 statusCode: 400
+ *                 message: Bad request
+ *
+ *       500:
+ *         content:
+ *           application/json:
+ *             example:
+ *               response: Error
+ *               error:
+ *                 type: InternalServerError
+ *                 path: /api/postReport/createOrUpdatePostReport
+ *                 statusCode: 500
+ *                 message: Internal Server Error
+ *
+ */
+router.post('/createOrUpdatePostReport', createOrUpdatePostReport);
+
+/**
+ * @swagger
+ * /api/postReport/disconnectTagFromPostReport:
+ *   put:
+ *     security:
+ *       - bearerAuth: []
+ *     description: Update an existing post report disconnecting one of its tags.
+ *     tags: [PostReport]
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
- *             $ref: '#/components/schemas/Tag'
- *
- *           example:
- *             key: Matemática Discreta
- *             categoryId: 1
+ *             properties:
+ *               postReportId:
+ *                 type: integer
+ *                 example: 1
+ *               tagId:
+ *                 type: integer
+ *                 example: 1
+ *             required:
+ *               - postReportId
+ *               - tagId
  *     responses:
  *       200:
  *         content:
  *           application/json:
  *             example:
  *               response: Successful
- *               tag:
+ *               report:
  *                 id: 1
- *                 key: Matemática Discreta
- *                 categoryId: 1
+ *                 authorId: 2
+ *                 postId: 3
+ *                 type: "Violação dos termos de uso"
  *
  *       400:
  *         content:
@@ -69,7 +141,7 @@ const router = express.Router();
  *               response: Error
  *               error:
  *                 type: BadRequestError
- *                 path: /api/tag/createTag
+ *                 path: /api/postReport/disconnectTagFromPostReport
  *                 statusCode: 400
  *                 message: Bad request
  *
@@ -80,48 +152,147 @@ const router = express.Router();
  *               response: Error
  *               error:
  *                 type: InternalServerError
- *                 path: /api/tag/createTag
+ *                 path: /api/postReport/disconnectTagFromPostReport
  *                 statusCode: 500
  *                 message: Internal Server Error
  *
  */
-router.post('/createTag', moderatorMiddleware, createTag);
+router.put('/disconnectTagFromPostReport/', disconnectTagFromPostReport);
 
 /**
  * @swagger
- * /api/tag/updateTag/{tagId}:
- *   put:
+ * /api/postReport/getAllPostReports:
+ *   get:
  *     security:
  *       - bearerAuth: []
- *     description: Update an tag by id.
- *     tags: [Tag]
+ *     description: Retrieve all post reports.
+ *     tags: [PostReport]
+ *
+ *     responses:
+ *       200:
+ *         content:
+ *           application/json:
+ *             example:
+ *               response: Successful
+ *               reports: []
+ *
+ *       400:
+ *         content:
+ *           application/json:
+ *             example:
+ *               response: Error
+ *               error:
+ *                 type: BadRequestError
+ *                 path: /api/postReport/getAllPostReports
+ *                 statusCode: 400
+ *                 message: Bad request
+ *
+ *       500:
+ *         content:
+ *           application/json:
+ *             example:
+ *               response: Error
+ *               error:
+ *                 type: InternalServerError
+ *                 path: /api/postReport/getAllPostReports
+ *                 statusCode: 500
+ *                 message: Internal Server Error
+ *
+ */
+router.get('/getAllPostReports', moderatorMiddleware, getAllPostReports);
+
+/**
+ * @swagger
+ * /api/postReport/getPostReport/{postReportId}:
+ *   get:
+ *     security:
+ *       - bearerAuth: []
+ *     description: Retrieve a post report by id.
+ *     tags: [PostReport]
  *     parameters:
- *       - name: tagId
+ *       - name: postReportId
  *         in: path
  *         required: true
  *         schema:
  *           type: integer
+ *
+ *     responses:
+ *       200:
+ *         content:
+ *           application/json:
+ *             example:
+ *               response: Successful
+ *               report:
+ *                 id: 1
+ *                 postId: 1
+ *                 authorId: 1
+ *                 type: "Violação dos termos de uso"
+ *
+ *       400:
+ *         content:
+ *           application/json:
+ *             example:
+ *               response: Error
+ *               error:
+ *                 type: BadRequestError
+ *                 path: /api/postReport/getPostReport
+ *                 statusCode: 400
+ *                 message: Bad request
+ *
+ *       404:
+ *         content:
+ *           application/json:
+ *             example:
+ *               response: Error
+ *               error:
+ *                 type: NotFoundError
+ *                 path: /api/postReport/getPostReport
+ *                 statusCode: 404
+ *                 message: Not found
+ *
+ *       500:
+ *         content:
+ *           application/json:
+ *             example:
+ *               response: Error
+ *               error:
+ *                 type: InternalServerError
+ *                 path: /api/postReport/getPostReport
+ *                 statusCode: 500
+ *                 message: Internal Server Error
+ *
+ */
+router.get('/getPostReport/:postReportId', getPostReport);
+
+/**
+ * @swagger
+ * /api/postReport/getPostReportsByAuthor:
+ *   post:
+ *     security:
+ *       - bearerAuth: []
+ *     description: Retrieve all post reports by an author.
+ *     tags: [PostReport]
  *     requestBody:
- *       required: false
+ *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
- *             $ref: '#/components/schemas/Tag'
+ *             properties:
+ *               authorId:
+ *                 type: integer
+ *                 description: The id of the author whose post reports are being retrieved.
+ *                 example: 1
+ *             required:
+ *               - authorId
  *
- *           example:
- *             key: Matemática Discreta
- *             categoryId: 1
  *     responses:
  *       200:
  *         content:
  *           application/json:
  *             example:
  *               response: Successful
- *               tag:
- *                 id: 1
- *                 key: Matemática Discreta
- *                 categoryId: 1
+ *               reports: []
  *
  *       400:
  *         content:
@@ -130,60 +301,7 @@ router.post('/createTag', moderatorMiddleware, createTag);
  *               response: Error
  *               error:
  *                 type: BadRequestError
- *                 path: /api/tag/updateTag
- *                 statusCode: 400
- *                 message: Bad request
- *
- *       404:
- *         content:
- *           application/json:
- *             example:
- *               response: Error
- *               error:
- *                 type: NotFoundError
- *                 path: /api/tag/updateTag
- *                 statusCode: 404
- *                 message: Not found
- *
- *       500:
- *         content:
- *           application/json:
- *             example:
- *               response: Error
- *               error:
- *                 type: InternalServerError
- *                 path: /api/tag/updateTag
- *                 statusCode: 500
- *                 message: Internal Server Error
- *
- */
-router.put('/updateTag/:tagId', moderatorMiddleware, updateTag);
-
-/**
- * @swagger
- * /api/tag/getAllTags:
- *   get:
- *     security:
- *       - bearerAuth: []
- *     description: Retrieve all tags.
- *     tags: [Tag]
- *
- *     responses:
- *       200:
- *         content:
- *           application/json:
- *             example:
- *               response: Successful
- *               tags: []
- *
- *       400:
- *         content:
- *           application/json:
- *             example:
- *               response: Error
- *               error:
- *                 type: BadRequestError
- *                 path: /api/tag/getAllTags
+ *                 path: /api/postReport/getPostReportsByAuthor
  *                 statusCode: 400
  *                 message: Bad request
  *
@@ -194,85 +312,23 @@ router.put('/updateTag/:tagId', moderatorMiddleware, updateTag);
  *               response: Error
  *               error:
  *                 type: InternalServerError
- *                 path: /api/tag/getAllTags
+ *                 path: /api/postReport/getPostReportsByAuthor
  *                 statusCode: 500
  *                 message: Internal Server Error
  *
  */
-router.get('/getAllTags', moderatorMiddleware, getAllTags);
+router.post('/getPostReportsByAuthor/', getPostReportsByAuthor);
 
 /**
  * @swagger
- * /api/tag/getTag/{tagId}:
- *   get:
- *     security:
- *       - bearerAuth: []
- *     description: Retrieve a tag by id.
- *     tags: [Tag]
- *     parameters:
- *       - name: tagId
- *         in: path
- *         required: true
- *         schema:
- *           type: integer
- *
- *     responses:
- *       200:
- *         content:
- *           application/json:
- *             example:
- *               response: Successful
- *               tag:
- *                 id: 1
- *                 key: Matemática Discreta
- *                 categoryId: 1
- *
- *       400:
- *         content:
- *           application/json:
- *             example:
- *               response: Error
- *               error:
- *                 type: BadRequestError
- *                 path: /api/tag/getTag
- *                 statusCode: 400
- *                 message: Bad request
- *
- *       404:
- *         content:
- *           application/json:
- *             example:
- *               response: Error
- *               error:
- *                 type: NotFoundError
- *                 path: /api/tag/getTag
- *                 statusCode: 404
- *                 message: Not found
- *
- *       500:
- *         content:
- *           application/json:
- *             example:
- *               response: Error
- *               error:
- *                 type: InternalServerError
- *                 path: /api/tag/getTag
- *                 statusCode: 500
- *                 message: Internal Server Error
- *
- */
-router.get('/getTag/:tagId', moderatorMiddleware, getTag);
-
-/**
- * @swagger
- * /api/tag/deleteTag/{tagId}:
+ * /api/postReport/deletePostReport/{postReportId}:
  *   delete:
  *     security:
  *       - bearerAuth: []
- *     description: Delete an tag by id.
- *     tags: [Tag]
+ *     description: Delete an post report by id.
+ *     tags: [PostReport]
  *     parameters:
- *       - name: tagId
+ *       - name: postReportId
  *         in: path
  *         required: true
  *         schema:
@@ -292,7 +348,7 @@ router.get('/getTag/:tagId', moderatorMiddleware, getTag);
  *               response: Error
  *               error:
  *                 type: BadRequestError
- *                 path: /api/tag/deleteTag
+ *                 path: /api/postReport/deletePostReport
  *                 statusCode: 400
  *                 message: Bad request
  *
@@ -303,7 +359,7 @@ router.get('/getTag/:tagId', moderatorMiddleware, getTag);
  *               response: Error
  *               error:
  *                 type: NotFoundError
- *                 path: /api/tag/deleteTag
+ *                 path: /api/postReport/deletePostReport
  *                 statusCode: 404
  *                 message: Not found
  *
@@ -314,11 +370,11 @@ router.get('/getTag/:tagId', moderatorMiddleware, getTag);
  *               response: Error
  *               error:
  *                 type: InternalServerError
- *                 path: /api/tag/deleteTag
+ *                 path: /api/postReport/deletePostReport
  *                 statusCode: 500
  *                 message: Internal Server Error
  *
  */
-router.delete('/deleteTag/:tagId', moderatorMiddleware, deleteTag);
+router.delete('/deletePostReport/:postReportId', deletePostReport);
 
 export default router;

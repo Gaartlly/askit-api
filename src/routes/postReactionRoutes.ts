@@ -1,8 +1,12 @@
 import express from 'express';
-import { createUser, deleteUser, getUsers, updateUser } from '../controllers/userController';
-import adminMiddleware from '../middleware/adminMiddleware';
 import moderatorMiddleware from '../middleware/moderatorMiddleware';
-import verifyAuthentication from '../middleware/authUserMiddleware';
+import {
+    createOrUpdatePostReaction,
+    getAllPostReactions,
+    getPostReaction,
+    deletePostReaction,
+    getPostReactionsByAuthor,
+} from '../controllers/postReactionController';
 
 const router = express.Router();
 
@@ -11,120 +15,218 @@ const router = express.Router();
  * components:
  *   securitySchemes:
  *     bearerAuth:
- *       type: http
+ *       type: https
  *       scheme: bearer
  *       bearerFormat: JWT
  *
  *   schemas:
- *     User:
+ *     ReactionType:
+ *       type: string
+ *       enum: [UPVOTE, DOWNVOTE]
+ *
+ *     PostReaction:
  *       type: object
  *       properties:
  *         id:
  *           type: integer
- *           example: 10
- *         name:
- *           type: string
- *           example: "João Silva"
- *         email:
- *           type: string
- *           example: "joaosilva@ufpr.br"
- *         password:
- *           type: string
- *           example: "joaosilvapassword"
- *         role:
- *           type: string
- *           default: "USER"
- *           example: "USER"
- *         status:
- *           type: boolean
- *           default: true
- *           example: true
- *         courseId:
- *           type: integer
  *           example: 1
+ *         authorId:
+ *           type: integer
+ *           example: 2
+ *         postId:
+ *           type: integer
+ *           example: 3
+ *         type:
+ *           $ref: '#/components/schemas/ReactionType'
+ *           example: UPVOTE
  *       required:
- *         - name
- *         - email
- *         - password
- *         - courseId
+ *         - authorId
+ *         - postId
+ *         - type
+ *
  */
 
 /**
  * @swagger
- * /api/user/create-user:
+ * /api/postReaction/createOrUpdatePostReaction:
  *   post:
- *     description: Create new user.
- *     tags: [User]
+ *     security:
+ *       - bearerAuth: []
+ *     description: Create a new post reaction or update an existing one containing the same foreign keys.
+ *     tags: [PostReaction]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/PostReaction'
+ *             example:
+ *               authorId: 2
+ *               postId: 3
+ *               type: UPVOTE
+ *     responses:
+ *       200:
+ *         content:
+ *           application/json:
+ *             example:
+ *               response: Successful
+ *               reaction:
+ *                 id: 1
+ *                 authorId: 2
+ *                 postId: 3
+ *                 type: UPVOTE
+ *
+ *       400:
+ *         content:
+ *           application/json:
+ *             example:
+ *               response: Error
+ *               error:
+ *                 type: BadRequestError
+ *                 path: /api/postReaction/createOrUpdatePostReaction
+ *                 statusCode: 400
+ *                 message: Bad request
+ *
+ *       500:
+ *         content:
+ *           application/json:
+ *             example:
+ *               response: Error
+ *               error:
+ *                 type: InternalServerError
+ *                 path: /api/postReaction/createOrUpdatePostReaction
+ *                 statusCode: 500
+ *                 message: Internal Server Error
+ *
+ */
+router.post('/createOrUpdatePostReaction', createOrUpdatePostReaction);
+
+/**
+ * @swagger
+ * /api/postReaction/getAllPostReactions:
+ *   get:
+ *     security:
+ *       - bearerAuth: []
+ *     description: Retrieve all post reactions.
+ *     tags: [PostReaction]
+ *
+ *     responses:
+ *       200:
+ *         content:
+ *           application/json:
+ *             example:
+ *               response: Successful
+ *               reactions: []
+ *
+ *       400:
+ *         content:
+ *           application/json:
+ *             example:
+ *               response: Error
+ *               error:
+ *                 type: BadRequestError
+ *                 path: /api/postReaction/getAllPostReactions
+ *                 statusCode: 400
+ *                 message: Bad request
+ *
+ *       500:
+ *         content:
+ *           application/json:
+ *             example:
+ *               response: Error
+ *               error:
+ *                 type: InternalServerError
+ *                 path: /api/postReaction/getAllPostReactions
+ *                 statusCode: 500
+ *                 message: Internal Server Error
+ *
+ */
+router.get('/getAllPostReactions', moderatorMiddleware, getAllPostReactions);
+
+/**
+ * @swagger
+ * /api/postReaction/getPostReaction/{postReactionId}:
+ *   get:
+ *     security:
+ *       - bearerAuth: []
+ *     description: Retrieve a post reaction by id.
+ *     tags: [PostReaction]
+ *     parameters:
+ *       - name: postReactionId
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: integer
+ *
+ *     responses:
+ *       200:
+ *         content:
+ *           application/json:
+ *             example:
+ *               response: Successful
+ *               reaction:
+ *                 id: 1
+ *                 postId: 1
+ *                 authorId: 1
+ *                 type: UPVOTE
+ *
+ *       400:
+ *         content:
+ *           application/json:
+ *             example:
+ *               response: Error
+ *               error:
+ *                 type: BadRequestError
+ *                 path: /api/postReaction/getPostReaction
+ *                 statusCode: 400
+ *                 message: Bad request
+ *
+ *       404:
+ *         content:
+ *           application/json:
+ *             example:
+ *               response: Error
+ *               error:
+ *                 type: NotFoundError
+ *                 path: /api/postReaction/getPostReaction
+ *                 statusCode: 404
+ *                 message: Not found
+ *
+ *       500:
+ *         content:
+ *           application/json:
+ *             example:
+ *               response: Error
+ *               error:
+ *                 type: InternalServerError
+ *                 path: /api/postReaction/getPostReaction
+ *                 statusCode: 500
+ *                 message: Internal Server Error
+ *
+ */
+router.get('/getPostReaction/:postReactionId', getPostReaction);
+
+/**
+ * @swagger
+ * /api/postReaction/getPostReactionsByAuthor:
+ *   post:
+ *     security:
+ *       - bearerAuth: []
+ *     description: Retrieve all post reactions by an author.
+ *     tags: [PostReaction]
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
- *             $ref: '#/components/schemas/User'
- *
- *           example:
- *             name: João Silva Camargo
- *             email: joaosilva@ufpr.br
- *             password: joaosilvapassword
- *             courseId: 1
- *
- *     responses:
- *       201:
- *         content:
- *           application/json:
- *             example:
- *               response: Successful
- *               user:
- *                 id: 25
- *                 name: João Silva Camargo
- *                 email: joaosilva@ufpr.br
- *                 courseId: 1
- *
- *       400:
- *         content:
- *           application/json:
- *             example:
- *               response: Error
- *               error:
- *                 type: BadRequestError
- *                 path: /api/createUser
- *                 statusCode: 400
- *                 message: Bad request
- *
- *       404:
- *         content:
- *           application/json:
- *             example:
- *               response: Error
- *               error:
- *                 type: NotFoundError
- *                 path: /api/createUser
- *                 statusCode: 404
- *                 message: Not found
- *
- *       500:
- *         content:
- *           application/json:
- *             example:
- *               response: Error
- *               error:
- *                 type: InternalServerError
- *                 path: /api/createUser
- *                 statusCode: 500
- *                 message: Internal Server Error
- *
- */
-router.post('/create-user', createUser);
-
-/**
- * @swagger
- * /api/user/get-users:
- *   get:
- *     security:
- *       - bearerAuth: []
- *     description: Retrieve all users.
- *     tags: [User]
+ *             properties:
+ *               authorId:
+ *                 type: integer
+ *                 description: The id of the author whose post reactions are being retrieved.
+ *                 example: 1
+ *             required:
+ *               - authorId
  *
  *     responses:
  *       200:
@@ -132,7 +234,7 @@ router.post('/create-user', createUser);
  *           application/json:
  *             example:
  *               response: Successful
- *               users: []
+ *               reactions: []
  *
  *       400:
  *         content:
@@ -141,20 +243,9 @@ router.post('/create-user', createUser);
  *               response: Error
  *               error:
  *                 type: BadRequestError
- *                 path: /api/get-users
+ *                 path: /api/postReaction/getPostReactionsByAuthor
  *                 statusCode: 400
  *                 message: Bad request
- *
- *       404:
- *         content:
- *           application/json:
- *             example:
- *               response: Error
- *               error:
- *                 type: NotFoundError
- *                 path: /api/get-users
- *                 statusCode: 404
- *                 message: Not found
  *
  *       500:
  *         content:
@@ -163,92 +254,27 @@ router.post('/create-user', createUser);
  *               response: Error
  *               error:
  *                 type: InternalServerError
- *                 path: /api/get-users
+ *                 path: /api/postReaction/getPostReactionsByAuthor
  *                 statusCode: 500
  *                 message: Internal Server Error
  *
  */
-router.get('/get-users', verifyAuthentication, getUsers);
+router.post('/getPostReactionsByAuthor/', getPostReactionsByAuthor);
 
 /**
  * @swagger
- * /api/user/updateUser/{userId}:
- *   put:
- *     security:
- *       - bearerAuth: []
- *     description: Update user.
- *     tags: [User]
- *     parameters:
- *       - in: path
- *         name: userId
- *         required: true
- *         schema:
- *           type: integer
- *           minimum: 1
- *
- *     responses:
- *       200:
- *         content:
- *           application/json:
- *             example:
- *               response: Successful
- *               user:
- *                 id: 25
- *                 name: João Silva Camargo Martins
- *                 email: joaosilvamartins@ufpr.br
- *                 courseId: 1
- *
- *       400:
- *         content:
- *           application/json:
- *             example:
- *               response: Error
- *               error:
- *                 type: BadRequestError
- *                 path: /api/update-user
- *                 statusCode: 400
- *                 message: Bad request
- *
- *       404:
- *         content:
- *           application/json:
- *             example:
- *               response: Error
- *               error:
- *                 type: NotFoundError
- *                 path: /api/update-user
- *                 statusCode: 404
- *                 message: Not found
- *
- *       500:
- *         content:
- *           application/json:
- *             example:
- *               response: Error
- *               error:
- *                 type: InternalServerError
- *                 path: /api/update-user
- *                 statusCode: 500
- *                 message: Internal Server Error
- *
- */
-router.put('/update-user/:id', verifyAuthentication, updateUser);
-
-/**
- * @swagger
- * /api/user/delete-user/{userId}:
+ * /api/postReaction/deletePostReaction/{postReactionId}:
  *   delete:
  *     security:
  *       - bearerAuth: []
- *     description: Delete user.
- *     tags: [User]
+ *     description: Delete an post reaction by id.
+ *     tags: [PostReaction]
  *     parameters:
- *       - in: path
- *         name: userId
+ *       - name: postReactionId
+ *         in: path
  *         required: true
  *         schema:
  *           type: integer
- *           minimum: 1
  *
  *     responses:
  *       200:
@@ -264,7 +290,7 @@ router.put('/update-user/:id', verifyAuthentication, updateUser);
  *               response: Error
  *               error:
  *                 type: BadRequestError
- *                 path: /api/delete-user
+ *                 path: /api/postReaction/deletePostReaction
  *                 statusCode: 400
  *                 message: Bad request
  *
@@ -275,7 +301,7 @@ router.put('/update-user/:id', verifyAuthentication, updateUser);
  *               response: Error
  *               error:
  *                 type: NotFoundError
- *                 path: /api/delete-user
+ *                 path: /api/postReaction/deletePostReaction
  *                 statusCode: 404
  *                 message: Not found
  *
@@ -286,11 +312,11 @@ router.put('/update-user/:id', verifyAuthentication, updateUser);
  *               response: Error
  *               error:
  *                 type: InternalServerError
- *                 path: /api/delete-user
+ *                 path: /api/postReaction/deletePostReaction
  *                 statusCode: 500
  *                 message: Internal Server Error
  *
  */
-router.delete('/delete-user/:id', verifyAuthentication, deleteUser);
+router.delete('/deletePostReaction/:postReactionId', deletePostReaction);
 
 export default router;

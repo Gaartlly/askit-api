@@ -20,10 +20,10 @@ export const createTag = asyncHandler(async (req: Request, res: Response): Promi
 
     const { key, categoryId } = createSchema.parse(req.body);
 
-    const createdTag = await prismaClient.tag.create({
+    const createdTag: Tag = await prismaClient.tag.create({
         data: {
             key,
-            categoryId
+            categoryId,
         },
     });
 
@@ -40,16 +40,18 @@ export const createTag = asyncHandler(async (req: Request, res: Response): Promi
 export const updateTag = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const updateSchema = z.object({
         key: z.string().min(1).max(255).optional(),
+        categoryId: z.number().int().optional(),
     });
     const id = await integerValidator.parseAsync(req.params.tagId);
-    const { key } = updateSchema.parse(req.body);
+    const { key, categoryId } = updateSchema.parse(req.body);
 
     const updatedTag: Tag = await prismaClient.tag.update({
         where: {
-            id
+            id,
         },
         data: {
-            key
+            key,
+            categoryId,
         },
     });
 
@@ -64,7 +66,7 @@ export const updateTag = asyncHandler(async (req: Request, res: Response): Promi
  * @returns {Promise<void>}
  */
 export const getAllTags = asyncHandler(async (req: Request, res: Response): Promise<void> => {
-    const tags = await prismaClient.tag.findMany();
+    const tags: Tag[] = await prismaClient.tag.findMany();
     res.status(200).json(formatSuccessResponse(tags));
 });
 
@@ -78,12 +80,12 @@ export const getAllTags = asyncHandler(async (req: Request, res: Response): Prom
 export const getTag = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const id = await integerValidator.parseAsync(req.params.tagId);
 
-    const tag = await prismaClient.tag.findUniqueOrThrow({
+    const tag: Tag = await prismaClient.tag.findUniqueOrThrow({
         where: {
-            id
-        }
+            id,
+        },
     });
-    
+
     res.status(200).json(formatSuccessResponse(tag));
 });
 
@@ -97,10 +99,10 @@ export const getTag = asyncHandler(async (req: Request, res: Response): Promise<
 export const deleteTag = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const id = await integerValidator.parseAsync(req.params.tagId);
 
-    const deletedTag = await prismaClient.tag.deleteMany({ 
-        where: { 
-            id 
-        } 
+    const deletedTag: Tag = await prismaClient.tag.delete({
+        where: {
+            id,
+        },
     });
 
     res.status(200).json(formatSuccessResponse(deletedTag));

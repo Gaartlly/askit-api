@@ -1,8 +1,12 @@
 import express from 'express';
-import { createUser, deleteUser, getUsers, updateUser } from '../controllers/userController';
-import adminMiddleware from '../middleware/adminMiddleware';
 import moderatorMiddleware from '../middleware/moderatorMiddleware';
-import verifyAuthentication from '../middleware/authUserMiddleware';
+import {
+    createUserControl,
+    updateUserControl,
+    getAllUserControls,
+    getUserControl,
+    deleteUserControl,
+} from '../controllers/userControlController';
 
 const router = express.Router();
 
@@ -11,128 +15,58 @@ const router = express.Router();
  * components:
  *   securitySchemes:
  *     bearerAuth:
- *       type: http
+ *       type: https
  *       scheme: bearer
  *       bearerFormat: JWT
  *
  *   schemas:
- *     User:
+ *     UserControl:
  *       type: object
  *       properties:
  *         id:
  *           type: integer
- *           example: 10
- *         name:
+ *           example: 1
+ *         reason:
  *           type: string
- *           example: "João Silva"
- *         email:
- *           type: string
- *           example: "joaosilva@ufpr.br"
- *         password:
- *           type: string
- *           example: "joaosilvapassword"
- *         role:
- *           type: string
- *           default: "USER"
- *           example: "USER"
- *         status:
- *           type: boolean
- *           default: true
- *           example: true
- *         courseId:
+ *           example: "Violação dos termos de uso."
+ *         userId:
  *           type: integer
  *           example: 1
  *       required:
- *         - name
- *         - email
- *         - password
- *         - courseId
+ *         - reason
+ *         - userId
+ *
  */
 
 /**
  * @swagger
- * /api/user/create-user:
+ * /api/userControl/createUserControl:
  *   post:
- *     description: Create new user.
- *     tags: [User]
+ *     security:
+ *       - bearerAuth: []
+ *     description: Create a new userControl.
+ *     tags: [UserControl]
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
- *             $ref: '#/components/schemas/User'
+ *             $ref: '#/components/schemas/UserControl'
  *
  *           example:
- *             name: João Silva Camargo
- *             email: joaosilva@ufpr.br
- *             password: joaosilvapassword
- *             courseId: 1
- *
- *     responses:
- *       201:
- *         content:
- *           application/json:
- *             example:
- *               response: Successful
- *               user:
- *                 id: 25
- *                 name: João Silva Camargo
- *                 email: joaosilva@ufpr.br
- *                 courseId: 1
- *
- *       400:
- *         content:
- *           application/json:
- *             example:
- *               response: Error
- *               error:
- *                 type: BadRequestError
- *                 path: /api/createUser
- *                 statusCode: 400
- *                 message: Bad request
- *
- *       404:
- *         content:
- *           application/json:
- *             example:
- *               response: Error
- *               error:
- *                 type: NotFoundError
- *                 path: /api/createUser
- *                 statusCode: 404
- *                 message: Not found
- *
- *       500:
- *         content:
- *           application/json:
- *             example:
- *               response: Error
- *               error:
- *                 type: InternalServerError
- *                 path: /api/createUser
- *                 statusCode: 500
- *                 message: Internal Server Error
- *
- */
-router.post('/create-user', createUser);
-
-/**
- * @swagger
- * /api/user/get-users:
- *   get:
- *     security:
- *       - bearerAuth: []
- *     description: Retrieve all users.
- *     tags: [User]
- *
+ *             reason: "Violação dos termos de uso."
+ *             userId: 1
  *     responses:
  *       200:
  *         content:
  *           application/json:
  *             example:
  *               response: Successful
- *               users: []
+ *               userControl:
+ *                 id: 1
+ *                 reason: "Violação dos termos de uso."
+ *                 userId: 1
  *
  *       400:
  *         content:
@@ -141,20 +75,9 @@ router.post('/create-user', createUser);
  *               response: Error
  *               error:
  *                 type: BadRequestError
- *                 path: /api/get-users
+ *                 path: /api/userControl/createUserControl
  *                 statusCode: 400
  *                 message: Bad request
- *
- *       404:
- *         content:
- *           application/json:
- *             example:
- *               response: Error
- *               error:
- *                 type: NotFoundError
- *                 path: /api/get-users
- *                 statusCode: 404
- *                 message: Not found
  *
  *       500:
  *         content:
@@ -163,40 +86,48 @@ router.post('/create-user', createUser);
  *               response: Error
  *               error:
  *                 type: InternalServerError
- *                 path: /api/get-users
+ *                 path: /api/userControl/createUserControl
  *                 statusCode: 500
  *                 message: Internal Server Error
  *
  */
-router.get('/get-users', verifyAuthentication, getUsers);
+router.post('/createUserControl', moderatorMiddleware, createUserControl);
 
 /**
  * @swagger
- * /api/user/updateUser/{userId}:
+ * /api/userControl/updateUserControl/{userControlId}:
  *   put:
  *     security:
  *       - bearerAuth: []
- *     description: Update user.
- *     tags: [User]
+ *     description: Update an userControl by id.
+ *     tags: [UserControl]
  *     parameters:
- *       - in: path
- *         name: userId
+ *       - name: userControlId
+ *         in: path
  *         required: true
  *         schema:
  *           type: integer
- *           minimum: 1
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             $ref: '#/components/schemas/UserControl'
  *
+ *           example:
+ *             reason: "Violação dos termos de uso."
+ *             userId: 1
  *     responses:
  *       200:
  *         content:
  *           application/json:
  *             example:
  *               response: Successful
- *               user:
- *                 id: 25
- *                 name: João Silva Camargo Martins
- *                 email: joaosilvamartins@ufpr.br
- *                 courseId: 1
+ *               userControl:
+ *                 id: 1
+ *                 reason: "Violação dos termos de uso."
+ *                 userId: 1
  *
  *       400:
  *         content:
@@ -205,7 +136,7 @@ router.get('/get-users', verifyAuthentication, getUsers);
  *               response: Error
  *               error:
  *                 type: BadRequestError
- *                 path: /api/update-user
+ *                 path: /api/userControl/updateUserControl
  *                 statusCode: 400
  *                 message: Bad request
  *
@@ -216,7 +147,7 @@ router.get('/get-users', verifyAuthentication, getUsers);
  *               response: Error
  *               error:
  *                 type: NotFoundError
- *                 path: /api/update-user
+ *                 path: /api/userControl/updateUserControl
  *                 statusCode: 404
  *                 message: Not found
  *
@@ -227,28 +158,131 @@ router.get('/get-users', verifyAuthentication, getUsers);
  *               response: Error
  *               error:
  *                 type: InternalServerError
- *                 path: /api/update-user
+ *                 path: /api/userControl/updateUserControl
  *                 statusCode: 500
  *                 message: Internal Server Error
  *
  */
-router.put('/update-user/:id', verifyAuthentication, updateUser);
+router.put('/updateUserControl/:userControlId', moderatorMiddleware, updateUserControl);
 
 /**
  * @swagger
- * /api/user/delete-user/{userId}:
- *   delete:
+ * /api/userControl/getAllUserControls:
+ *   get:
  *     security:
  *       - bearerAuth: []
- *     description: Delete user.
- *     tags: [User]
+ *     description: Retrieve all userControls.
+ *     tags: [UserControl]
+ *
+ *     responses:
+ *       200:
+ *         content:
+ *           application/json:
+ *             example:
+ *               response: Successful
+ *               userControls: []
+ *
+ *       400:
+ *         content:
+ *           application/json:
+ *             example:
+ *               response: Error
+ *               error:
+ *                 type: BadRequestError
+ *                 path: /api/userControl/getAllUserControls
+ *                 statusCode: 400
+ *                 message: Bad request
+ *
+ *       500:
+ *         content:
+ *           application/json:
+ *             example:
+ *               response: Error
+ *               error:
+ *                 type: InternalServerError
+ *                 path: /api/userControl/getAllUserControls
+ *                 statusCode: 500
+ *                 message: Internal Server Error
+ *
+ */
+router.get('/getAllUserControls', moderatorMiddleware, getAllUserControls);
+
+/**
+ * @swagger
+ * /api/userControl/getUserControl/{userControlId}:
+ *   get:
+ *     security:
+ *       - bearerAuth: []
+ *     description: Retrieve a userControl by id.
+ *     tags: [UserControl]
  *     parameters:
- *       - in: path
- *         name: userId
+ *       - name: userControlId
+ *         in: path
  *         required: true
  *         schema:
  *           type: integer
- *           minimum: 1
+ *
+ *     responses:
+ *       200:
+ *         content:
+ *           application/json:
+ *             example:
+ *               response: Successful
+ *               userControl:
+ *                 id: 1
+ *                 reason: "Violação dos termos de uso."
+ *                 userId: 1
+ *
+ *       400:
+ *         content:
+ *           application/json:
+ *             example:
+ *               response: Error
+ *               error:
+ *                 type: BadRequestError
+ *                 path: /api/userControl/getUserControl
+ *                 statusCode: 400
+ *                 message: Bad request
+ *
+ *       404:
+ *         content:
+ *           application/json:
+ *             example:
+ *               response: Error
+ *               error:
+ *                 type: NotFoundError
+ *                 path: /api/userControl/getUserControl
+ *                 statusCode: 404
+ *                 message: Not found
+ *
+ *       500:
+ *         content:
+ *           application/json:
+ *             example:
+ *               response: Error
+ *               error:
+ *                 type: InternalServerError
+ *                 path: /api/userControl/getUserControl
+ *                 statusCode: 500
+ *                 message: Internal Server Error
+ *
+ */
+router.get('/getUserControl/:userControlId', moderatorMiddleware, getUserControl);
+
+/**
+ * @swagger
+ * /api/userControl/deleteUserControl/{userControlId}:
+ *   delete:
+ *     security:
+ *       - bearerAuth: []
+ *     description: Delete an userControl by id.
+ *     tags: [UserControl]
+ *     parameters:
+ *       - name: userControlId
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: integer
  *
  *     responses:
  *       200:
@@ -264,7 +298,7 @@ router.put('/update-user/:id', verifyAuthentication, updateUser);
  *               response: Error
  *               error:
  *                 type: BadRequestError
- *                 path: /api/delete-user
+ *                 path: /api/userControl/deleteUserControl
  *                 statusCode: 400
  *                 message: Bad request
  *
@@ -275,7 +309,7 @@ router.put('/update-user/:id', verifyAuthentication, updateUser);
  *               response: Error
  *               error:
  *                 type: NotFoundError
- *                 path: /api/delete-user
+ *                 path: /api/userControl/deleteUserControl
  *                 statusCode: 404
  *                 message: Not found
  *
@@ -286,11 +320,11 @@ router.put('/update-user/:id', verifyAuthentication, updateUser);
  *               response: Error
  *               error:
  *                 type: InternalServerError
- *                 path: /api/delete-user
+ *                 path: /api/userControl/deleteUserControl
  *                 statusCode: 500
  *                 message: Internal Server Error
  *
  */
-router.delete('/delete-user/:id', verifyAuthentication, deleteUser);
+router.delete('/deleteUserControl/:userControlId', moderatorMiddleware, deleteUserControl);
 
 export default router;

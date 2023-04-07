@@ -1,4 +1,5 @@
 import express from 'express';
+import moderatorMiddleware from '../middleware/moderatorMiddleware';
 import { updateFile, getFileById, getAllFiles, uploadFile, deleteFile } from '../controllers/fileController';
 
 const router = express.Router();
@@ -149,9 +150,12 @@ router.get('/get-all-files', getAllFiles);
  *     description: Retrieve file by id.
  *     tags: [File]
  *     parameters:
- *       - in: path param
+ *       - in: path
  *         name: fileId
  *         required: true
+ *         schema:
+ *           type: integer
+ *           minimum: 1
  *
  *     responses:
  *       200:
@@ -211,9 +215,12 @@ router.get('/get-file-by-id/:id', getFileById);
  *     description: Delete file.
  *     tags: [File]
  *     parameters:
- *       - in: path param
+ *       - in: path
  *         name: fileId
  *         required: true
+ *         schema:
+ *           type: integer
+ *           minimum: 1
  *
  *     responses:
  *       200:
@@ -267,9 +274,12 @@ router.delete('/delete-file/:id', deleteFile);
  *     description: Update file.
  *     tags: [File]
  *     parameters:
- *       - in: path param
+ *       - in: path
  *         name: fileId
  *         required: true
+ *         schema:
+ *           type: integer
+ *           minimum: 1
  *
  *     responses:
  *       200:

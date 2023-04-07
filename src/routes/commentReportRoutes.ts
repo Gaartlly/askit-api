@@ -1,6 +1,13 @@
 import express from 'express';
 import moderatorMiddleware from '../middleware/moderatorMiddleware';
-import { createTag, updateTag, getAllTags, getTag, deleteTag } from '../controllers/tagController';
+import {
+    createOrUpdateCommentReport,
+    getAllCommentReports,
+    getCommentReport,
+    deleteCommentReport,
+    disconnectTagFromCommentReport,
+    getCommentReportsByAuthor,
+} from '../controllers/commentReportController';
 
 const router = express.Router();
 
@@ -14,53 +21,118 @@ const router = express.Router();
  *       bearerFormat: JWT
  *
  *   schemas:
- *     Tag:
+ *     CommentReport:
  *       type: object
  *       properties:
  *         id:
  *           type: integer
  *           example: 1
- *         key:
- *           type: string
- *           example: "Matemática Discreta"
- *         categoryId:
+ *         authorId:
  *           type: integer
- *           example: 1
+ *           example: 2
+ *         commentId:
+ *           type: integer
+ *           example: 3
+ *         reason:
+ *           type: string
+ *           example: "Violação dos termos de uso."
  *       required:
- *         - key
- *         - categoryId
+ *         - authorId
+ *         - commentId
+ *         - reason
  *
  */
 
 /**
  * @swagger
- * /api/tag/createTag:
+ * /api/commentReport/createOrUpdateCommentReport:
  *   post:
  *     security:
  *       - bearerAuth: []
- *     description: Create a new tag.
- *     tags: [Tag]
+ *     description: Create a new comment report or update an existing one containing the same foreign keys.
+ *     tags: [CommentReport]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/CommentReport'
+ *             example:
+ *               authorId: 2
+ *               commentId: 3
+ *               type: "Violação dos termos de uso"
+ *     responses:
+ *       200:
+ *         content:
+ *           application/json:
+ *             example:
+ *               response: Successful
+ *               report:
+ *                 id: 1
+ *                 authorId: 2
+ *                 commentId: 3
+ *                 type: "Violação dos termos de uso"
+ *
+ *       400:
+ *         content:
+ *           application/json:
+ *             example:
+ *               response: Error
+ *               error:
+ *                 type: BadRequestError
+ *                 path: /api/commentReport/createOrUpdateCommentReport
+ *                 statusCode: 400
+ *                 message: Bad request
+ *
+ *       500:
+ *         content:
+ *           application/json:
+ *             example:
+ *               response: Error
+ *               error:
+ *                 type: InternalServerError
+ *                 path: /api/commentReport/createOrUpdateCommentReport
+ *                 statusCode: 500
+ *                 message: Internal Server Error
+ *
+ */
+router.post('/createOrUpdateCommentReport', createOrUpdateCommentReport);
+
+/**
+ * @swagger
+ * /api/commentReport/disconnectTagFromCommentReport:
+ *   put:
+ *     security:
+ *       - bearerAuth: []
+ *     description: Update an existing comment report disconnecting one of its tags.
+ *     tags: [CommentReport]
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
- *             $ref: '#/components/schemas/Tag'
- *
- *           example:
- *             key: Matemática Discreta
- *             categoryId: 1
+ *             properties:
+ *               commentReportId:
+ *                 type: integer
+ *                 example: 1
+ *               tagId:
+ *                 type: integer
+ *                 example: 1
+ *             required:
+ *               - commentReportId
+ *               - tagId
  *     responses:
  *       200:
  *         content:
  *           application/json:
  *             example:
  *               response: Successful
- *               tag:
+ *               report:
  *                 id: 1
- *                 key: Matemática Discreta
- *                 categoryId: 1
+ *                 authorId: 2
+ *                 commentId: 3
+ *                 type: "Violação dos termos de uso"
  *
  *       400:
  *         content:
@@ -69,7 +141,7 @@ const router = express.Router();
  *               response: Error
  *               error:
  *                 type: BadRequestError
- *                 path: /api/tag/createTag
+ *                 path: /api/commentReport/disconnectTagFromCommentReport
  *                 statusCode: 400
  *                 message: Bad request
  *
@@ -80,48 +152,147 @@ const router = express.Router();
  *               response: Error
  *               error:
  *                 type: InternalServerError
- *                 path: /api/tag/createTag
+ *                 path: /api/commentReport/disconnectTagFromCommentReport
  *                 statusCode: 500
  *                 message: Internal Server Error
  *
  */
-router.post('/createTag', moderatorMiddleware, createTag);
+router.put('/disconnectTagFromCommentReport/', disconnectTagFromCommentReport);
 
 /**
  * @swagger
- * /api/tag/updateTag/{tagId}:
- *   put:
+ * /api/commentReport/getAllCommentReports:
+ *   get:
  *     security:
  *       - bearerAuth: []
- *     description: Update an tag by id.
- *     tags: [Tag]
+ *     description: Retrieve all comment reports.
+ *     tags: [CommentReport]
+ *
+ *     responses:
+ *       200:
+ *         content:
+ *           application/json:
+ *             example:
+ *               response: Successful
+ *               reports: []
+ *
+ *       400:
+ *         content:
+ *           application/json:
+ *             example:
+ *               response: Error
+ *               error:
+ *                 type: BadRequestError
+ *                 path: /api/commentReport/getAllCommentReports
+ *                 statusCode: 400
+ *                 message: Bad request
+ *
+ *       500:
+ *         content:
+ *           application/json:
+ *             example:
+ *               response: Error
+ *               error:
+ *                 type: InternalServerError
+ *                 path: /api/commentReport/getAllCommentReports
+ *                 statusCode: 500
+ *                 message: Internal Server Error
+ *
+ */
+router.get('/getAllCommentReports', moderatorMiddleware, getAllCommentReports);
+
+/**
+ * @swagger
+ * /api/commentReport/getCommentReport/{commentReportId}:
+ *   get:
+ *     security:
+ *       - bearerAuth: []
+ *     description: Retrieve a comment report by id.
+ *     tags: [CommentReport]
  *     parameters:
- *       - name: tagId
+ *       - name: commentReportId
  *         in: path
  *         required: true
  *         schema:
  *           type: integer
+ *
+ *     responses:
+ *       200:
+ *         content:
+ *           application/json:
+ *             example:
+ *               response: Successful
+ *               report:
+ *                 id: 1
+ *                 commentId: 1
+ *                 authorId: 1
+ *                 type: "Violação dos termos de uso"
+ *
+ *       400:
+ *         content:
+ *           application/json:
+ *             example:
+ *               response: Error
+ *               error:
+ *                 type: BadRequestError
+ *                 path: /api/commentReport/getCommentReport
+ *                 statusCode: 400
+ *                 message: Bad request
+ *
+ *       404:
+ *         content:
+ *           application/json:
+ *             example:
+ *               response: Error
+ *               error:
+ *                 type: NotFoundError
+ *                 path: /api/commentReport/getCommentReport
+ *                 statusCode: 404
+ *                 message: Not found
+ *
+ *       500:
+ *         content:
+ *           application/json:
+ *             example:
+ *               response: Error
+ *               error:
+ *                 type: InternalServerError
+ *                 path: /api/commentReport/getCommentReport
+ *                 statusCode: 500
+ *                 message: Internal Server Error
+ *
+ */
+router.get('/getCommentReport/:commentReportId', getCommentReport);
+
+/**
+ * @swagger
+ * /api/commentReport/getCommentReportsByAuthor:
+ *   post:
+ *     security:
+ *       - bearerAuth: []
+ *     description: Retrieve all comment reports by an author.
+ *     tags: [CommentReport]
  *     requestBody:
- *       required: false
+ *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
- *             $ref: '#/components/schemas/Tag'
+ *             properties:
+ *               authorId:
+ *                 type: integer
+ *                 description: The id of the author whose comment reports are being retrieved.
+ *                 example: 1
+ *             required:
+ *               - authorId
  *
- *           example:
- *             key: Matemática Discreta
- *             categoryId: 1
  *     responses:
  *       200:
  *         content:
  *           application/json:
  *             example:
  *               response: Successful
- *               tag:
- *                 id: 1
- *                 key: Matemática Discreta
- *                 categoryId: 1
+ *               reports: []
  *
  *       400:
  *         content:
@@ -130,60 +301,7 @@ router.post('/createTag', moderatorMiddleware, createTag);
  *               response: Error
  *               error:
  *                 type: BadRequestError
- *                 path: /api/tag/updateTag
- *                 statusCode: 400
- *                 message: Bad request
- *
- *       404:
- *         content:
- *           application/json:
- *             example:
- *               response: Error
- *               error:
- *                 type: NotFoundError
- *                 path: /api/tag/updateTag
- *                 statusCode: 404
- *                 message: Not found
- *
- *       500:
- *         content:
- *           application/json:
- *             example:
- *               response: Error
- *               error:
- *                 type: InternalServerError
- *                 path: /api/tag/updateTag
- *                 statusCode: 500
- *                 message: Internal Server Error
- *
- */
-router.put('/updateTag/:tagId', moderatorMiddleware, updateTag);
-
-/**
- * @swagger
- * /api/tag/getAllTags:
- *   get:
- *     security:
- *       - bearerAuth: []
- *     description: Retrieve all tags.
- *     tags: [Tag]
- *
- *     responses:
- *       200:
- *         content:
- *           application/json:
- *             example:
- *               response: Successful
- *               tags: []
- *
- *       400:
- *         content:
- *           application/json:
- *             example:
- *               response: Error
- *               error:
- *                 type: BadRequestError
- *                 path: /api/tag/getAllTags
+ *                 path: /api/commentReport/getCommentReportsByAuthor
  *                 statusCode: 400
  *                 message: Bad request
  *
@@ -194,85 +312,23 @@ router.put('/updateTag/:tagId', moderatorMiddleware, updateTag);
  *               response: Error
  *               error:
  *                 type: InternalServerError
- *                 path: /api/tag/getAllTags
+ *                 path: /api/commentReport/getCommentReportsByAuthor
  *                 statusCode: 500
  *                 message: Internal Server Error
  *
  */
-router.get('/getAllTags', moderatorMiddleware, getAllTags);
+router.post('/getCommentReportsByAuthor/', getCommentReportsByAuthor);
 
 /**
  * @swagger
- * /api/tag/getTag/{tagId}:
- *   get:
- *     security:
- *       - bearerAuth: []
- *     description: Retrieve a tag by id.
- *     tags: [Tag]
- *     parameters:
- *       - name: tagId
- *         in: path
- *         required: true
- *         schema:
- *           type: integer
- *
- *     responses:
- *       200:
- *         content:
- *           application/json:
- *             example:
- *               response: Successful
- *               tag:
- *                 id: 1
- *                 key: Matemática Discreta
- *                 categoryId: 1
- *
- *       400:
- *         content:
- *           application/json:
- *             example:
- *               response: Error
- *               error:
- *                 type: BadRequestError
- *                 path: /api/tag/getTag
- *                 statusCode: 400
- *                 message: Bad request
- *
- *       404:
- *         content:
- *           application/json:
- *             example:
- *               response: Error
- *               error:
- *                 type: NotFoundError
- *                 path: /api/tag/getTag
- *                 statusCode: 404
- *                 message: Not found
- *
- *       500:
- *         content:
- *           application/json:
- *             example:
- *               response: Error
- *               error:
- *                 type: InternalServerError
- *                 path: /api/tag/getTag
- *                 statusCode: 500
- *                 message: Internal Server Error
- *
- */
-router.get('/getTag/:tagId', moderatorMiddleware, getTag);
-
-/**
- * @swagger
- * /api/tag/deleteTag/{tagId}:
+ * /api/commentReport/deleteCommentReport/{commentReportId}:
  *   delete:
  *     security:
  *       - bearerAuth: []
- *     description: Delete an tag by id.
- *     tags: [Tag]
+ *     description: Delete an comment report by id.
+ *     tags: [CommentReport]
  *     parameters:
- *       - name: tagId
+ *       - name: commentReportId
  *         in: path
  *         required: true
  *         schema:
@@ -292,7 +348,7 @@ router.get('/getTag/:tagId', moderatorMiddleware, getTag);
  *               response: Error
  *               error:
  *                 type: BadRequestError
- *                 path: /api/tag/deleteTag
+ *                 path: /api/commentReport/deleteCommentReport
  *                 statusCode: 400
  *                 message: Bad request
  *
@@ -303,7 +359,7 @@ router.get('/getTag/:tagId', moderatorMiddleware, getTag);
  *               response: Error
  *               error:
  *                 type: NotFoundError
- *                 path: /api/tag/deleteTag
+ *                 path: /api/commentReport/deleteCommentReport
  *                 statusCode: 404
  *                 message: Not found
  *
@@ -314,11 +370,11 @@ router.get('/getTag/:tagId', moderatorMiddleware, getTag);
  *               response: Error
  *               error:
  *                 type: InternalServerError
- *                 path: /api/tag/deleteTag
+ *                 path: /api/commentReport/deleteCommentReport
  *                 statusCode: 500
  *                 message: Internal Server Error
  *
  */
-router.delete('/deleteTag/:tagId', moderatorMiddleware, deleteTag);
+router.delete('/deleteCommentReport/:commentReportId', deleteCommentReport);
 
 export default router;
