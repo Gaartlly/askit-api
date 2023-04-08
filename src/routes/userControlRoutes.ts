@@ -20,7 +20,7 @@ const router = express.Router();
  *       bearerFormat: JWT
  *
  *   schemas:
- *     UserControl:
+ *     user-control:
  *       type: object
  *       properties:
  *         id:
@@ -29,23 +29,23 @@ const router = express.Router();
  *         reason:
  *           type: string
  *           example: "Violação dos termos de uso."
- *         userId:
+ *         user-id:
  *           type: integer
  *           example: 1
  *       required:
  *         - reason
- *         - userId
+ *         - user-id
  *
  */
 
 /**
  * @swagger
- * /api/userControl/createUserControl:
+ * /api/user-control/:
  *   post:
  *     security:
  *       - bearerAuth: []
- *     description: Create a new userControl.
- *     tags: [UserControl]
+ *     description: Create a new user-control.
+ *     tags: [user-control]
  *     requestBody:
  *       required: true
  *       content:
@@ -56,17 +56,17 @@ const router = express.Router();
  *
  *           example:
  *             reason: "Violação dos termos de uso."
- *             userId: 1
+ *             user-id: 1
  *     responses:
  *       200:
  *         content:
  *           application/json:
  *             example:
  *               response: Successful
- *               userControl:
+ *               user-control:
  *                 id: 1
  *                 reason: "Violação dos termos de uso."
- *                 userId: 1
+ *                 user-id: 1
  *
  *       400:
  *         content:
@@ -75,7 +75,7 @@ const router = express.Router();
  *               response: Error
  *               error:
  *                 type: BadRequestError
- *                 path: /api/userControl/createUserControl
+ *                 path: /api/user-control/
  *                 statusCode: 400
  *                 message: Bad request
  *
@@ -86,23 +86,23 @@ const router = express.Router();
  *               response: Error
  *               error:
  *                 type: InternalServerError
- *                 path: /api/userControl/createUserControl
+ *                 path: /api/user-control/
  *                 statusCode: 500
  *                 message: Internal Server Error
  *
  */
-router.post('/createUserControl', moderatorMiddleware, createUserControl);
+router.post('/', moderatorMiddleware, createUserControl);
 
 /**
  * @swagger
- * /api/userControl/updateUserControl/{userControlId}:
+ * /api/user-control/{id}:
  *   put:
  *     security:
  *       - bearerAuth: []
  *     description: Update an userControl by id.
- *     tags: [UserControl]
+ *     tags: [user-control]
  *     parameters:
- *       - name: userControlId
+ *       - name: user-control-id
  *         in: path
  *         required: true
  *         schema:
@@ -117,17 +117,17 @@ router.post('/createUserControl', moderatorMiddleware, createUserControl);
  *
  *           example:
  *             reason: "Violação dos termos de uso."
- *             userId: 1
+ *             user-id: 1
  *     responses:
  *       200:
  *         content:
  *           application/json:
  *             example:
  *               response: Successful
- *               userControl:
+ *               user-control:
  *                 id: 1
  *                 reason: "Violação dos termos de uso."
- *                 userId: 1
+ *                 user-id: 1
  *
  *       400:
  *         content:
@@ -136,7 +136,7 @@ router.post('/createUserControl', moderatorMiddleware, createUserControl);
  *               response: Error
  *               error:
  *                 type: BadRequestError
- *                 path: /api/userControl/updateUserControl
+ *                 path: /api/user-control/
  *                 statusCode: 400
  *                 message: Bad request
  *
@@ -147,7 +147,7 @@ router.post('/createUserControl', moderatorMiddleware, createUserControl);
  *               response: Error
  *               error:
  *                 type: NotFoundError
- *                 path: /api/userControl/updateUserControl
+ *                 path: /api/user-control/
  *                 statusCode: 404
  *                 message: Not found
  *
@@ -158,21 +158,21 @@ router.post('/createUserControl', moderatorMiddleware, createUserControl);
  *               response: Error
  *               error:
  *                 type: InternalServerError
- *                 path: /api/userControl/updateUserControl
+ *                 path: /api/user-control/
  *                 statusCode: 500
  *                 message: Internal Server Error
  *
  */
-router.put('/updateUserControl/:userControlId', moderatorMiddleware, updateUserControl);
+router.put('/:id', moderatorMiddleware, updateUserControl);
 
 /**
  * @swagger
- * /api/userControl/getAllUserControls:
+ * /api/user-control/:
  *   get:
  *     security:
  *       - bearerAuth: []
  *     description: Retrieve all userControls.
- *     tags: [UserControl]
+ *     tags: [user-control]
  *
  *     responses:
  *       200:
@@ -189,7 +189,7 @@ router.put('/updateUserControl/:userControlId', moderatorMiddleware, updateUserC
  *               response: Error
  *               error:
  *                 type: BadRequestError
- *                 path: /api/userControl/getAllUserControls
+ *                 path: /api/user-control/
  *                 statusCode: 400
  *                 message: Bad request
  *
@@ -200,23 +200,23 @@ router.put('/updateUserControl/:userControlId', moderatorMiddleware, updateUserC
  *               response: Error
  *               error:
  *                 type: InternalServerError
- *                 path: /api/userControl/getAllUserControls
+ *                 path: /api/user-control/
  *                 statusCode: 500
  *                 message: Internal Server Error
  *
  */
-router.get('/getAllUserControls', moderatorMiddleware, getAllUserControls);
+router.get('/', moderatorMiddleware, getAllUserControls);
 
 /**
  * @swagger
- * /api/userControl/getUserControl/{userControlId}:
+ * /api/user-control/{id}:
  *   get:
  *     security:
  *       - bearerAuth: []
  *     description: Retrieve a userControl by id.
- *     tags: [UserControl]
+ *     tags: [user-control]
  *     parameters:
- *       - name: userControlId
+ *       - name: user-control-id
  *         in: path
  *         required: true
  *         schema:
@@ -228,10 +228,10 @@ router.get('/getAllUserControls', moderatorMiddleware, getAllUserControls);
  *           application/json:
  *             example:
  *               response: Successful
- *               userControl:
+ *               user-control:
  *                 id: 1
  *                 reason: "Violação dos termos de uso."
- *                 userId: 1
+ *                 user-id: 1
  *
  *       400:
  *         content:
@@ -240,7 +240,7 @@ router.get('/getAllUserControls', moderatorMiddleware, getAllUserControls);
  *               response: Error
  *               error:
  *                 type: BadRequestError
- *                 path: /api/userControl/getUserControl
+ *                 path: /api/user-control/
  *                 statusCode: 400
  *                 message: Bad request
  *
@@ -251,7 +251,7 @@ router.get('/getAllUserControls', moderatorMiddleware, getAllUserControls);
  *               response: Error
  *               error:
  *                 type: NotFoundError
- *                 path: /api/userControl/getUserControl
+ *                 path: /api/user-control/
  *                 statusCode: 404
  *                 message: Not found
  *
@@ -262,23 +262,23 @@ router.get('/getAllUserControls', moderatorMiddleware, getAllUserControls);
  *               response: Error
  *               error:
  *                 type: InternalServerError
- *                 path: /api/userControl/getUserControl
+ *                 path: /api/user-control/
  *                 statusCode: 500
  *                 message: Internal Server Error
  *
  */
-router.get('/getUserControl/:userControlId', moderatorMiddleware, getUserControl);
+router.get('/:id', moderatorMiddleware, getUserControl);
 
 /**
  * @swagger
- * /api/userControl/deleteUserControl/{userControlId}:
+ * /api/user-control/{id}:
  *   delete:
  *     security:
  *       - bearerAuth: []
  *     description: Delete an userControl by id.
- *     tags: [UserControl]
+ *     tags: [user-control]
  *     parameters:
- *       - name: userControlId
+ *       - name: user-control-id
  *         in: path
  *         required: true
  *         schema:
@@ -298,7 +298,7 @@ router.get('/getUserControl/:userControlId', moderatorMiddleware, getUserControl
  *               response: Error
  *               error:
  *                 type: BadRequestError
- *                 path: /api/userControl/deleteUserControl
+ *                 path: /api/user-control/
  *                 statusCode: 400
  *                 message: Bad request
  *
@@ -309,7 +309,7 @@ router.get('/getUserControl/:userControlId', moderatorMiddleware, getUserControl
  *               response: Error
  *               error:
  *                 type: NotFoundError
- *                 path: /api/userControl/deleteUserControl
+ *                 path: /api/user-control/
  *                 statusCode: 404
  *                 message: Not found
  *
@@ -320,11 +320,11 @@ router.get('/getUserControl/:userControlId', moderatorMiddleware, getUserControl
  *               response: Error
  *               error:
  *                 type: InternalServerError
- *                 path: /api/userControl/deleteUserControl
+ *                 path: /api/user-control/
  *                 statusCode: 500
  *                 message: Internal Server Error
  *
  */
-router.delete('/deleteUserControl/:userControlId', moderatorMiddleware, deleteUserControl);
+router.delete('/:id', moderatorMiddleware, deleteUserControl);
 
 export default router;

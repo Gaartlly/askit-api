@@ -39,19 +39,19 @@ const router = express.Router();
  *           type: boolean
  *           default: true
  *           example: true
- *         courseId:
+ *         course-id:
  *           type: integer
  *           example: 1
  *       required:
  *         - name
  *         - email
  *         - password
- *         - courseId
+ *         - course-id
  */
 
 /**
  * @swagger
- * /api/user/create-user:
+ * /api/user/:
  *   post:
  *     description: Create new user.
  *     tags: [User]
@@ -67,7 +67,7 @@ const router = express.Router();
  *             name: João Silva Camargo
  *             email: joaosilva@ufpr.br
  *             password: joaosilvapassword
- *             courseId: 1
+ *             course-id: 1
  *
  *     responses:
  *       201:
@@ -79,7 +79,7 @@ const router = express.Router();
  *                 id: 25
  *                 name: João Silva Camargo
  *                 email: joaosilva@ufpr.br
- *                 courseId: 1
+ *                 course-id: 1
  *
  *       400:
  *         content:
@@ -88,7 +88,7 @@ const router = express.Router();
  *               response: Error
  *               error:
  *                 type: BadRequestError
- *                 path: /api/createUser
+ *                 path: /api/user/
  *                 statusCode: 400
  *                 message: Bad request
  *
@@ -99,7 +99,7 @@ const router = express.Router();
  *               response: Error
  *               error:
  *                 type: NotFoundError
- *                 path: /api/createUser
+ *                 path: /api/user/
  *                 statusCode: 404
  *                 message: Not found
  *
@@ -110,16 +110,16 @@ const router = express.Router();
  *               response: Error
  *               error:
  *                 type: InternalServerError
- *                 path: /api/createUser
+ *                 path: /api/user/
  *                 statusCode: 500
  *                 message: Internal Server Error
  *
  */
-router.post('/create-user', createUser);
+router.post('/', createUser);
 
 /**
  * @swagger
- * /api/user/get-users:
+ * /api/user/:
  *   get:
  *     security:
  *       - bearerAuth: []
@@ -141,7 +141,7 @@ router.post('/create-user', createUser);
  *               response: Error
  *               error:
  *                 type: BadRequestError
- *                 path: /api/get-users
+ *                 path: /api/user/
  *                 statusCode: 400
  *                 message: Bad request
  *
@@ -152,7 +152,7 @@ router.post('/create-user', createUser);
  *               response: Error
  *               error:
  *                 type: NotFoundError
- *                 path: /api/get-users
+ *                 path: /api/user/
  *                 statusCode: 404
  *                 message: Not found
  *
@@ -163,16 +163,16 @@ router.post('/create-user', createUser);
  *               response: Error
  *               error:
  *                 type: InternalServerError
- *                 path: /api/get-users
+ *                 path: /api/user/
  *                 statusCode: 500
  *                 message: Internal Server Error
  *
  */
-router.get('/get-users', verifyAuthentication, getUsers);
+router.get('/', verifyAuthentication, getUsers);
 
 /**
  * @swagger
- * /api/user/updateUser/{userId}:
+ * /api/user/{id}:
  *   put:
  *     security:
  *       - bearerAuth: []
@@ -180,7 +180,7 @@ router.get('/get-users', verifyAuthentication, getUsers);
  *     tags: [User]
  *     parameters:
  *       - in: path
- *         name: userId
+ *         name: user-id
  *         required: true
  *         schema:
  *           type: integer
@@ -196,7 +196,7 @@ router.get('/get-users', verifyAuthentication, getUsers);
  *                 id: 25
  *                 name: João Silva Camargo Martins
  *                 email: joaosilvamartins@ufpr.br
- *                 courseId: 1
+ *                 course-id: 1
  *
  *       400:
  *         content:
@@ -205,7 +205,7 @@ router.get('/get-users', verifyAuthentication, getUsers);
  *               response: Error
  *               error:
  *                 type: BadRequestError
- *                 path: /api/update-user
+ *                 path: /api/user/
  *                 statusCode: 400
  *                 message: Bad request
  *
@@ -216,7 +216,7 @@ router.get('/get-users', verifyAuthentication, getUsers);
  *               response: Error
  *               error:
  *                 type: NotFoundError
- *                 path: /api/update-user
+ *                 path: /api/user/
  *                 statusCode: 404
  *                 message: Not found
  *
@@ -227,16 +227,16 @@ router.get('/get-users', verifyAuthentication, getUsers);
  *               response: Error
  *               error:
  *                 type: InternalServerError
- *                 path: /api/update-user
+ *                 path: /api/user/
  *                 statusCode: 500
  *                 message: Internal Server Error
  *
  */
-router.put('/update-user/:id', verifyAuthentication, updateUser);
+router.put('/:id', verifyAuthentication, updateUser);
 
 /**
  * @swagger
- * /api/user/delete-user/{userId}:
+ * /api/user/{id}:
  *   delete:
  *     security:
  *       - bearerAuth: []
@@ -244,7 +244,7 @@ router.put('/update-user/:id', verifyAuthentication, updateUser);
  *     tags: [User]
  *     parameters:
  *       - in: path
- *         name: userId
+ *         name: user-id
  *         required: true
  *         schema:
  *           type: integer
@@ -264,7 +264,7 @@ router.put('/update-user/:id', verifyAuthentication, updateUser);
  *               response: Error
  *               error:
  *                 type: BadRequestError
- *                 path: /api/delete-user
+ *                 path: /api/user/
  *                 statusCode: 400
  *                 message: Bad request
  *
@@ -275,7 +275,7 @@ router.put('/update-user/:id', verifyAuthentication, updateUser);
  *               response: Error
  *               error:
  *                 type: NotFoundError
- *                 path: /api/delete-user
+ *                 path: /api/user/
  *                 statusCode: 404
  *                 message: Not found
  *
@@ -286,11 +286,11 @@ router.put('/update-user/:id', verifyAuthentication, updateUser);
  *               response: Error
  *               error:
  *                 type: InternalServerError
- *                 path: /api/delete-user
+ *                 path: /api/user/
  *                 statusCode: 500
  *                 message: Internal Server Error
  *
  */
-router.delete('/delete-user/:id', verifyAuthentication, deleteUser);
+router.delete('/:id', verifyAuthentication, deleteUser);
 
 export default router;

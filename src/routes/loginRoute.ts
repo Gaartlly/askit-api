@@ -7,7 +7,7 @@ const loginRoutes = Router();
  * @swagger
  * components:
  *   schemas:
- *     SignIn:
+ *     Sign-in:
  *       type: object
  *       properties:
  *         email:
@@ -26,14 +26,14 @@ const loginRoutes = Router();
  * /api/sign-in:
  *   post:
  *     description: Login to the application
- *     tags: [SignIn]
+ *     tags: [Sign-in]
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
- *             $ref: '#/components/schemas/SignIn'
+ *             $ref: '#/components/schemas/Sign-in'
  *
  *           example:
  *             email: user@ufpr.br
@@ -80,6 +80,6 @@ const loginRoutes = Router();
  *                 message: Internal Server Error
  *
  */
-loginRoutes.post('/signin', loginController.login);
+loginRoutes.post('/sign-in', loginController.login);
 
 export default loginRoutes;

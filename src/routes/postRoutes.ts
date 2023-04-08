@@ -33,19 +33,19 @@ const router = express.Router();
  *         content:
  *           type: string
  *           example: "Conteúdo do post."
- *         authorId:
+ *         author-id:
  *           type: integer
  *           example: 2
  *       required:
  *         - title
  *         - content
- *         - authorId
+ *         - author-id
  *
  */
 
 /**
  * @swagger
- * /api/post/createPost:
+ * /api/post/:
  *   post:
  *     security:
  *       - bearerAuth: []
@@ -60,7 +60,7 @@ const router = express.Router();
  *             example:
  *               title: "Título do post"
  *               content: "Conteúdo do post."
- *               authorId: 2
+ *               author-id: 2
  *     responses:
  *       200:
  *         content:
@@ -71,7 +71,7 @@ const router = express.Router();
  *                 id: 1
  *                 title: "Título do post"
  *                 content: "Conteúdo do post."
- *                 authorId: 2
+ *                 author-id: 2
  *
  *       400:
  *         content:
@@ -80,7 +80,7 @@ const router = express.Router();
  *               response: Error
  *               error:
  *                 type: BadRequestError
- *                 path: /api/post/createPost
+ *                 path: /api/post/
  *                 statusCode: 400
  *                 message: Bad request
  *
@@ -91,23 +91,23 @@ const router = express.Router();
  *               response: Error
  *               error:
  *                 type: InternalServerError
- *                 path: /api/post/createPost
+ *                 path: /api/post/
  *                 statusCode: 500
  *                 message: Internal Server Error
  *
  */
-router.post('/createPost', createPost);
+router.post('/', createPost);
 
 /**
  * @swagger
- * /api/post/updatePost/{postId}:
+ * /api/post/{id}:
  *   put:
  *     security:
  *       - bearerAuth: []
  *     description: Update a post by id.
  *     tags: [Post]
  *     parameters:
- *       - name: postId
+ *       - name: post-id
  *         in: path
  *         required: true
  *         schema:
@@ -122,7 +122,7 @@ router.post('/createPost', createPost);
  *           example:
  *             title: "Título do post atualizado"
  *             content: "Conteúdo do post atualizado."
- *             authorId: 1
+ *             author-id: 1
  *     responses:
  *       200:
  *         content:
@@ -133,7 +133,7 @@ router.post('/createPost', createPost);
  *                 id: 1
  *                 title: "Título do post atualizado"
  *                 content: "Conteúdo do post atualizado."
- *                 authorId: 1
+ *                 author-id: 1
  *
  *       400:
  *         content:
@@ -142,7 +142,7 @@ router.post('/createPost', createPost);
  *               response: Error
  *               error:
  *                 type: BadRequestError
- *                 path: /api/post/updatePost
+ *                 path: /api/post/
  *                 statusCode: 400
  *                 message: Bad request
  *
@@ -153,7 +153,7 @@ router.post('/createPost', createPost);
  *               response: Error
  *               error:
  *                 type: NotFoundError
- *                 path: /api/post/updatePost
+ *                 path: /api/post/
  *                 statusCode: 404
  *                 message: Post not found
  *
@@ -164,16 +164,16 @@ router.post('/createPost', createPost);
  *               response: Error
  *               error:
  *                 type: InternalServerError
- *                 path: /api/post/updatePost
+ *                 path: /api/post/
  *                 statusCode: 500
  *                 message: Internal Server Error
  *
  */
-router.put('/updatePost/:postId', updatePost);
+router.put('/:id', updatePost);
 
 /**
  * @swagger
- * /api/post/disconnectTagFromPost:
+ * /api/post/{id}/tag/disconnect/{id}:
  *   put:
  *     security:
  *       - bearerAuth: []
@@ -186,15 +186,15 @@ router.put('/updatePost/:postId', updatePost);
  *           schema:
  *             type: object
  *             properties:
- *               postId:
+ *               post-id:
  *                 type: integer
  *                 example: 1
- *               tagId:
+ *               tag-id:
  *                 type: integer
  *                 example: 1
  *             required:
- *               - postId
- *               - tagId
+ *               - post-id
+ *               - tag-id
  *     responses:
  *       200:
  *         content:
@@ -205,7 +205,7 @@ router.put('/updatePost/:postId', updatePost);
  *                 id: 1
  *                 title: "Título do post"
  *                 content: "Conteúdo do post."
- *                 authorId: 2
+ *                 author-id: 2
  *
  *       400:
  *         content:
@@ -214,7 +214,7 @@ router.put('/updatePost/:postId', updatePost);
  *               response: Error
  *               error:
  *                 type: BadRequestError
- *                 path: /api/post/disconnectTagFromPost
+ *                 path: /api/post/
  *                 statusCode: 400
  *                 message: Bad request
  *
@@ -225,16 +225,16 @@ router.put('/updatePost/:postId', updatePost);
  *               response: Error
  *               error:
  *                 type: InternalServerError
- *                 path: /api/post/disconnectTagFromPost
+ *                 path: /api/post/
  *                 statusCode: 500
  *                 message: Internal Server Error
  *
  */
-router.put('/disconnectTagFromPost/', disconnectTagFromPost);
+router.put('/:id/tag/disconnect/:id', disconnectTagFromPost);
 
 /**
  * @swagger
- * /api/post/getAllPosts:
+ * /api/post/:
  *   get:
  *     security:
  *       - bearerAuth: []
@@ -256,7 +256,7 @@ router.put('/disconnectTagFromPost/', disconnectTagFromPost);
  *               response: Error
  *               error:
  *                 type: BadRequestError
- *                 path: /api/post/getAllPosts
+ *                 path: /api/post/
  *                 statusCode: 400
  *                 message: Bad request
  *
@@ -267,23 +267,23 @@ router.put('/disconnectTagFromPost/', disconnectTagFromPost);
  *               response: Error
  *               error:
  *                 type: InternalServerError
- *                 path: /api/post/getAllPosts
+ *                 path: /api/post/
  *                 statusCode: 500
  *                 message: Internal Server Error
  *
  */
-router.get('/getAllPosts', moderatorMiddleware, getAllPosts);
+router.get('/', moderatorMiddleware, getAllPosts);
 
 /**
  * @swagger
- * /api/post/getPost/{postId}:
+ * /api/post/{id}:
  *   get:
  *     security:
  *       - bearerAuth: []
  *     description: Retrieve a post by id.
  *     tags: [Post]
  *     parameters:
- *       - name: postId
+ *       - name: post-id
  *         in: path
  *         required: true
  *         schema:
@@ -299,7 +299,7 @@ router.get('/getAllPosts', moderatorMiddleware, getAllPosts);
  *                 id: 1
  *                 title: "Título do Post"
  *                 content: "Conteúdo do post."
- *                 authorId: 2
+ *                 author-id: 2
  *
  *       400:
  *         content:
@@ -308,7 +308,7 @@ router.get('/getAllPosts', moderatorMiddleware, getAllPosts);
  *               response: Error
  *               error:
  *                 type: BadRequestError
- *                 path: /api/post/getPost/
+ *                 path: /api/post/
  *                 statusCode: 400
  *                 message: Bad request
  *
@@ -319,7 +319,7 @@ router.get('/getAllPosts', moderatorMiddleware, getAllPosts);
  *               response: Error
  *               error:
  *                 type: NotFoundError
- *                 path: /api/post/getPost/
+ *                 path: /api/post/
  *                 statusCode: 404
  *                 message: Not found
  *
@@ -330,16 +330,16 @@ router.get('/getAllPosts', moderatorMiddleware, getAllPosts);
  *               response: Error
  *               error:
  *                 type: InternalServerError
- *                 path: /api/post/getPost/
+ *                 path: /api/post/
  *                 statusCode: 500
  *                 message: Internal Server Error
  *
  */
-router.get('/getPost/:postId', getPost);
+router.get('/:id', getPost);
 
 /**
  * @swagger
- * /api/post/getPostsByAuthor:
+ * /api/post/author/{id}:
  *   post:
  *     security:
  *       - bearerAuth: []
@@ -352,12 +352,12 @@ router.get('/getPost/:postId', getPost);
  *           schema:
  *             type: object
  *             properties:
- *               authorId:
+ *               author-id:
  *                 type: integer
  *                 description: The id of the author whose posts are being retrieved.
  *                 example: 1
  *             required:
- *               - authorId
+ *               - author-id
  *
  *     responses:
  *       200:
@@ -374,7 +374,7 @@ router.get('/getPost/:postId', getPost);
  *               response: Error
  *               error:
  *                 type: BadRequestError
- *                 path: /api/post/getPostsByAuthor
+ *                 path: /api/post/
  *                 statusCode: 400
  *                 message: Bad request
  *
@@ -385,23 +385,23 @@ router.get('/getPost/:postId', getPost);
  *               response: Error
  *               error:
  *                 type: InternalServerError
- *                 path: /api/post/getPostsByAuthor
+ *                 path: /api/post/
  *                 statusCode: 500
  *                 message: Internal Server Error
  *
  */
-router.post('/getPostsByAuthor/', getPostsByAuthor);
+router.post('/author/:id', getPostsByAuthor);
 
 /**
  * @swagger
- * /api/post/deletePost/{postId}:
+ * /api/post/{id}:
  *   delete:
  *     security:
  *       - bearerAuth: []
  *     description: Delete an post by id.
  *     tags: [Post]
  *     parameters:
- *       - name: postId
+ *       - name: post-id
  *         in: path
  *         required: true
  *         schema:
@@ -421,7 +421,7 @@ router.post('/getPostsByAuthor/', getPostsByAuthor);
  *               response: Error
  *               error:
  *                 type: BadRequestError
- *                 path: /api/post/deletePost
+ *                 path: /api/post/
  *                 statusCode: 400
  *                 message: Bad request
  *
@@ -432,7 +432,7 @@ router.post('/getPostsByAuthor/', getPostsByAuthor);
  *               response: Error
  *               error:
  *                 type: NotFoundError
- *                 path: /api/post/deletePost
+ *                 path: /api/post/
  *                 statusCode: 404
  *                 message: Not found
  *
@@ -443,11 +443,11 @@ router.post('/getPostsByAuthor/', getPostsByAuthor);
  *               response: Error
  *               error:
  *                 type: InternalServerError
- *                 path: /api/post/deletePost
+ *                 path: /api/post/
  *                 statusCode: 500
  *                 message: Internal Server Error
  *
  */
-router.delete('/deletePost/:postId', deletePost);
+router.delete('/:id', deletePost);
 
 export default router;
