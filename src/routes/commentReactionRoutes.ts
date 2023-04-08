@@ -166,8 +166,8 @@ router.get('/', moderatorMiddleware, getAllCommentReactions);
  *               response: Successful
  *               reaction:
  *                 id: 1
- *                 commentId: 1
- *                 authorId: 1
+ *                 comment-id: 1
+ *                 author-id: 1
  *                 type: UPVOTE
  *
  *       400:
@@ -221,12 +221,12 @@ router.get('/:id', getCommentReaction);
  *           schema:
  *             type: object
  *             properties:
- *               authorId:
+ *               author-id:
  *                 type: integer
  *                 description: The id of the author whose comment reactions are being retrieved.
  *                 example: 1
  *             required:
- *               - authorId
+ *               - author-id
  *
  *     responses:
  *       200:
