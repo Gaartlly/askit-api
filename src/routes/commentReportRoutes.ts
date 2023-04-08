@@ -21,7 +21,7 @@ const router = express.Router();
  *       bearerFormat: JWT
  *
  *   schemas:
- *     CommentReport:
+ *     comment-report:
  *       type: object
  *       properties:
  *         id:
@@ -45,7 +45,7 @@ const router = express.Router();
 
 /**
  * @swagger
- * /api/commentReport/createOrUpdateCommentReport:
+ * /api/comment-report/createOrUpdateCommentReport:
  *   post:
  *     security:
  *       - bearerAuth: []
@@ -100,12 +100,12 @@ router.post('/createOrUpdateCommentReport', createOrUpdateCommentReport);
 
 /**
  * @swagger
- * /api/commentReport/disconnectTagFromCommentReport:
+ * /api/comment-report/{id}/tag/disconnect/{id}:
  *   put:
  *     security:
  *       - bearerAuth: []
  *     description: Update an existing comment report disconnecting one of its tags.
- *     tags: [CommentReport]
+ *     tags: [comment-report]
  *     requestBody:
  *       required: true
  *       content:
@@ -113,15 +113,15 @@ router.post('/createOrUpdateCommentReport', createOrUpdateCommentReport);
  *           schema:
  *             type: object
  *             properties:
- *               commentReportId:
+ *               comment-report-id:
  *                 type: integer
  *                 example: 1
  *               tagId:
  *                 type: integer
  *                 example: 1
  *             required:
- *               - commentReportId
- *               - tagId
+ *               - comment-report-id
+ *               - tag-id
  *     responses:
  *       200:
  *         content:
@@ -141,7 +141,7 @@ router.post('/createOrUpdateCommentReport', createOrUpdateCommentReport);
  *               response: Error
  *               error:
  *                 type: BadRequestError
- *                 path: /api/commentReport/disconnectTagFromCommentReport
+ *                 path: /api/comment-report/{id}/tag/disconnect/{id}
  *                 statusCode: 400
  *                 message: Bad request
  *
@@ -152,21 +152,21 @@ router.post('/createOrUpdateCommentReport', createOrUpdateCommentReport);
  *               response: Error
  *               error:
  *                 type: InternalServerError
- *                 path: /api/commentReport/disconnectTagFromCommentReport
+ *                 path: /api/comment-report/{id}/tag/disconnect/{id}
  *                 statusCode: 500
  *                 message: Internal Server Error
  *
  */
-router.put('/disconnectTagFromCommentReport/', disconnectTagFromCommentReport);
+router.put('/comment-report/:id/tag/disconnect/:id', disconnectTagFromCommentReport);
 
 /**
  * @swagger
- * /api/commentReport/getAllCommentReports:
+ * /api/comment-report/:
  *   get:
  *     security:
  *       - bearerAuth: []
  *     description: Retrieve all comment reports.
- *     tags: [CommentReport]
+ *     tags: [comment-report]
  *
  *     responses:
  *       200:
@@ -183,7 +183,7 @@ router.put('/disconnectTagFromCommentReport/', disconnectTagFromCommentReport);
  *               response: Error
  *               error:
  *                 type: BadRequestError
- *                 path: /api/commentReport/getAllCommentReports
+ *                 path: /api/comment-report/
  *                 statusCode: 400
  *                 message: Bad request
  *
@@ -194,23 +194,23 @@ router.put('/disconnectTagFromCommentReport/', disconnectTagFromCommentReport);
  *               response: Error
  *               error:
  *                 type: InternalServerError
- *                 path: /api/commentReport/getAllCommentReports
+ *                 path: /api/comment-report/
  *                 statusCode: 500
  *                 message: Internal Server Error
  *
  */
-router.get('/getAllCommentReports', moderatorMiddleware, getAllCommentReports);
+router.get('/', moderatorMiddleware, getAllCommentReports);
 
 /**
  * @swagger
- * /api/commentReport/getCommentReport/{commentReportId}:
+ * /api/comment-report/{id}:
  *   get:
  *     security:
  *       - bearerAuth: []
  *     description: Retrieve a comment report by id.
- *     tags: [CommentReport]
+ *     tags: [comment-report]
  *     parameters:
- *       - name: commentReportId
+ *       - name: comment-report-id
  *         in: path
  *         required: true
  *         schema:
@@ -235,7 +235,7 @@ router.get('/getAllCommentReports', moderatorMiddleware, getAllCommentReports);
  *               response: Error
  *               error:
  *                 type: BadRequestError
- *                 path: /api/commentReport/getCommentReport
+ *                 path: /api/comment-report/{id}
  *                 statusCode: 400
  *                 message: Bad request
  *
@@ -246,7 +246,7 @@ router.get('/getAllCommentReports', moderatorMiddleware, getAllCommentReports);
  *               response: Error
  *               error:
  *                 type: NotFoundError
- *                 path: /api/commentReport/getCommentReport
+ *                 path: /api/comment-report/{id}
  *                 statusCode: 404
  *                 message: Not found
  *
@@ -257,21 +257,21 @@ router.get('/getAllCommentReports', moderatorMiddleware, getAllCommentReports);
  *               response: Error
  *               error:
  *                 type: InternalServerError
- *                 path: /api/commentReport/getCommentReport
+ *                 path: /api/comment-report/{id}
  *                 statusCode: 500
  *                 message: Internal Server Error
  *
  */
-router.get('/getCommentReport/:commentReportId', getCommentReport);
+router.get('/:id', getCommentReport);
 
 /**
  * @swagger
- * /api/commentReport/getCommentReportsByAuthor:
+ * /api/comment-report/author/{id}:
  *   post:
  *     security:
  *       - bearerAuth: []
  *     description: Retrieve all comment reports by an author.
- *     tags: [CommentReport]
+ *     tags: [comment-report]
  *     requestBody:
  *       required: true
  *       content:
@@ -301,7 +301,7 @@ router.get('/getCommentReport/:commentReportId', getCommentReport);
  *               response: Error
  *               error:
  *                 type: BadRequestError
- *                 path: /api/commentReport/getCommentReportsByAuthor
+ *                 path: /api/comment-report/author/{id}
  *                 statusCode: 400
  *                 message: Bad request
  *
@@ -312,23 +312,23 @@ router.get('/getCommentReport/:commentReportId', getCommentReport);
  *               response: Error
  *               error:
  *                 type: InternalServerError
- *                 path: /api/commentReport/getCommentReportsByAuthor
+ *                 path: /api/comment-report/author/{id}
  *                 statusCode: 500
  *                 message: Internal Server Error
  *
  */
-router.post('/getCommentReportsByAuthor/', getCommentReportsByAuthor);
+router.post('/author/{id}', getCommentReportsByAuthor);
 
 /**
  * @swagger
- * /api/commentReport/deleteCommentReport/{commentReportId}:
+ * /api/comment-report/{id}:
  *   delete:
  *     security:
  *       - bearerAuth: []
  *     description: Delete an comment report by id.
- *     tags: [CommentReport]
+ *     tags: [comment-report]
  *     parameters:
- *       - name: commentReportId
+ *       - name: comment-report-id
  *         in: path
  *         required: true
  *         schema:
@@ -348,7 +348,7 @@ router.post('/getCommentReportsByAuthor/', getCommentReportsByAuthor);
  *               response: Error
  *               error:
  *                 type: BadRequestError
- *                 path: /api/commentReport/deleteCommentReport
+ *                 path: /api/comment-report/{id}
  *                 statusCode: 400
  *                 message: Bad request
  *
@@ -359,7 +359,7 @@ router.post('/getCommentReportsByAuthor/', getCommentReportsByAuthor);
  *               response: Error
  *               error:
  *                 type: NotFoundError
- *                 path: /api/commentReport/deleteCommentReport
+ *                 path: /api/comment-report/{id}
  *                 statusCode: 404
  *                 message: Not found
  *
@@ -370,11 +370,11 @@ router.post('/getCommentReportsByAuthor/', getCommentReportsByAuthor);
  *               response: Error
  *               error:
  *                 type: InternalServerError
- *                 path: /api/commentReport/deleteCommentReport
+ *                 path: /api/comment-report/{id}
  *                 statusCode: 500
  *                 message: Internal Server Error
  *
  */
-router.delete('/deleteCommentReport/:commentReportId', deleteCommentReport);
+router.delete('/:id', deleteCommentReport);
 
 export default router;

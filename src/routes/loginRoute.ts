@@ -7,7 +7,7 @@ const loginRoutes = Router();
  * @swagger
  * components:
  *   schemas:
- *     SignIn:
+ *     Sign-in:
  *       type: object
  *       properties:
  *         email:
@@ -23,17 +23,17 @@ const loginRoutes = Router();
 
 /**
  * @swagger
- * /api/signin:
+ * /api/sign-in:
  *   post:
  *     description: Login to the application
- *     tags: [SignIn]
+ *     tags: [Sign-in]
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
- *             $ref: '#/components/schemas/SignIn'
+ *             $ref: '#/components/schemas/Sign-in'
  *
  *           example:
  *             email: user@ufpr.br
@@ -53,7 +53,7 @@ const loginRoutes = Router();
  *               response: Error
  *               error:
  *                 type: BadRequestError
- *                 path: /api/signin
+ *                 path: /api/sign-in
  *                 statusCode: 400
  *                 message: Bad request
  *
@@ -64,7 +64,7 @@ const loginRoutes = Router();
  *               response: Error
  *               error:
  *                 type: NotFoundError
- *                 path: /api/signin
+ *                 path: /api/sign-in
  *                 statusCode: 404
  *                 message: Not found user
  *
@@ -75,11 +75,11 @@ const loginRoutes = Router();
  *               response: Error
  *               error:
  *                 type: InternalServerError
- *                 path: /api/signin
+ *                 path: /api/sign-in
  *                 statusCode: 500
  *                 message: Internal Server Error
  *
  */
-loginRoutes.post('/signin', loginController.login);
+loginRoutes.post('/sign-in', loginController.login);
 
 export default loginRoutes;

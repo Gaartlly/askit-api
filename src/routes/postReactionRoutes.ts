@@ -24,45 +24,45 @@ const router = express.Router();
  *       type: string
  *       enum: [UPVOTE, DOWNVOTE]
  *
- *     PostReaction:
+ *     post-reaction:
  *       type: object
  *       properties:
  *         id:
  *           type: integer
  *           example: 1
- *         authorId:
+ *         author-id:
  *           type: integer
  *           example: 2
- *         postId:
+ *         post-id:
  *           type: integer
  *           example: 3
  *         type:
  *           $ref: '#/components/schemas/ReactionType'
  *           example: UPVOTE
  *       required:
- *         - authorId
- *         - postId
+ *         - author-id
+ *         - post-id
  *         - type
  *
  */
 
 /**
  * @swagger
- * /api/postReaction/createOrUpdatePostReaction:
+ * /api/post-reaction/createOrUpdatePostReaction:
  *   post:
  *     security:
  *       - bearerAuth: []
  *     description: Create a new post reaction or update an existing one containing the same foreign keys.
- *     tags: [PostReaction]
+ *     tags: [post-reaction]
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/PostReaction'
+ *             $ref: '#/components/schemas/post-reaction'
  *             example:
- *               authorId: 2
- *               postId: 3
+ *               author-id: 2
+ *               post-id: 3
  *               type: UPVOTE
  *     responses:
  *       200:
@@ -72,8 +72,8 @@ const router = express.Router();
  *               response: Successful
  *               reaction:
  *                 id: 1
- *                 authorId: 2
- *                 postId: 3
+ *                 author-id: 2
+ *                 post-id: 3
  *                 type: UPVOTE
  *
  *       400:
@@ -83,7 +83,7 @@ const router = express.Router();
  *               response: Error
  *               error:
  *                 type: BadRequestError
- *                 path: /api/postReaction/createOrUpdatePostReaction
+ *                 path: /api/post-reaction/createOrUpdatePostReaction
  *                 statusCode: 400
  *                 message: Bad request
  *
@@ -94,7 +94,7 @@ const router = express.Router();
  *               response: Error
  *               error:
  *                 type: InternalServerError
- *                 path: /api/postReaction/createOrUpdatePostReaction
+ *                 path: /api/post-reaction/createOrUpdatePostReaction
  *                 statusCode: 500
  *                 message: Internal Server Error
  *
@@ -103,12 +103,12 @@ router.post('/createOrUpdatePostReaction', createOrUpdatePostReaction);
 
 /**
  * @swagger
- * /api/postReaction/getAllPostReactions:
+ * /api/post-reaction/:
  *   get:
  *     security:
  *       - bearerAuth: []
  *     description: Retrieve all post reactions.
- *     tags: [PostReaction]
+ *     tags: [post-reaction]
  *
  *     responses:
  *       200:
@@ -125,7 +125,7 @@ router.post('/createOrUpdatePostReaction', createOrUpdatePostReaction);
  *               response: Error
  *               error:
  *                 type: BadRequestError
- *                 path: /api/postReaction/getAllPostReactions
+ *                 path: /api/post-reaction/
  *                 statusCode: 400
  *                 message: Bad request
  *
@@ -136,23 +136,23 @@ router.post('/createOrUpdatePostReaction', createOrUpdatePostReaction);
  *               response: Error
  *               error:
  *                 type: InternalServerError
- *                 path: /api/postReaction/getAllPostReactions
+ *                 path: /api/post-reaction/
  *                 statusCode: 500
  *                 message: Internal Server Error
  *
  */
-router.get('/getAllPostReactions', moderatorMiddleware, getAllPostReactions);
+router.get('/', moderatorMiddleware, getAllPostReactions);
 
 /**
  * @swagger
- * /api/postReaction/getPostReaction/{postReactionId}:
+ * /api/post-reaction/{id}:
  *   get:
  *     security:
  *       - bearerAuth: []
  *     description: Retrieve a post reaction by id.
- *     tags: [PostReaction]
+ *     tags: [post-reaction]
  *     parameters:
- *       - name: postReactionId
+ *       - name: post-reaction-id
  *         in: path
  *         required: true
  *         schema:
@@ -166,8 +166,8 @@ router.get('/getAllPostReactions', moderatorMiddleware, getAllPostReactions);
  *               response: Successful
  *               reaction:
  *                 id: 1
- *                 postId: 1
- *                 authorId: 1
+ *                 post-id: 1
+ *                 author-id: 1
  *                 type: UPVOTE
  *
  *       400:
@@ -177,7 +177,7 @@ router.get('/getAllPostReactions', moderatorMiddleware, getAllPostReactions);
  *               response: Error
  *               error:
  *                 type: BadRequestError
- *                 path: /api/postReaction/getPostReaction
+ *                 path: /api/post-reaction/
  *                 statusCode: 400
  *                 message: Bad request
  *
@@ -188,7 +188,7 @@ router.get('/getAllPostReactions', moderatorMiddleware, getAllPostReactions);
  *               response: Error
  *               error:
  *                 type: NotFoundError
- *                 path: /api/postReaction/getPostReaction
+ *                 path: /api/post-reaction/
  *                 statusCode: 404
  *                 message: Not found
  *
@@ -199,21 +199,21 @@ router.get('/getAllPostReactions', moderatorMiddleware, getAllPostReactions);
  *               response: Error
  *               error:
  *                 type: InternalServerError
- *                 path: /api/postReaction/getPostReaction
+ *                 path: /api/post-reaction/
  *                 statusCode: 500
  *                 message: Internal Server Error
  *
  */
-router.get('/getPostReaction/:postReactionId', getPostReaction);
+router.get('/:id', getPostReaction);
 
 /**
  * @swagger
- * /api/postReaction/getPostReactionsByAuthor:
+ * /api/post-reaction/author/{id}:
  *   post:
  *     security:
  *       - bearerAuth: []
  *     description: Retrieve all post reactions by an author.
- *     tags: [PostReaction]
+ *     tags: [post-reaction]
  *     requestBody:
  *       required: true
  *       content:
@@ -221,12 +221,12 @@ router.get('/getPostReaction/:postReactionId', getPostReaction);
  *           schema:
  *             type: object
  *             properties:
- *               authorId:
+ *               author-id:
  *                 type: integer
  *                 description: The id of the author whose post reactions are being retrieved.
  *                 example: 1
  *             required:
- *               - authorId
+ *               - author-id
  *
  *     responses:
  *       200:
@@ -243,7 +243,7 @@ router.get('/getPostReaction/:postReactionId', getPostReaction);
  *               response: Error
  *               error:
  *                 type: BadRequestError
- *                 path: /api/postReaction/getPostReactionsByAuthor
+ *                 path: /api/post-reaction/
  *                 statusCode: 400
  *                 message: Bad request
  *
@@ -254,23 +254,23 @@ router.get('/getPostReaction/:postReactionId', getPostReaction);
  *               response: Error
  *               error:
  *                 type: InternalServerError
- *                 path: /api/postReaction/getPostReactionsByAuthor
+ *                 path: /api/post-reaction/
  *                 statusCode: 500
  *                 message: Internal Server Error
  *
  */
-router.post('/getPostReactionsByAuthor/', getPostReactionsByAuthor);
+router.post('/author/:id', getPostReactionsByAuthor);
 
 /**
  * @swagger
- * /api/postReaction/deletePostReaction/{postReactionId}:
+ * /api/post-reaction/{id}:
  *   delete:
  *     security:
  *       - bearerAuth: []
  *     description: Delete an post reaction by id.
- *     tags: [PostReaction]
+ *     tags: [post-reaction]
  *     parameters:
- *       - name: postReactionId
+ *       - name: post-reaction-id
  *         in: path
  *         required: true
  *         schema:
@@ -290,7 +290,7 @@ router.post('/getPostReactionsByAuthor/', getPostReactionsByAuthor);
  *               response: Error
  *               error:
  *                 type: BadRequestError
- *                 path: /api/postReaction/deletePostReaction
+ *                 path: /api/post-reaction/
  *                 statusCode: 400
  *                 message: Bad request
  *
@@ -301,7 +301,7 @@ router.post('/getPostReactionsByAuthor/', getPostReactionsByAuthor);
  *               response: Error
  *               error:
  *                 type: NotFoundError
- *                 path: /api/postReaction/deletePostReaction
+ *                 path: /api/post-reaction/
  *                 statusCode: 404
  *                 message: Not found
  *
@@ -312,11 +312,11 @@ router.post('/getPostReactionsByAuthor/', getPostReactionsByAuthor);
  *               response: Error
  *               error:
  *                 type: InternalServerError
- *                 path: /api/postReaction/deletePostReaction
+ *                 path: /api/post-reaction/
  *                 statusCode: 500
  *                 message: Internal Server Error
  *
  */
-router.delete('/deletePostReaction/:postReactionId', deletePostReaction);
+router.delete('/:id', deletePostReaction);
 
 export default router;

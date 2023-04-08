@@ -23,18 +23,18 @@ const router = express.Router();
  *         key:
  *           type: string
  *           example: "Matemática Discreta"
- *         categoryId:
+ *         category-id:
  *           type: integer
  *           example: 1
  *       required:
  *         - key
- *         - categoryId
+ *         - category-id
  *
  */
 
 /**
  * @swagger
- * /api/tag/createTag:
+ * /api/tag/:
  *   post:
  *     security:
  *       - bearerAuth: []
@@ -50,7 +50,7 @@ const router = express.Router();
  *
  *           example:
  *             key: Matemática Discreta
- *             categoryId: 1
+ *             category-id: 1
  *     responses:
  *       200:
  *         content:
@@ -60,7 +60,7 @@ const router = express.Router();
  *               tag:
  *                 id: 1
  *                 key: Matemática Discreta
- *                 categoryId: 1
+ *                 category-id: 1
  *
  *       400:
  *         content:
@@ -69,7 +69,7 @@ const router = express.Router();
  *               response: Error
  *               error:
  *                 type: BadRequestError
- *                 path: /api/tag/createTag
+ *                 path: /api/tag/
  *                 statusCode: 400
  *                 message: Bad request
  *
@@ -85,18 +85,18 @@ const router = express.Router();
  *                 message: Internal Server Error
  *
  */
-router.post('/createTag', moderatorMiddleware, createTag);
+router.post('/', moderatorMiddleware, createTag);
 
 /**
  * @swagger
- * /api/tag/updateTag/{tagId}:
+ * /api/tag/{id}:
  *   put:
  *     security:
  *       - bearerAuth: []
  *     description: Update an tag by id.
  *     tags: [Tag]
  *     parameters:
- *       - name: tagId
+ *       - name: tag-id
  *         in: path
  *         required: true
  *         schema:
@@ -111,7 +111,7 @@ router.post('/createTag', moderatorMiddleware, createTag);
  *
  *           example:
  *             key: Matemática Discreta
- *             categoryId: 1
+ *             category-id: 1
  *     responses:
  *       200:
  *         content:
@@ -121,7 +121,7 @@ router.post('/createTag', moderatorMiddleware, createTag);
  *               tag:
  *                 id: 1
  *                 key: Matemática Discreta
- *                 categoryId: 1
+ *                 category-id: 1
  *
  *       400:
  *         content:
@@ -130,7 +130,7 @@ router.post('/createTag', moderatorMiddleware, createTag);
  *               response: Error
  *               error:
  *                 type: BadRequestError
- *                 path: /api/tag/updateTag
+ *                 path: /api/tag/
  *                 statusCode: 400
  *                 message: Bad request
  *
@@ -141,7 +141,7 @@ router.post('/createTag', moderatorMiddleware, createTag);
  *               response: Error
  *               error:
  *                 type: NotFoundError
- *                 path: /api/tag/updateTag
+ *                 path: /api/tag/
  *                 statusCode: 404
  *                 message: Not found
  *
@@ -152,16 +152,16 @@ router.post('/createTag', moderatorMiddleware, createTag);
  *               response: Error
  *               error:
  *                 type: InternalServerError
- *                 path: /api/tag/updateTag
+ *                 path: /api/tag/
  *                 statusCode: 500
  *                 message: Internal Server Error
  *
  */
-router.put('/updateTag/:tagId', moderatorMiddleware, updateTag);
+router.put('/:id', moderatorMiddleware, updateTag);
 
 /**
  * @swagger
- * /api/tag/getAllTags:
+ * /api/tag/:
  *   get:
  *     security:
  *       - bearerAuth: []
@@ -183,7 +183,7 @@ router.put('/updateTag/:tagId', moderatorMiddleware, updateTag);
  *               response: Error
  *               error:
  *                 type: BadRequestError
- *                 path: /api/tag/getAllTags
+ *                 path: /api/tag/
  *                 statusCode: 400
  *                 message: Bad request
  *
@@ -194,23 +194,23 @@ router.put('/updateTag/:tagId', moderatorMiddleware, updateTag);
  *               response: Error
  *               error:
  *                 type: InternalServerError
- *                 path: /api/tag/getAllTags
+ *                 path: /api/tag/
  *                 statusCode: 500
  *                 message: Internal Server Error
  *
  */
-router.get('/getAllTags', moderatorMiddleware, getAllTags);
+router.get('/', moderatorMiddleware, getAllTags);
 
 /**
  * @swagger
- * /api/tag/getTag/{tagId}:
+ * /api/tag/{id}:
  *   get:
  *     security:
  *       - bearerAuth: []
  *     description: Retrieve a tag by id.
  *     tags: [Tag]
  *     parameters:
- *       - name: tagId
+ *       - name: tag-id
  *         in: path
  *         required: true
  *         schema:
@@ -225,7 +225,7 @@ router.get('/getAllTags', moderatorMiddleware, getAllTags);
  *               tag:
  *                 id: 1
  *                 key: Matemática Discreta
- *                 categoryId: 1
+ *                 category-id: 1
  *
  *       400:
  *         content:
@@ -234,7 +234,7 @@ router.get('/getAllTags', moderatorMiddleware, getAllTags);
  *               response: Error
  *               error:
  *                 type: BadRequestError
- *                 path: /api/tag/getTag
+ *                 path: /api/tag/
  *                 statusCode: 400
  *                 message: Bad request
  *
@@ -245,7 +245,7 @@ router.get('/getAllTags', moderatorMiddleware, getAllTags);
  *               response: Error
  *               error:
  *                 type: NotFoundError
- *                 path: /api/tag/getTag
+ *                 path: /api/tag/
  *                 statusCode: 404
  *                 message: Not found
  *
@@ -256,23 +256,23 @@ router.get('/getAllTags', moderatorMiddleware, getAllTags);
  *               response: Error
  *               error:
  *                 type: InternalServerError
- *                 path: /api/tag/getTag
+ *                 path: /api/tag/
  *                 statusCode: 500
  *                 message: Internal Server Error
  *
  */
-router.get('/getTag/:tagId', moderatorMiddleware, getTag);
+router.get('/:id', moderatorMiddleware, getTag);
 
 /**
  * @swagger
- * /api/tag/deleteTag/{tagId}:
+ * /api/tag/{id}:
  *   delete:
  *     security:
  *       - bearerAuth: []
  *     description: Delete an tag by id.
  *     tags: [Tag]
  *     parameters:
- *       - name: tagId
+ *       - name: tag-id
  *         in: path
  *         required: true
  *         schema:
@@ -292,7 +292,7 @@ router.get('/getTag/:tagId', moderatorMiddleware, getTag);
  *               response: Error
  *               error:
  *                 type: BadRequestError
- *                 path: /api/tag/deleteTag
+ *                 path: /api/tag/
  *                 statusCode: 400
  *                 message: Bad request
  *
@@ -303,7 +303,7 @@ router.get('/getTag/:tagId', moderatorMiddleware, getTag);
  *               response: Error
  *               error:
  *                 type: NotFoundError
- *                 path: /api/tag/deleteTag
+ *                 path: /api/tag/
  *                 statusCode: 404
  *                 message: Not found
  *
@@ -314,11 +314,11 @@ router.get('/getTag/:tagId', moderatorMiddleware, getTag);
  *               response: Error
  *               error:
  *                 type: InternalServerError
- *                 path: /api/tag/deleteTag
+ *                 path: /api/tag/
  *                 statusCode: 500
  *                 message: Internal Server Error
  *
  */
-router.delete('/deleteTag/:tagId', moderatorMiddleware, deleteTag);
+router.delete('/:id', moderatorMiddleware, deleteTag);
 
 export default router;
